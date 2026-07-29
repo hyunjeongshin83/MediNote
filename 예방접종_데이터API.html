@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>예방접종 데이터·API 연결 · MediNote</title>
+<meta name="theme-color" content="#12BDB0">
+<link rel="manifest" href="예방접종API.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{
+  --g0:#EEFBF8;--g1:#D8F5EF;--g2:#AEEAE2;--g4:#12BDB0;--g5:#0DA298;--g6:#0A7168;--g7:#06413E;
+  --ink:#122423;--d2:#324744;--d3:#5A716D;--d4:#8FA6A2;--line:#E6F1EE;--mist:#F0F7F5;
+  --blue:#2B7DC9;--bluebg:#E9F2FB;--blueln:#CDE1F5;--amber:#F0A83C;--amberbg:#FFF7EC;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);letter-spacing:-.01em;line-height:1.7;
+  background:var(--g7);display:flex;justify-content:center;min-height:100vh;}
+.wrap{width:100%;max-width:430px;min-height:100vh;
+  background:linear-gradient(180deg,#EEFBF8 0%,#FAFDFC 30%,#EEFBF8 100%);
+  box-shadow:0 0 60px rgba(0,0,0,.28);
+  padding:26px 18px calc(50px + env(safe-area-inset-bottom));}
+.eyebrow{display:flex;align-items:center;gap:8px;margin:0 4px 12px;}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--g4);box-shadow:0 0 0 4px rgba(18,189,176,.14);}
+.eyebrow span{font-size:12.5px;font-weight:800;letter-spacing:.4px;color:var(--g6);}
+.eyebrow .cute{font-family:'Gaegu',cursive;font-weight:700;font-size:16px;color:var(--g5);margin-left:auto;opacity:.9;}
+.h1{font-family:'Gaegu',cursive;font-weight:700;font-size:27px;color:var(--ink);letter-spacing:-.02em;margin:2px 2px;}
+.lead{font-size:13.5px;color:var(--d3);margin:4px 2px 18px;line-height:1.62;}
+.lead b{color:var(--g6);}
+
+.sec-h{font-size:12px;font-weight:800;color:var(--g6);letter-spacing:.4px;margin:22px 4px 10px;display:flex;align-items:center;gap:8px;}
+.sec-h::before{content:"";width:16px;height:2px;border-radius:2px;background:var(--g4);}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;box-shadow:0 12px 34px rgba(6,65,62,.07);margin-bottom:12px;}
+.card .tp{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.card .tp .badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;}
+.badge.free{background:var(--g0);color:var(--g6);} .badge.key{background:var(--amberbg);color:var(--amber);} .badge.std{background:var(--bluebg);color:var(--blue);}
+.card .tt{font-size:15px;font-weight:800;color:var(--ink);}
+.card .ds{font-size:12.5px;color:var(--d3);line-height:1.6;margin-top:3px;}
+.card code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:var(--mist);color:var(--g7);padding:1px 6px;border-radius:6px;word-break:break-all;}
+.card .ep{margin-top:8px;font-size:11.5px;}
+.card .lk{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:12.5px;font-weight:800;color:var(--g5);text-decoration:none;}
+.card .lk svg{width:13px;height:13px;}
+
+/* live demo */
+.live{background:linear-gradient(160deg,#ffffff,#f4fcfb);border:1.5px solid var(--g2);border-radius:20px;padding:18px 16px 16px;box-shadow:0 16px 40px rgba(6,65,62,.1);}
+.live .lt{font-size:15.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.live .lt .pulse{width:9px;height:9px;border-radius:50%;background:#2FBF71;box-shadow:0 0 0 0 rgba(47,191,113,.6);animation:pl 1.8s infinite;}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(47,191,113,.5);}70%{box-shadow:0 0 0 9px rgba(47,191,113,0);}100%{box-shadow:0 0 0 0 rgba(47,191,113,0);}}
+.live .ls{font-size:12px;color:var(--d3);margin:5px 2px 12px;}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;}
+.fld{flex:1;min-width:140px;}
+label{display:block;font-size:11px;font-weight:800;color:var(--g6);margin:0 2px 5px;}
+select,input{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);border:1.5px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;}
+select:focus,input:focus{outline:none;border-color:var(--g4);}
+.btn{width:100%;margin-top:11px;font-family:inherit;font-weight:800;font-size:14px;color:#fff;border:none;border-radius:12px;padding:12px 0;cursor:pointer;
+  background:linear-gradient(135deg,var(--g4),var(--g6));box-shadow:0 8px 18px rgba(18,189,176,.28);}
+.btn:disabled{opacity:.6;cursor:default;}
+.out{margin-top:14px;min-height:20px;}
+.big{display:flex;align-items:baseline;gap:8px;}
+.big .n{font-family:'Gaegu',cursive;font-weight:700;font-size:40px;color:var(--g6);line-height:1;}
+.big .u{font-size:15px;font-weight:800;color:var(--g5);}
+.big .y{font-size:12px;color:var(--d3);margin-left:auto;}
+.iname{font-size:12.5px;color:var(--d2);margin-top:4px;font-weight:600;}
+.bars{margin-top:12px;display:flex;align-items:flex-end;gap:5px;height:66px;}
+.bars .b{flex:1;background:linear-gradient(180deg,var(--g4),var(--g6));border-radius:4px 4px 0 0;min-height:3px;position:relative;}
+.bars .b span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);}
+.bars .b em{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);font-style:normal;}
+.st{font-size:12px;font-weight:700;color:var(--g6);margin-top:10px;min-height:16px;}
+.raw{margin-top:12px;font-size:11px;background:#06302e;color:#8fe9df;border-radius:11px;padding:11px 12px;max-height:150px;overflow:auto;white-space:pre;font-family:ui-monospace,Menlo,monospace;line-height:1.5;}
+
+.note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:12px;color:var(--d3);line-height:1.62;margin-top:8px;}
+.note b{color:var(--g6);}
+.foot{font-size:11px;color:var(--d4);text-align:center;margin-top:16px;line-height:1.6;}
+.foot b{color:var(--g6);}
+.src{font-size:10.5px;color:#A9BCB8;text-align:center;margin-top:8px;line-height:1.7;}
+.src a{color:#8FA6A2;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span><span>예방접종 데이터 · API</span><span class="cute">우리 가족 건강노트</span></div>
+  <div class="h1">예방접종 실데이터 연결</div>
+  <div class="lead">예시 데이터가 아니라 <b>공식 통계·API</b>에 연결합니다. 아래 <b>WHO 데이터는 지금 이 페이지에서 실제로 호출</b>해 국가별 백신 접종률을 불러옵니다. 국내 공공데이터는 인증키를 받아 같은 방식으로 붙일 수 있습니다.</div>
+
+  <!-- ===== LIVE: WHO GHO ===== -->
+  <div class="live">
+    <div class="lt"><span class="pulse"></span>WHO 글로벌보건관측소(GHO) · 실시간 호출</div>
+    <div class="ls">키(인증) 없이 브라우저에서 바로 호출되는 공개 API입니다. 백신 지표와 국가를 골라 보세요.</div>
+    <div class="ctrl">
+      <div class="fld"><label>백신 지표</label><select id="ind"><option>불러오는 중…</option></select></div>
+      <div class="fld"><label>국가(ISO3)</label>
+        <select id="ctry">
+          <option value="KOR">대한민국 (KOR)</option>
+          <option value="USA">미국 (USA)</option>
+          <option value="JPN">일본 (JPN)</option>
+          <option value="CHN">중국 (CHN)</option>
+          <option value="DEU">독일 (DEU)</option>
+          <option value="GBR">영국 (GBR)</option>
+        </select></div>
+    </div>
+    <button class="btn" id="go">실데이터 불러오기</button>
+    <div class="out" id="out"></div>
+    <div class="st" id="st"></div>
+  </div>
+
+  <!-- ===== 국내 ===== -->
+  <div class="sec-h">국내 · 질병관리청 / 공공데이터포털</div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">예방접종도우미</span><span class="badge free">포털</span></div>
+    <div class="ds">국가예방접종 일정·지정의료기관·이상반응 신고 등 공식 창구. 개인 접종기록 조회는 로그인이 필요합니다.</div>
+    <a class="lk" href="https://nip.kdca.go.kr/" target="_blank" rel="noopener">nip.kdca.go.kr 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">질병관리청 · 코로나19 예방접종 현황</span><span class="badge key">인증키</span></div>
+    <div class="ds">일자별·지역별 접종 현황을 REST로 제공. 공공데이터포털에서 활용신청 후 <code>serviceKey</code>를 받아 호출합니다.</div>
+    <div class="ep">예: <code>apis.data.go.kr/…/getVaccineStatus?serviceKey=KEY&amp;numOfRows=10</code></div>
+    <a class="lk" href="https://www.data.go.kr/data/15078166/openapi.do" target="_blank" rel="noopener">활용신청 페이지 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">코로나19 예방접종 위탁의료기관 조회</span><span class="badge key">인증키</span></div>
+    <div class="ds">접종 가능한 병·의원을 지역으로 조회. 앱의 “가까운 접종기관 찾기”에 연결할 수 있습니다.</div>
+    <a class="lk" href="https://www.data.go.kr/data/15081240/openapi.do" target="_blank" rel="noopener">활용신청 페이지 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">감염병 누리집 OPEN API</span><span class="badge key">인증키</span></div>
+    <div class="ds">감염병 발생·예방접종 관련 통계 API 모음. 질병관리청이 직접 제공합니다.</div>
+    <a class="lk" href="https://www.kdca.go.kr/npt/biz/npp/api/nppOpenApiIntrMain.do" target="_blank" rel="noopener">API 소개 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <!-- ===== 국제 ===== -->
+  <div class="sec-h">국제 · WHO / CDC / 표준</div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">WHO GHO OData API</span><span class="badge free">키 불필요</span></div>
+    <div class="ds">DTP3·홍역(MCV)·B형간염 등 국가별 접종률을 공개 제공. 위 실시간 패널이 이 API를 사용합니다.</div>
+    <div class="ep">기준: <code>https://ghoapi.azureedge.net/api/{지표코드}?$filter=SpatialDim eq 'KOR'</code></div>
+    <a class="lk" href="https://immunizationdata.who.int/" target="_blank" rel="noopener">WHO 접종데이터 포털 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">CDC 오픈데이터 (Socrata)</span><span class="badge free">키 불필요*</span></div>
+    <div class="ds">미국 독감·코로나 접종률 데이터셋을 JSON으로 제공. 소량은 키 없이 호출(대량은 앱토큰 권장).</div>
+    <div class="ep">예: <code>https://data.cdc.gov/resource/3myw-4j4q.json?$limit=5</code></div>
+    <a class="lk" href="https://data.cdc.gov/" target="_blank" rel="noopener">data.cdc.gov 열기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="card">
+    <div class="tp"><span class="tt">HL7 FHIR · Immunization 리소스</span><span class="badge std">국제표준</span></div>
+    <div class="ds">개인 접종기록을 병원·EMR·국가 레지스트리와 주고받는 표준 데이터 형식. 실제 접종기록 연동은 이 표준으로 설계하는 것이 정석입니다.</div>
+    <a class="lk" href="https://www.hl7.org/fhir/immunization.html" target="_blank" rel="noopener">FHIR Immunization 문서 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+
+  <div class="note"><b>연결 방법 요약</b> · WHO·CDC는 지금 바로 붙는 공개 API라 앱 화면에 통계를 띄우기 좋습니다. 국내 질병관리청/공공데이터포털 API는 <b>활용신청 → serviceKey 발급 → 같은 fetch 코드에 키만 추가</b>하면 됩니다. 개인 접종기록(누가 언제 무엇을 맞았는지)은 <b>FHIR Immunization</b> 표준으로 병원·레지스트리와 연동하는 것이 국제 정석입니다.</div>
+
+  <div class="foot"><b>MediNote</b> · 정보 제공·상담 연결까지만, 판정·처방은 하지 않습니다<br>표시된 통계는 공식 출처의 집계이며, 개인의 접종 여부·판정은 의료진과 상의하세요.</div>
+  <div class="src">출처 · WHO GHO(ghoapi.azureedge.net) · WHO 접종데이터포털 · CDC(data.cdc.gov) · 질병관리청 공공데이터포털(data.go.kr) · HL7 FHIR</div>
+</div>
+
+<script>
+/* ===== WHO GHO OData 실시간 호출 (키 불필요) ===== */
+(function(){
+  "use strict";
+  var API="https://ghoapi.azureedge.net/api/";
+  var $=function(id){return document.getElementById(id);};
+
+  // 1) 예방접종 커버리지 지표 목록 로드 → 드롭다운
+  var inds=[];
+  function loadIndicators(){
+    fetch(API+"Indicator?$filter="+encodeURIComponent("contains(IndicatorName,'immunization coverage among 1-year-olds')"))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        inds=(d.value||[]).filter(function(x){return x.IndicatorCode&&x.IndicatorName;});
+        // 대표 지표를 앞으로
+        var pref=["WHS4_544","WHS4_100","WHS8_110","WHS4_128","WHS4_129","vhepb3"];
+        inds.sort(function(a,b){ var ia=pref.indexOf(a.IndicatorCode),ib=pref.indexOf(b.IndicatorCode); ia=ia<0?99:ia; ib=ib<0?99:ib; return ia-ib||a.IndicatorName.localeCompare(b.IndicatorName); });
+        if(!inds.length){ fallbackList(); return; }
+        $("ind").innerHTML=inds.slice(0,40).map(function(x){ return '<option value="'+x.IndicatorCode+'">'+esc(x.IndicatorName)+'</option>'; }).join("");
+        $("st").textContent="지표 "+inds.length+"개 로드됨 · 국가를 고르고 [실데이터 불러오기]를 누르세요.";
+      })
+      .catch(function(){ fallbackList(); });
+  }
+  function fallbackList(){
+    // 네트워크/CORS 문제 시 대표 지표 코드로 대체
+    var f=[["WHS4_544","DTP3 접종률 (1세)"],["WHS4_100","홍역(MCV1) 접종률 (1세)"],["WHS8_110","Hib3 접종률 (1세)"],["vhepb3","B형간염(HepB3) 접종률 (1세)"]];
+    $("ind").innerHTML=f.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>';}).join("");
+    $("st").textContent="대표 지표로 준비됨 · [실데이터 불러오기]를 눌러 보세요.";
+  }
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
+
+  // 2) 선택 지표+국가로 실데이터 호출
+  function run(){
+    var code=$("ind").value, ctry=$("ctry").value;
+    var iname=(inds.filter(function(x){return x.IndicatorCode===code;})[0]||{}).IndicatorName||$("ind").options[$("ind").selectedIndex].text;
+    $("go").disabled=true; $("st").textContent="WHO에 요청 중…"; $("out").innerHTML="";
+    fetch(API+encodeURIComponent(code)+"?$filter="+encodeURIComponent("SpatialDim eq '"+ctry+"'"))
+      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+      .then(function(d){
+        var rows=(d.value||[]).filter(function(x){return x.NumericValue!=null;});
+        // 연도별(합계/전체 성별 우선) 정리
+        rows.sort(function(a,b){ return (+a.TimeDim||0)-(+b.TimeDim||0); });
+        // 같은 연도 중복 시 마지막값
+        var byYear={}; rows.forEach(function(x){ byYear[x.TimeDim]=x; });
+        var years=Object.keys(byYear).sort();
+        if(!years.length){ $("st").textContent="해당 국가·지표의 값이 없습니다. 다른 조합을 시도해 보세요."; $("go").disabled=false; return; }
+        var last=byYear[years[years.length-1]];
+        var recent=years.slice(-8).map(function(y){return byYear[y];});
+        var maxv=Math.max.apply(null,recent.map(function(x){return +x.NumericValue;}))||100;
+        var bars=recent.map(function(x){ var h=Math.max(3,Math.round(+x.NumericValue/maxv*60)); return '<div class="b" style="height:'+h+'px"><span>'+Math.round(+x.NumericValue)+'</span><em>'+String(x.TimeDim).slice(2)+'</em></div>'; }).join("");
+        $("out").innerHTML=
+          '<div class="big"><span class="n">'+(Math.round(+last.NumericValue*10)/10)+'</span><span class="u">%</span><span class="y">'+esc(last.TimeDim)+'년 기준</span></div>'+
+          '<div class="iname">'+esc(iname)+' · '+esc(ctry)+'</div>'+
+          '<div class="bars">'+bars+'</div>'+
+          '<div class="raw">GET '+API+code+"?$filter=SpatialDim eq '"+ctry+"'\n\n최근값: "+esc(last.Value||last.NumericValue)+' ('+esc(last.TimeDim)+')  ·  총 '+rows.length+'행 수신</div>';
+        $("st").textContent="실데이터 수신 완료 · WHO GHO 공개 API";
+        $("go").disabled=false;
+      })
+      .catch(function(e){
+        $("st").textContent="호출 실패: "+e.message+" — 미리보기/iframe이 아닌 단독 탭에서 열면 정상 작동합니다.";
+        $("go").disabled=false;
+      });
+  }
+
+  $("go").onclick=run;
+  loadIndicators();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 증상 기록 · MediNote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--g0:#EEFBF8;--g1:#D8F5EF;--g2:#AEEAE2;--g4:#12BDB0;--g5:#0DA298;--g6:#0A7168;--g7:#06413E;
+  --ink:#122423;--d2:#324744;--d3:#5A716D;--d4:#8FA6A2;--line:#E6F1EE;--coral:#F6796B;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);letter-spacing:-.01em;
+  background:var(--g7);display:flex;justify-content:center;min-height:100vh;}
+.wrap{width:100%;max-width:430px;min-height:100vh;
+  background:linear-gradient(180deg,#EEFBF8 0%,#FAFDFC 30%,#EEFBF8 100%);
+  box-shadow:0 0 60px rgba(0,0,0,.28);padding:22px 16px 40px;}
+.eyebrow{display:flex;align-items:center;gap:8px;margin:0 4px 12px;}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--g4);box-shadow:0 0 0 4px rgba(18,189,176,.14);}
+.eyebrow span{font-size:12.5px;font-weight:800;color:var(--g6);letter-spacing:.4px;}
+.eyebrow .cute{font-family:'Gaegu',cursive;font-weight:700;font-size:16px;color:var(--g5);margin-left:auto;}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px 18px 18px;box-shadow:0 12px 36px rgba(6,65,62,.08);margin-bottom:13px;}
+.title{font-family:'Gaegu','Pretendard',cursive;font-size:27px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+.sub{font-size:12.5px;color:var(--d3);margin-top:4px;display:flex;align-items:center;gap:6px;}
+.dotc{width:8px;height:8px;border-radius:50%;background:var(--g4);}
+.dotc.local{background:#E9A23B;}
+label{display:block;font-size:12.5px;font-weight:800;color:var(--d3);margin-bottom:5px;}
+input,textarea{width:100%;font-family:inherit;font-size:16px;padding:12px 13px;border-radius:12px;border:1.5px solid var(--line);outline:none;background:#fff;color:var(--ink);}
+input:focus,textarea:focus{border-color:var(--g4);box-shadow:0 0 0 3px rgba(18,189,176,.15);}
+textarea{min-height:64px;resize:vertical;}
+.fld{margin-bottom:11px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.chips{display:flex;gap:7px;}
+.tchip{font-family:inherit;font-size:14px;font-weight:700;padding:9px 0;border-radius:11px;cursor:pointer;border:1.5px solid var(--line);background:#fff;color:var(--d3);flex:1;text-align:center;}
+.tchip.on{background:var(--g6);color:#fff;border-color:var(--g6);}
+.btn{width:100%;padding:13px;border:none;border-radius:13px;font-family:inherit;font-weight:800;font-size:15.5px;color:#fff;background:linear-gradient(135deg,var(--g4),var(--g6));cursor:pointer;box-shadow:0 6px 16px rgba(18,189,176,.3);}
+.btn.ghost{background:#fff;color:var(--g6);border:1.5px solid var(--line);box-shadow:none;}
+.sect{font-family:'Gaegu',cursive;font-size:18px;font-weight:700;color:var(--g6);margin:4px 2px 9px;}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff;}
+table{border-collapse:collapse;width:100%;font-size:13.5px;}
+th,td{padding:10px 11px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;}
+th{background:var(--g0);color:var(--g6);font-weight:800;font-size:12px;}
+td{color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+td .del{color:#c9a;font-weight:800;cursor:pointer;}
+td .del:hover{color:var(--coral);}
+.sev-b{font-size:11.5px;font-weight:800;border-radius:20px;padding:2px 9px;}
+.sev-약함{background:var(--g0);color:var(--g6);} .sev-보통{background:#FFF3E0;color:#B77A16;} .sev-심함{background:#FDEDE9;color:var(--coral);}
+.empty{text-align:center;padding:26px;color:var(--d3);font-size:14px;background:var(--g0);border-radius:14px;border:1.5px dashed var(--line);}
+.disc{font-size:11.5px;color:var(--d4);text-align:center;line-height:1.5;margin-top:8px;}
+.disc b{color:var(--g6);}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--g7);color:#fff;padding:11px 18px;border-radius:11px;font-size:13.5px;opacity:0;transition:.3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span><span>MediNote · 증상 기록</span><span class="cute">우리 가족 건강노트</span></div>
+
+  <div class="card">
+    <div class="title">오늘 증상 기록</div>
+    <div class="sub"><span class="dotc" id="dotc"></span><span id="stx">이 기기에 저장</span></div>
+    <div style="margin-top:16px" class="row2">
+      <div class="fld"><label>날짜</label><input type="date" id="f_date"></div>
+      <div class="fld"><label>정도</label><div class="chips" id="f_sev"></div></div>
+    </div>
+    <div class="fld"><label>증상</label><input id="f_sym" placeholder="예: 약 먹은 뒤 어지러움"></div>
+    <div class="fld"><label>관련 약·접종 <span style="font-weight:500">(선택)</span></label><input id="f_med" placeholder="예: 로사르탄 / 독감접종"></div>
+    <div class="fld"><label>메모 <span style="font-weight:500">(선택)</span></label><textarea id="f_note" placeholder="언제, 얼마나, 어떤 상황이었는지"></textarea></div>
+    <button class="btn" id="save">기록 저장</button>
+    <div class="disc" style="margin-top:10px"><b>안내</b> · 기록은 참고용입니다. 증상이 심하거나 지속되면 약사·의사와 상의하세요. 응급은 119.</div>
+  </div>
+
+  <div class="sect">오늘의 기록</div>
+  <div id="list"></div>
+  <button class="btn ghost" id="all" style="margin-top:6px">전체 기록 보기</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+const KEY="medinote:report:guest";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+let DB={symptoms:[]}, sev="약함", showAll=false, cloudOK=false, sb=null;
+try{ if(window.supabase) sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){}
+
+const SEVS=["약함","보통","심함"];
+function renderSev(){ $("f_sev").innerHTML=SEVS.map(s=>`<button type="button" class="tchip ${s===sev?'on':''}" data-sev="${s}">${s}</button>`).join(""); $("f_sev").querySelectorAll("[data-sev]").forEach(b=>b.onclick=()=>{sev=b.dataset.sev;renderSev();}); }
+
+function loadLocal(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(v&&Array.isArray(v.symptoms)) DB=v; }catch(e){} if(!Array.isArray(DB.symptoms))DB.symptoms=[]; }
+async function loadCloud(){ try{ const r=await fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(KEY)+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}}); if(r.ok){cloudOK=true; const rows=await r.json(); if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.symptoms)) DB=rows[0].value;} }catch(e){cloudOK=false;} renderStatus(); render(); }
+let t=null;
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){} clearTimeout(t); t=setTimeout(push,600); }
+async function push(){ try{ await fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{key:KEY,value:DB,updated_at:new Date().toISOString()}])}); cloudOK=true; }catch(e){cloudOK=false;} renderStatus(); }
+function renderStatus(){ $("dotc").className="dotc"+(cloudOK?"":" local"); $("stx").textContent=cloudOK?"클라우드 동기화됨":"이 기기에 저장 · 연결 시 동기화"; }
+
+function render(){
+  const rows = showAll ? DB.symptoms : DB.symptoms.filter(s=>s.date===($("f_date").value||today()));
+  $("list").innerHTML = rows.length
+    ? `<div class="tablewrap"><table><thead><tr><th>#</th><th>날짜</th><th>증상</th><th>정도</th><th>관련</th><th>메모</th><th></th></tr></thead><tbody>`+
+      rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.date)}</td><td>${esc(r.symptom)}</td><td><span class="sev-b sev-${esc(r.severity)}">${esc(r.severity)}</span></td><td>${esc(r.med||"")}</td><td>${esc(r.note||"")}</td><td><span class="del" data-del="${r.id}">✕</span></td></tr>`).join("")+
+      `</tbody></table></div>`
+    : `<div class="empty">${showAll?'기록이 없습니다.':'오늘 기록이 없습니다. 위에서 증상을 기록해 보세요.'}</div>`;
+  $("list").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{DB.symptoms=DB.symptoms.filter(s=>s.id!==b.dataset.del);save();render();});
+}
+$("save").onclick=()=>{ const sym=$("f_sym").value.trim(); if(!sym){toast("증상을 입력하세요");return;}
+  DB.symptoms.unshift({id:"s_"+Date.now(),date:$("f_date").value||today(),symptom:sym,severity:sev,med:$("f_med").value.trim(),note:$("f_note").value.trim(),ts:Date.now()});
+  save(); $("f_sym").value="";$("f_med").value="";$("f_note").value=""; render(); toast("기록했습니다"); };
+$("all").onclick=()=>{ showAll=!showAll; $("all").textContent=showAll?"오늘만 보기":"전체 기록 보기"; render(); };
+// 리포트 내보내기(.md) 기능은 웹앱에서 제외
+
+$("f_date").value=today(); $("f_date").onchange=render;
+renderSev(); loadLocal(); renderStatus(); render(); loadCloud();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediNote</title>
+<meta name="theme-color" content="#06413E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta http-equiv="refresh" content="0; url=MediNote_app.html">
+<link rel="canonical" href="MediNote_app.html">
+<style>
+html,body{height:100%;margin:0;background:#06413E;color:#EEFBF8;font-family:'Pretendard',-apple-system,sans-serif;}
+.c{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.d{width:40px;height:40px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:#12BDB0;animation:s 1s linear infinite;}
+@keyframes s{to{transform:rotate(360deg)}}
+a{color:#12BDB0;font-weight:800;text-decoration:none;}
+.t{font-size:15px;opacity:.9;}
+</style>
+</head>
+<body>
+<div class="c">
+  <div class="d"></div>
+  <div class="t">MediNote 앱을 여는 중…</div>
+  <a href="MediNote_app.html">열리지 않으면 여기를 누르세요</a>
+</div>
+<script>location.replace("MediNote_app.html");</script>
+</body>
+</html>

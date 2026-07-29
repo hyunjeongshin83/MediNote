@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#12BDB0">
+<title>MediNote</title>
+<!-- ===== MediNote 실제연결 레이어 (UI 변경 없음 · 기능만 추가) ===== -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MediNote">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<script>
+(function(){
+  // (1) PWA — 설치형/오프라인 (Play스토어 TWA용). UI에 영향 없음.
+  if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("MediNote.sw.js").catch(function(){}); }); }
+  window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); window.__mnInstall=e; });
+
+  // (2) AI 도우미 실제 연결 — 앱의 기존 Anthropic 호출에 인증을 주입(비침습).
+  //     허브와 같은 저장키(medit:apikey) 사용. 프록시 세션이 없으므로 개인 키 방식.
+  var KEY="medit:apikey";
+  var _fetch = window.fetch ? window.fetch.bind(window) : null;
+  if(_fetch){
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==="string") ? url : (url && url.url) || "";
+        if(u.indexOf("api.anthropic.com")>-1){
+          opts = opts || {};
+          opts.headers = Object.assign({}, opts.headers || {});
+          var k = null; try{ k = localStorage.getItem(KEY); }catch(e){}
+          if(!k){
+            try{ k = prompt("AI 도우미를 실제로 사용하려면 Anthropic API 키(sk-ant-…)가 필요합니다.\n콘솔(console.anthropic.com)에서 발급 · 이 브라우저에만 저장됩니다."); }catch(e){}
+            if(k){ try{ localStorage.setItem(KEY, k.trim()); }catch(e){} }
+          }
+          if(k){
+            opts.headers["x-api-key"] = k.trim();
+            opts.headers["anthropic-version"] = "2023-06-01";
+            opts.headers["anthropic-dangerous-direct-browser-access"] = "true";
+          }
+        }
+      }catch(e){}
+      return _fetch(url, opts);
+    };
+  }
+  window.MediNoteSetKey = function(k){ try{ k?localStorage.setItem(KEY,String(k).trim()):localStorage.removeItem(KEY); }catch(e){} };
+})();
+</script>
+<!-- ===== /실제연결 레이어 ===== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#06413E;font-family:Pretendard,-apple-system,sans-serif}#root{height:100%}</style>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+</head><body><div id="root"></div>
+<script>window.require=function(m){if(m==="react")return window.React;if(m==="react-dom"||m==="react-dom/client")return window.ReactDOM;};</script>
+<script>(() => {
+  var __create = Object.create;
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+    get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+  }) : x)(function(x) {
+    if (typeof require !== "undefined") return require.apply(this, arguments);
+    throw Error('Dynamic require of "' + x + '" is not supported');
+  });
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    // If the importer is in node compatibility mode or this is not an ESM
+    // file that has been converted to a CommonJS file using a Babel-
+    // compatible transform (i.e. "__esModule" has not been set), then set
+    // "default" to the CommonJS "module.exports" for node compatibility.
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
+
+  // ../../tmp/entryF.jsx
+  var import_react = __toESM(__require("react"));
+  var C = {
+    g0: "#EEFBF8",
+    g1: "#D8F5EF",
+    g2: "#AEEAE2",
+    g3: "#5FD6CE",
+    g4: "#12BDB0",
+    g5: "#0DA298",
+    g6: "#0A7168",
+    g7: "#06413E",
+    ink: "#122423",
+    d2: "#324744",
+    d3: "#5A716D",
+    d4: "#8FA6A2",
+    d5: "#C0D3CF",
+    coral: "#F6796B",
+    coralD: "#B23A2E",
+    coralBg: "#FFF1EF",
+    amber: "#F0A83C",
+    amberD: "#96601A",
+    amberBg: "#FFF7EC",
+    burg: "#8E1F2E",
+    burgD: "#6E1522",
+    burgBg: "#FBEDEF",
+    burgBg2: "#F6DDE1",
+    violet: "#6B7BF0",
+    violetBg: "#EDEFFF",
+    violetD: "#3B45B0",
+    paper: "#FAFDFC",
+    card: "#FFFFFF",
+    line: "#E6F1EE",
+    lineSoft: "#F0F7F5"
+  };
+  var FONT = "'Pretendard','Inter','Apple SD Gothic Neo',system-ui,sans-serif";
+  var HAND = "'Gaegu','Pretendard',cursive";
+  var detectLang = () => {
+    try {
+      return (navigator.language || "en").toLowerCase().startsWith("ko") ? "ko" : "en";
+    } catch {
+      return "en";
+    }
+  };
+  var STR = {
+    ko: {
+      tagline: "\uC57D\uB3C4 \uC608\uBC29\uC811\uC885\uB3C4 \uCF55\uCF55! \uC6B0\uB9AC \uAC00\uC871 \uAC74\uAC15\uB178\uD2B8 \u{1F4D4}",
+      taglinePlain: "\uC57D\uB3C4 \uC608\uBC29\uC811\uC885\uB3C4 \uCF55\uCF55! \uC6B0\uB9AC \uAC00\uC871 \uAC74\uAC15\uB178\uD2B8",
+      google: "Google\uB85C \uACC4\uC18D\uD558\uAE30",
+      kakao: "\uCE74\uCE74\uC624\uB85C \uACC4\uC18D\uD558\uAE30",
+      naver: "\uB124\uC774\uBC84\uB85C \uACC4\uC18D\uD558\uAE30",
+      consentNote: "Google \uB85C\uADF8\uC778 \uC2DC \uC0DD\uB144\uC6D4\uC77C\uB85C \uC5F0\uB839\uB300\uB97C \uC790\uB3D9 \uC124\uC815\uD569\uB2C8\uB2E4 (\uB3D9\uC758 \uC2DC).\n\uC81C\uACF5\uB418\uC9C0 \uC54A\uC73C\uBA74 \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4.",
+      dobMissTitle: "\uC0DD\uB144\uC6D4\uC77C\uC774 \uACF5\uC720\uB418\uC9C0 \uC54A\uC558\uC5B4\uC694",
+      oneThing: "\uD55C \uAC00\uC9C0\uB9CC\uC694",
+      dobMissBody: "Google\uC5D0\uC11C \uC0DD\uB144\uC6D4\uC77C\uC744 \uBC1B\uC9C0 \uBABB\uD588\uC5B4\uC694. \uC5F0\uB839\uB300 \uB9DE\uCDA4 \uC548\uB0B4\uB97C \uC704\uD574 \uD55C \uBC88\uB9CC \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
+      ageGroup: "\uC5F0\uB839\uB300",
+      start: "\uC2DC\uC791\uD558\uAE30",
+      nav: { home: "\uCC98\uC74C", vaccine: "\uC608\uBC29\uC811\uC885", assist: "\uB3C4\uC6B0\uBBF8", report: "\uB9AC\uD3EC\uD2B8", my: "\uB098\uC758\uC815\uBCF4" },
+      title: { home: "MediNote", vaccine: "\uC608\uBC29\uC811\uC885", assist: "\uB3C4\uC6B0\uBBF8", report: "\uC811\uC885 \uD6C4", my: "\uB098\uC758 \uAE30\uB85D" },
+      greetChild: "\uAC74\uAC15\uD558\uAC8C \uC790\uB77C\uC694!",
+      greetAdult: "\uB2F9\uC2E0\uC758 \uAC74\uAC15, \uC21C\uC870\uB86D\uAC8C.",
+      greetSenior: "\uCC9C\uCC9C\uD788, \uD55C \uAC78\uC74C\uC529.",
+      greetHcw: "\uC784\uC0C1 \uCC38\uACE0, \uC190\uB05D\uC5D0.",
+      notiTitle: "MediNote \xB7 \uB9DE\uCDA4 \uC548\uB0B4",
+      notiNow: "\uC9C0\uAE08 \xB7 \uC571 \uC54C\uB9BC",
+      notiSenior: "\uB3C5\uAC10 \uCCA0\uC774 \uB2E4\uAC00\uC640\uC694. 65\uC138 \uC774\uC0C1\uC740 \uC62C\uD574 \uB3C5\uAC10 \uC811\uC885\uC774 \uAD6D\uAC00 \uC9C0\uC6D0 \uB300\uC0C1\uC774\uC5D0\uC694.",
+      notiChild: "\uC790\uB140\uC758 \uB2E4\uC74C \uC608\uC815 \uC811\uC885\uC774 \uB2E4\uAC00\uC640\uC694.",
+      notiAdult: "\uC62C\uD574 \uB3C5\uAC10 \uC811\uC885 \uC2DC\uAE30\uC608\uC694. \uB20C\uB7EC\uC11C \uAD8C\uC7A5 \uD56D\uBAA9\uC744 \uD655\uC778\uD558\uC138\uC694.",
+      dueTitle: "\uC62C\uD574 \uB9DE\uC744 \uC811\uC885",
+      dueSenior: "\uB3C5\uAC10(10\uC6D4\xB7\uAD6D\uAC00\uC9C0\uC6D0)\uC774 \uC608\uC815\uB3FC \uC788\uC5B4\uC694. \uD3D0\uB834\uAD6C\uADE0 \uC644\uB8CC. \uB300\uC0C1\uD3EC\uC9C4\uC740 \uC0C1\uB2F4 \uAD8C\uC7A5.",
+      dueAdult: "\uB3C5\uAC10\uC774 10\uC6D4\uC5D0 \uC608\uC815\uB3FC \uC788\uC5B4\uC694. \uB20C\uB7EC\uC11C \uD655\uC778\uD558\uC138\uC694.",
+      askAssistant: "\uB3C4\uC6B0\uBBF8\uC5D0\uAC8C \uBB3C\uC5B4\uBCF4\uAE30",
+      todayMed: "\uC624\uB298\uC758 \uBCF5\uC57D",
+      medHalf: "\uC808\uBC18 \uC644\uB8CC\uD588\uC5B4\uC694.\n\uC800\uB141 \uC57D 2\uAC1C\uAC00 \uB0A8\uC558\uC5B4\uC694.",
+      doses: "\uD68C\uBD84",
+      today: "\uC624\uB298",
+      morningDone: "\uC544\uCE68 \uC57D \uBCF5\uC6A9 \uC644\uB8CC",
+      bpDm: "\uD608\uC555\uC57D \xB7 \uB2F9\uB1E8\uC57D",
+      eveningDose: "\uC800\uB141 \uC57D",
+      eveningWhen: "\uC800\uB141 \uC2DD\uD6C4 30\uBD84 \xB7 2\uC815",
+      fluComing: "\uB3C5\uAC10 \uC811\uC885 \uC2DC\uC98C\uC774 \uB2E4\uAC00\uC640\uC694",
+      fluWhen: "10\uC6D4 \xB7 65\uC138 \uC774\uC0C1 \uAD6D\uAC00\uC9C0\uC6D0",
+      nairobi: "\uB098\uC774\uB85C\uBE44 \uC5EC\uD589 \xB7 \uD669\uC5F4 \uC811\uC885 \uD544\uC694",
+      nairobiSub: "\uD56D\uACF5\uAD8C \uC790\uB3D9 \uAC10\uC9C0 \xB7 \uCD9C\uAD6D 46\uC77C \uC804",
+      lifeSched: "\uC0DD\uC560\uC8FC\uAE30 \uC811\uC885",
+      newVac: "\uC0C8\uB85C \uB4F1\uB85D\uB41C \uC811\uC885\uC57D",
+      newVacBody: "\uC740 \uC2DD\uC57D\uCC98 \uD488\uBAA9\uD5C8\uAC00 \uC790\uB8CC\uC5D0\uC11C \uC790\uB3D9 \uC5C5\uB370\uC774\uD2B8\uB3FC\uC694. \uD5C8\uAC00 \uC644\uB8CC\uC640 \uAD6D\uAC00\uAD8C\uC7A5\uC740 \uAD6C\uBD84\uD574 \uD45C\uC2DC\uD569\uB2C8\uB2E4.",
+      when: "\uAD8C\uC7A5 \uC2DC\uAE30",
+      sampleWarn: "\uC608\uC2DC \uB370\uC774\uD130\uC785\uB2C8\uB2E4. \uC2E4\uC81C \uC811\uC885 \uC5EC\uBD80\uB294 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694.",
+      gov: "\uAD6D\uAC00\uC9C0\uC6D0",
+      newB: "\uC0C8 \uC811\uC885\uC57D",
+      cert: "\uC99D\uBA85\uC11C",
+      askAnything: "\uBB34\uC5C7\uC774\uB4E0\n\uBB3C\uC5B4\uBCF4\uC138\uC694",
+      assistIntro: "\uB2D8 \uC815\uBCF4\uC5D0 \uB9DE\uCDB0, \uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uB4F1 \uCD5C\uC2E0 \uC815\uBCF4\uB97C \uD568\uAED8 \uCC3E\uC544 \uC548\uB0B4\uD574\uC694.",
+      searchNote: "\uAD81\uAE08\uD55C \uAC78 \uBB3C\uC73C\uBA74 \uC6F9\uAC80\uC0C9\uC73C\uB85C \uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uC790\uB8CC\uAE4C\uC9C0 \uD655\uC778\uD574 \uB2F5\uD574\uC694.",
+      searched: "\uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uB4F1 \uC6F9 \uC815\uBCF4 \uCC38\uC870",
+      placeholder: "\uC811\uC885\xB7\uBCF5\uC57D\uC5D0 \uB300\uD574 \uBB3C\uC5B4\uBCF4\uC138\uC694",
+      assistFoot: "\uC815\uBCF4 \uC81C\uACF5 \uB3C4\uC6B0\uBBF8\uC608\uC694. \uC811\uC885\xB7\uBCF5\uC57D\uC758 \uCD5C\uC885 \uD310\uB2E8\uC740 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694.",
+      reactionLog: "\uC774\uC0C1\uBC18\uC751 \uAE30\uB85D",
+      reactionSub: "\uC811\uC885 \uD6C4 \uBAB8\uC758 \uBCC0\uD654\uB97C \uAE30\uB85D\uD558\uBA74 \uC9C0\uB09C \uC811\uC885\uACFC \uBE44\uAD50\uD560 \uC218 \uC788\uC5B4\uC694.",
+      latest: "\uCD5C\uADFC \uC811\uC885",
+      logToday: "\uC624\uB298 \uC99D\uC0C1 \uAE30\uB85D\uD558\uAE30",
+      emergency: "\uACE0\uC5F4\xB7\uD638\uD761\uACE4\uB780\xB7\uC2EC\uD55C \uBD93\uAE30\uAC00 \uC788\uC73C\uBA74 \uC989\uC2DC \uC758\uB8CC\uAE30\uAD00 \uB610\uB294 1339\uB85C \uC5F0\uB77D\uD558\uC138\uC694. \uC774 \uC571\uC740 \uC99D\uC0C1\uC744 \uC9C4\uB2E8\uD558\uC9C0 \uC54A\uC544\uC694.",
+      reportShare: "\uC774\uC0C1\uBC18\uC751 \uC2E0\uACE0\xB7\uACF5\uC720",
+      reportShareSub: "\uAE30\uB85D\uD55C \uC99D\uC0C1\uC744 \uC9C8\uBCD1\uAD00\uB9AC\uCCAD\uC774\uB098 \uC811\uC885 \uBCD1\uC6D0\uC73C\uB85C \uBCF4\uB0BC \uC218 \uC788\uC5B4\uC694.",
+      toKdca: "\uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uC2E0\uACE0 (KAERS)",
+      toKdcaSub: "\uC608\uBC29\uC811\uC885 \uD6C4 \uC774\uC0C1\uBC18\uC751 \uC2E0\uACE0\uC2DC\uC2A4\uD15C",
+      toClinic: "\uC811\uC885\uBC1B\uC740 \uBCD1\uC6D0\uC5D0 \uACF5\uC720",
+      toClinicSub: "OO\uBCF4\uAC74\uC18C \xB7 \uD6C4\uC18D \uAD00\uB9AC \uC694\uCCAD",
+      myRecord: "\uB098\uC758 \uC811\uC885\uC218\uCCA9",
+      lifelong: "\uC804 \uC0DD\uC560 \uC811\uC885 \uAE30\uB85D",
+      done: "\uC644\uB8CC",
+      upcoming: "\uC608\uC815",
+      discuss: "\uC0C1\uB2F4 \uAD8C\uC7A5",
+      connect: "\uB9DE\uCDA4 \uC815\uBCF4 \uC5F0\uACB0 (\uB3D9\uC758 \uAE30\uBC18)",
+      linkHealth: "\uB098\uC758\uAC74\uAC15\uAE30\uB85D \uC5F0\uACB0",
+      linkHealthSub: "\uAC74\uAC15\uAC80\uC9C4\xB7\uC9C4\uB8CC \uC774\uB825 (\uB9C8\uC774\uD5EC\uC2A4\uC6E8\uC774)",
+      linkPgx: "\uC57D\uBB3C\uC720\uC804\uD615 \uC815\uBCF4 \uC5F0\uACB0",
+      linkPgxSub: "CPIC \uAC00\uC774\uB4DC\uB77C\uC778 \uAE30\uBC18 \uC815\uBCF4 \uC81C\uACF5",
+      sensitive: "\uC720\uC804\xB7\uC758\uB8CC \uC815\uBCF4\uB294 \uBBFC\uAC10\uC815\uBCF4\uC608\uC694. \uBA85\uC2DC\uC801 \uB3D9\uC758 \uD6C4 \uAE30\uAE30 \uC548\uC5D0\uB9CC \uC800\uC7A5\uB418\uBA70, \uC571\uC740 \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0 \uC815\uBCF4 \uC81C\uACF5\uACFC \uC0C1\uB2F4 \uC5F0\uACB0\uB9CC \uD574\uC694.",
+      notif: "\uC54C\uB9BC \uBC1B\uAE30",
+      kkoInfo: "\uCE74\uCE74\uC624\uD1A1\uC73C\uB85C \uC811\uC885 \uC815\uBCF4 \uBC1B\uAE30",
+      kkoInfoSub: "\uCE5C\uAD6C\uCD94\uAC00\uD55C \uCC44\uB110\uB85C \uC815\uBCF4\uC131 \uBA54\uC2DC\uC9C0",
+      timing: "\uC811\uC885 \uC2DC\uAE30 \uC54C\uB9BC",
+      timingSub: "\uC608\uC815\uC77C 2\uC8FC \uC804\xB73\uC77C \uC804",
+      flightChk: "\uD56D\uACF5\uAD8C \uC774\uBA54\uC77C \uD655\uC778 \uC54C\uB9BC",
+      flightChkSub: "\uC5EC\uD589 \uC811\uC885 \uC790\uB3D9 \uC548\uB0B4 (\uB3D9\uC758 \uC2DC)",
+      newsNew: "\uC0C8 \uC811\uC885\uC57D \uC18C\uC2DD",
+      newsNewSub: "\uC2DD\uC57D\uCC98 \uC2E0\uADDC \uD5C8\uAC00 \uBC31\uC2E0",
+      reviewed: "\uBC29\uC900\uC11D \uC5F0\uAD6C\uC2E4 \uAC10\uC218",
+      dateStr: "7\uC6D4 6\uC77C \uC6D4\uC694\uC77C",
+      influenzaLatest: "\uC778\uD50C\uB8E8\uC5D4\uC790 (10.14)",
+      hwShare: "\uAE30\uAE30\xB7AI \uC5F0\uACB0 (\uB3D9\uC758 \uAE30\uBC18)",
+      hwGoogle: "Google \uAC74\uAC15\uAE30\uAE30 \uC5F0\uACB0",
+      hwGoogleSub: "Health Connect\xB7Wear OS \uC13C\uC11C \uC815\uBCF4 \uACF5\uC720",
+      hwAnthropic: "Anthropic \uC5F0\uACB0 \uAE30\uAE30",
+      hwAnthropicSub: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC815\uBCF4 \uC81C\uACF5",
+      hwChatgpt: "ChatGPT \uC5F0\uACB0 \uAE30\uAE30",
+      hwChatgptSub: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC815\uBCF4 \uC81C\uACF5",
+      hwNote: "\uC5F0\uACB0\uC740 \uBAA8\uB450 \uB3D9\uC758 \uAE30\uBC18\uC774\uBA70, \uC571\uC740 \uC815\uBCF4 \uC81C\uACF5\xB7\uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4. \uD310\uC815\xB7\uCC98\uBC29\uC740 \uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
+      hwTipGoogle: "Health Connect\xB7Wear OS\uC5D0 \uBAA8\uC778 \uAC78\uC74C\xB7\uC2EC\uBC15\xB7\uC218\uBA74 \uB4F1 \uC13C\uC11C \uC815\uBCF4\uB97C, \uB3D9\uC758\uD558\uC2E0 \uBC94\uC704\uC5D0\uC11C \uC811\uC885\xB7\uBCF5\uC57D \uC548\uB0B4\uC5D0 \uCC38\uACE0\uD569\uB2C8\uB2E4. \uC815\uBCF4\uB294 \uAE30\uAE30 \uC548\uC5D0 \uC800\uC7A5\uB3FC\uC694.",
+      hwTipAnthropic: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30(\uC608: \uC2A4\uD53C\uCEE4\xB7\uB85C\uBD07)\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC2DC\uAE30\uB97C \uC74C\uC131\uC73C\uB85C \uC548\uB0B4\uD560 \uC218 \uC788\uC5B4\uC694. \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0, \uC548\uB0B4\uC640 \uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4.",
+      hwTipChatgpt: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC624\uB298\uC758 \uBCF5\uC57D\xB7\uC811\uC885 \uC77C\uC815\uC744 \uC804\uB2EC\uD574, \uB9D0\uB85C \uC54C\uB824\uC8FC\uB3C4\uB85D \uD560 \uC218 \uC788\uC5B4\uC694. \uCD5C\uC885 \uD310\uB2E8\uC740 \uB298 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694."
+    },
+    en: {
+      tagline: "Meds and shots, all in one happy little note \u{1F4D4}",
+      taglinePlain: "Meds and shots, all in one happy little note",
+      google: "Continue with Google",
+      kakao: "Continue with Kakao",
+      naver: "Continue with Naver",
+      consentNote: "With Google, we read your date of birth to set your age group automatically (with consent). If it isn't shared, we'll ask once.",
+      dobMissTitle: "Your date of birth wasn't shared",
+      oneThing: "One quick thing",
+      dobMissBody: "Google didn't return a birth date, so please add it once. We use it only to tailor guidance to your age group.",
+      ageGroup: "Age group",
+      start: "Get started",
+      nav: { home: "Home", vaccine: "Vaccines", assist: "Assistant", report: "After-care", my: "Record" },
+      title: { home: "MediNote", vaccine: "Vaccines", assist: "Assistant", report: "After-care", my: "My record" },
+      greetChild: "Let's keep you healthy!",
+      greetAdult: "Your health, on track.",
+      greetSenior: "Taking it step by step.",
+      greetHcw: "Clinical reference, at hand.",
+      notiTitle: "MediNote \xB7 Personalized for you",
+      notiNow: "now \xB7 app notification",
+      notiSenior: "Flu season is coming. As you're 65+, your flu shot is state-funded this year.",
+      notiChild: "A reminder: your child's next scheduled vaccine is coming up.",
+      notiAdult: "Your flu shot is due this October. Tap to see what's recommended.",
+      dueTitle: "Vaccines due this year",
+      dueSenior: "Flu (October, state-funded) is scheduled. Pneumococcal done. Shingles \u2014 worth discussing.",
+      dueAdult: "Flu is due in October. Tap to review what's recommended.",
+      askAssistant: "Ask the assistant",
+      todayMed: "Today's medication",
+      medHalf: "Halfway there.\n2 evening doses left.",
+      doses: "doses",
+      today: "Today",
+      morningDone: "Morning dose taken",
+      bpDm: "Blood pressure \xB7 Diabetes",
+      eveningDose: "Evening dose",
+      eveningWhen: "30 min after dinner \xB7 2 tablets",
+      fluComing: "Flu season is coming",
+      fluWhen: "October \xB7 state-funded, 65+",
+      nairobi: "Nairobi trip \xB7 Yellow fever needed",
+      nairobiSub: "Auto-detected from your ticket \xB7 46 days out",
+      lifeSched: "Lifelong schedule",
+      newVac: "Newly registered vaccines",
+      newVacBody: " update automatically from MFDS approval data. Approval and national recommendation are shown separately.",
+      when: "When",
+      sampleWarn: "Sample data. Confirm any vaccination with your doctor or pharmacist.",
+      gov: "State-funded",
+      newB: "New",
+      cert: "Certificate",
+      askAnything: "Ask\nanything",
+      assistIntro: ", with KDCA and other sources checked in real time.",
+      searchNote: "Answers are checked against KDCA and public sources via web search.",
+      searched: "Checked KDCA / web sources",
+      placeholder: "Ask about vaccines or medication",
+      assistFoot: "Information only. Confirm any decision with your doctor or pharmacist.",
+      reactionLog: "Reaction log",
+      reactionSub: "Log how you feel after a vaccine, and compare it with past doses.",
+      latest: "Latest",
+      logToday: "Log today's symptoms",
+      emergency: "High fever, trouble breathing, or severe swelling \u2014 contact a medical facility or 1339 right away. This app does not diagnose.",
+      reportShare: "Report \xB7 share",
+      reportShareSub: "Send your logged symptoms to KDCA or the clinic where you were vaccinated.",
+      toKdca: "Report to KDCA (KAERS)",
+      toKdcaSub: "Adverse event reporting system",
+      toClinic: "Share with the clinic",
+      toClinicSub: "OO Public Health Center \xB7 follow-up",
+      myRecord: "Vaccine record",
+      lifelong: "lifelong history",
+      done: "Done",
+      upcoming: "Upcoming",
+      discuss: "Discuss",
+      connect: "Connect (with consent)",
+      linkHealth: "Link My Health Record",
+      linkHealthSub: "Check-ups \xB7 visits (My Healthway)",
+      linkPgx: "Link pharmacogenomic profile",
+      linkPgxSub: "CPIC-guideline information only",
+      sensitive: "Genetic and medical data are sensitive. Stored on-device after explicit consent; the app informs and refers, it does not decide.",
+      notif: "Notifications",
+      kkoInfo: "Vaccine info via KakaoTalk",
+      kkoInfoSub: "Channel messages after you add us",
+      timing: "Vaccine timing reminders",
+      timingSub: "2 weeks and 3 days before",
+      flightChk: "Flight email check",
+      flightChkSub: "Auto travel-vaccine alerts (with consent)",
+      newsNew: "New vaccine news",
+      newsNewSub: "Newly approved (MFDS)",
+      reviewed: "Reviewed \xB7 Bang Lab",
+      dateStr: "Mon, Jul 6",
+      influenzaLatest: "Influenza (Oct 14)",
+      hwShare: "Connect devices \xB7 AI (with consent)",
+      hwGoogle: "Google health devices",
+      hwGoogleSub: "Share Health Connect \xB7 Wear OS sensor data",
+      hwAnthropic: "Anthropic-connected device",
+      hwAnthropicSub: "Provide med/vaccine info to a linked care device",
+      hwChatgpt: "ChatGPT-connected device",
+      hwChatgptSub: "Provide info to a linked voice assistant",
+      hwNote: "All connections are consent-based; the app only informs and refers \u2014 it does not decide or prescribe.",
+      hwTipGoogle: "Sensor data gathered in Health Connect / Wear OS (steps, heart rate, sleep) can inform your vaccine and medication guidance, within the scope you consent to. Data stays on your device.",
+      hwTipAnthropic: "A linked care device (e.g. a speaker or robot) can voice your medication and vaccine reminders. It never decides on medicines \u2014 it only informs and refers.",
+      hwTipChatgpt: "A linked voice assistant can read out today's medication and vaccine schedule. Always confirm final decisions with your doctor or pharmacist."
+    }
+  };
+  var TONES = {
+    child: { label: { ko: "\uC5B4\uB9B0\uC774", en: "Child" }, voice: "gentle, simple, encouraging \u2014 speak to the child's guardian in warm, reassuring language with very short sentences" },
+    adult: { label: { ko: "\uC131\uC778", en: "Adult" }, voice: "direct, efficient, informative \u2014 concise professional sentences" },
+    senior: { label: { ko: "\uB178\uC778", en: "Senior" }, voice: "warm, clear, patient \u2014 plain words, avoid jargon, one point at a time" },
+    hcw: { label: { ko: "\uBCF4\uAC74\uC758\uB8CC\uC778", en: "Health worker" }, voice: "precise and professional \u2014 correct terminology, cite guideline sources" }
+  };
+  function ageGroupFromBirth(iso) {
+    if (!iso) return "adult";
+    const y = (/* @__PURE__ */ new Date()).getFullYear() - new Date(iso).getFullYear();
+    if (y < 19) return "child";
+    if (y >= 65) return "senior";
+    return "adult";
+  }
+  var VAC = {
+    ko: {
+      child: [["MMR", "\uC0DD\uD6C4 12~15\uAC1C\uC6D4 / \uB9CC 4~6\uC138", "\uAD6D\uAC00\uC608\uBC29\uC811\uC885(NIP)", "gov"], ["\uC77C\uBCF8\uB1CC\uC5FC", "\uC0DD\uD6C4 12\uAC1C\uC6D4~", "\uAD6D\uAC00\uC608\uBC29\uC811\uC885(NIP)", "gov"], ["\uC218\uB450", "\uC0DD\uD6C4 12~15\uAC1C\uC6D4", "\uAD6D\uAC00\uC608\uBC29\uC811\uC885(NIP)", "gov"]],
+      adult: [["Tdap", "10\uB144\uB9C8\uB2E4 \uCD94\uAC00\uC811\uC885", "\uC131\uC778 \uAD8C\uC7A5 \uC811\uC885", ""], ["A\uD615\uAC04\uC5FC", "\uD56D\uCCB4 \uC5C6\uB294 20~40\uB300", "2\uD68C \uC811\uC885(6\uAC1C\uC6D4 \uAC04\uACA9)", ""], ["HPV", "\uAD8C\uC7A5 \uC5F0\uB839\uB300", "\uC2DD\uC57D\uCC98 \uC2E0\uADDC \uC801\uC751\uC99D \uD5C8\uAC00", "newv"]],
+      senior: [["\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "\uB9E4\uB144 10~11\uC6D4", "65\uC138 \uC774\uC0C1 \uAD6D\uAC00\uC9C0\uC6D0", "gov"], ["\uD3D0\uB834\uAD6C\uADE0(PPSV23)", "65\uC138 \uC774\uC0C1 1\uD68C", "\uAD6D\uAC00\uC608\uBC29\uC811\uC885 \uC9C0\uC6D0", "gov"], ["\uB300\uC0C1\uD3EC\uC9C4", "\uB9CC 65\uC138 \uAD8C\uC7A5", "\uC2DD\uC57D\uCC98 \uC2E0\uADDC \uD5C8\uAC00 \xB7 \uC9C0\uC790\uCCB4\uBCC4 \uC0C1\uC774", "newv"]],
+      hcw: [["B\uD615\uAC04\uC5FC", "\uD56D\uCCB4 \uBBF8\uBCF4\uC720 \uC885\uC0AC\uC790", "\uC758\uC0AC\xB7\uC57D\uC0AC\xB7\uAC04\uD638\uC0AC \uAD8C\uC7A5", ""], ["\uC778\uD50C\uB8E8\uC5D4\uC790", "\uB9E4\uB144", "\uC758\uB8CC\uAE30\uAD00 \uC885\uC0AC\uC790 \uAD8C\uC7A5", ""], ["MMR\xB7\uC218\uB450", "\uD56D\uCCB4 \uBBF8\uBCF4\uC720 \uC2DC", "\uD658\uC790 \uC811\uCD09 \uC804 \uAD8C\uC7A5", ""]],
+      travel: [["\uD669\uC5F4", "\uCD9C\uAD6D 10\uC77C \uC804\uAE4C\uC9C0", "\uC785\uAD6D \uC2DC \uC99D\uBA85\uC11C(\uC610\uB85C\uCE74\uB4DC) \uC694\uAD6C \uAC00\uB2A5 \xB7 \uAD6D\uB0B4 \uC9C0\uC815 \uC758\uB8CC\uAE30\uAD00", "rec"], ["\uC7A5\uD2F0\uD478\uC2A4", "\uC704\uD5D8\uC9C0\uC5ED 2\uC8FC \uC804", "\uB3D9\uB0A8\uC544\xB7\uB0A8\uC544\uC2DC\uC544\xB7\uC544\uD504\uB9AC\uCE74 \uC5EC\uD589 \uC2DC \uAD8C\uC7A5", ""], ["A\uD615\uAC04\uC5FC", "\uCD9C\uAD6D 2~4\uC8FC \uC804", "\uC704\uC0DD \uCDE8\uC57D \uC9C0\uC5ED \uC804\uBC18 \uAD8C\uC7A5", ""], ["\uC218\uB9C9\uAD6C\uADE0", "\uCD9C\uAD6D 10\uC77C \uC804", "\uC0AC\uC6B0\uB514 \uC131\uC9C0\uC21C\uB840(\uD558\uC9C0\xB7\uC6C0\uB77C) \uC2DC \uD544\uC218", "rec"], ["\uB9D0\uB77C\uB9AC\uC544 \uC608\uBC29\uC57D", "\uC9C0\uC5ED\uBCC4 \xB7 \uCD9C\uAD6D \uC804 \uC0C1\uB2F4", "\uC811\uC885 \uC544\uB2CC \uC608\uBC29\uC57D(\uCC98\uBC29) \xB7 \uD604\uC9C0 \uB3C4\uCC29 \uC804 \uBCF5\uC6A9 \uC2DC\uC791", ""], ["\uAD11\uACAC\uBCD1", "\uACE0\uC704\uD5D8\xB7\uC7A5\uAE30 \uCCB4\uB958 \uC2DC", "\uD604\uC9C0 \uB3D9\uBB3C \uC811\uCD09 \uC704\uD5D8 \uC9C0\uC5ED \xB7 3\uD68C \uC811\uC885", ""], ["\uCF5C\uB808\uB77C", "\uCDE8\uC57D \uC9C0\uC5ED \uC7A5\uAE30 \uCCB4\uB958", "\uACBD\uAD6C\uC6A9 \xB7 \uD604\uC9C0 \uC720\uD589 \uC2DC \uACE0\uB824", ""]]
+    },
+    en: {
+      child: [["MMR", "12\u201315 months / age 4\u20136", "National immunization (NIP)", "gov"], ["Japanese encephalitis", "from 12 months", "National immunization (NIP)", "gov"], ["Varicella", "12\u201315 months", "National immunization (NIP)", "gov"]],
+      adult: [["Tdap", "booster every 10 years", "Recommended for adults", ""], ["Hepatitis A", "seronegative, 20s\u201340s", "2 doses, 6 months apart", ""], ["HPV", "recommended ages", "Newly approved indication", "newv"]],
+      senior: [["Influenza (flu)", "yearly, Oct\u2013Nov", "State-funded, age 65+", "gov"], ["Pneumococcal (PPSV23)", "once, age 65+", "National immunization program", "gov"], ["Shingles", "recommended at 65", "Newly approved \xB7 varies by region", "newv"]],
+      hcw: [["Hepatitis B", "non-immune staff", "Recommended for clinicians", ""], ["Influenza", "yearly", "Recommended for facility staff", ""], ["MMR \xB7 Varicella", "if non-immune", "Before patient contact", ""]],
+      travel: [["Yellow fever", "\u226510 days before travel", "Certificate (yellow card) may be required \xB7 designated clinics", "rec"], ["Typhoid", "2 weeks before, risk areas", "SE Asia \xB7 South Asia \xB7 Africa", ""], ["Hepatitis A", "2\u20134 weeks before", "Recommended for low-sanitation regions", ""], ["Meningococcal", "\u226510 days before", "Required for Hajj/Umrah pilgrimage (Saudi Arabia)", "rec"], ["Malaria prophylaxis", "varies \xB7 consult before travel", "Not a vaccine \u2014 prescription, start before arrival", ""], ["Rabies", "high-risk / long stay", "Areas with animal-contact risk \xB7 3 doses", ""], ["Cholera", "long stay in risk areas", "Oral \xB7 consider during local outbreaks", ""]]
+    }
+  };
+  var TAB_KEYS = ["child", "adult", "senior", "hcw", "travel"];
+  var TAB_LABELS = { ko: ["\uC5B4\uB9B0\uC774", "\uC131\uC778", "\uB178\uC778", "\uBCF4\uAC74\uC758\uB8CC\uC778", "\uD574\uC678\uC5EC\uD589"], en: ["Children", "Adults", "Seniors", "Health workers", "Travel"] };
+  function App() {
+    const [lang] = (0, import_react.useState)(detectLang());
+    const [phase, setPhase] = (0, import_react.useState)("splash");
+    const [pct, setPct] = (0, import_react.useState)(0);
+    const [profile, setProfile] = (0, import_react.useState)(null);
+    const [tab, setTab] = (0, import_react.useState)("home");
+    const t = STR[lang];
+    (0, import_react.useEffect)(() => {
+      if (phase !== "splash") return;
+      const total = 8e3, step = 30;
+      let elapsed = 0;
+      const iv = setInterval(() => {
+        elapsed += step;
+        setPct(Math.min(100, Math.round(elapsed / total * 100)));
+      }, step);
+      const done = setTimeout(() => setPhase("onboard"), total);
+      return () => {
+        clearInterval(iv);
+        clearTimeout(done);
+      };
+    }, [phase]);
+    if (phase === "splash") return /* @__PURE__ */ import_react.default.createElement(Splash, { t, pct });
+    if (phase === "onboard" || !profile) return /* @__PURE__ */ import_react.default.createElement(Onboard, { t, lang, onDone: (p) => {
+      setProfile(p);
+      setPhase("app");
+    } });
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, background: C.g7, minHeight: "100vh", display: "flex", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("style", null, `*{box-sizing:border-box;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent} ::-webkit-scrollbar{display:none} @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes drop{from{opacity:0;transform:translateY(-140%)}to{opacity:1;transform:translateY(0)}} @keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}} @keyframes pop{0%{transform:scale(.86);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}} button{font-family:inherit}`), /* @__PURE__ */ import_react.default.createElement("div", { style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", background: `linear-gradient(180deg,${C.g0} 0%,${C.paper} 30%,${C.g0} 100%)`, position: "relative", overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement(AppBar, { title: t.title[tab], onBell: () => setTab("assist"), onUser: () => setTab("my") }), /* @__PURE__ */ import_react.default.createElement("div", { key: tab, style: { flex: 1, overflowY: "auto", animation: "fade .34s ease" } }, tab === "home" && /* @__PURE__ */ import_react.default.createElement(Home, { t, go: setTab, profile }), tab === "vaccine" && /* @__PURE__ */ import_react.default.createElement(Vaccine, { t, lang, profile }), tab === "assist" && /* @__PURE__ */ import_react.default.createElement(Assistant, { t, lang, profile }), tab === "report" && /* @__PURE__ */ import_react.default.createElement(Report, { t }), tab === "my" && /* @__PURE__ */ import_react.default.createElement(My, { t, lang, profile })), /* @__PURE__ */ import_react.default.createElement(Nav, { t, tab, set: setTab })));
+  }
+  function Ico({ d, s = 22, c = C.d2, sw = 1.9, f = "none" }) {
+    return /* @__PURE__ */ import_react.default.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: f, stroke: c, strokeWidth: sw, strokeLinecap: "round", strokeLinejoin: "round" }, d);
+  }
+  var I = {
+    home: /* @__PURE__ */ import_react.default.createElement("path", { d: "M3 10.5l9-7 9 7V20a1.5 1.5 0 01-1.5 1.5H15V15H9v6.5H4.5A1.5 1.5 0 013 20z" }),
+    note: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M8 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2h-2" }), /* @__PURE__ */ import_react.default.createElement("rect", { x: "8", y: "2", width: "8", height: "4", rx: "1" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M8 11h6M8 15h4" })),
+    vaccine: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("rect", { x: "4", y: "9", width: "16", height: "6", rx: "3", transform: "rotate(-45 12 12)" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M15 6l3 3M9 12l3 3M6 15l-3 3" })),
+    chat: /* @__PURE__ */ import_react.default.createElement("path", { d: "M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z" }),
+    report: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 11l3 3L22 4" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" })),
+    user: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "8", r: "4" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M4 21c0-4 4-6.5 8-6.5S20 17 20 21" })),
+    pill: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("rect", { x: "4", y: "9", width: "16", height: "10", rx: "5" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 9v10" })),
+    plane: /* @__PURE__ */ import_react.default.createElement("path", { d: "M2 16l20-6L2 4l3 6-3 6z" }),
+    search: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M21 21l-4.3-4.3" })),
+    send: /* @__PURE__ */ import_react.default.createElement("path", { d: "M22 2L11 13M22 2l-7 20-4-9-9-4z" }),
+    chev: /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 6l6 6-6 6" }),
+    check: /* @__PURE__ */ import_react.default.createElement("path", { d: "M5 13l4 4L19 7" }),
+    warn: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M10.3 4L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L14 4a2 2 0 00-3.7 0z" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 9v4M12 17h.01" })),
+    building: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M3 21h18M5 21V5l8-3v19M19 21V9l-6-3" })),
+    hospital: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M3 21h18M6 21V6a2 2 0 012-2h8a2 2 0 012 2v15" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v6M9 11h6" }))
+  };
+  var Logo = ({ s = 30 }) => /* @__PURE__ */ import_react.default.createElement("svg", { width: s, height: s, viewBox: "0 0 48 48", fill: "none", "aria-hidden": "true" }, /* @__PURE__ */ import_react.default.createElement("rect", { width: "48", height: "48", rx: "14", fill: C.g4 }), /* @__PURE__ */ import_react.default.createElement("rect", { x: "13", y: "10", width: "22", height: "28", rx: "4", fill: "#EAFBF3" }), /* @__PURE__ */ import_react.default.createElement("rect", { x: "19", y: "7", width: "10", height: "6", rx: "2", fill: C.g6 }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M18 20h9M18 25h12M18 30h7", stroke: C.g4, strokeWidth: "2", strokeLinecap: "round" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "32", cy: "31", r: "7", fill: C.g6 }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M32 28v6M29 31h6", stroke: "#EAFBF3", strokeWidth: "2", strokeLinecap: "round" }));
+  function Splash({ t, pct = 0 }) {
+    const loadingLabel = t.reviewed === STR.ko.reviewed ? "\uBD88\uB7EC\uC624\uB294 \uC911" : "Loading";
+    const fillTop = 48 - 48 * pct / 100;
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, minHeight: "100vh", display: "flex", justifyContent: "center", background: `linear-gradient(160deg,${C.g5},${C.g7})` } }, /* @__PURE__ */ import_react.default.createElement("style", null, `@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes pop{0%{transform:scale(.86);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}} @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}`), /* @__PURE__ */ import_react.default.createElement("div", { style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { animation: "pop .7s cubic-bezier(.2,.8,.2,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { animation: "float 3s ease-in-out infinite" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "112", height: "112", viewBox: "0 0 48 48", fill: "none", "aria-hidden": "true" }, /* @__PURE__ */ import_react.default.createElement("defs", null, /* @__PURE__ */ import_react.default.createElement("clipPath", { id: "sp" }, /* @__PURE__ */ import_react.default.createElement("rect", { width: "48", height: "48", rx: "14" }))), /* @__PURE__ */ import_react.default.createElement("g", { clipPath: "url(#sp)" }, /* @__PURE__ */ import_react.default.createElement("rect", { width: "48", height: "48", fill: "rgba(255,255,255,.14)" }), /* @__PURE__ */ import_react.default.createElement("rect", { x: "0", y: fillTop, width: "48", height: 48, fill: "#fff", style: { transition: "y .1s linear" } })), /* @__PURE__ */ import_react.default.createElement("rect", { x: "13", y: "10", width: "22", height: "28", rx: "4", fill: "none", stroke: "#0A7168", strokeWidth: "2.2" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M18 20h9M18 25h12M18 30h7", stroke: "#0A7168", strokeWidth: "2", strokeLinecap: "round" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "32", cy: "31", r: "7", fill: "none", stroke: "#0A7168", strokeWidth: "2.2" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M32 28v6M29 31h6", stroke: "#0A7168", strokeWidth: "2", strokeLinecap: "round" }), /* @__PURE__ */ import_react.default.createElement("rect", { x: "1.1", y: "1.1", width: "45.8", height: "45.8", rx: "13", fill: "none", stroke: "rgba(255,255,255,.5)", strokeWidth: "1.2" })))), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-.03em", marginTop: 24, animation: "fade .6s .2s both" } }, "MediNote"), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontFamily: HAND, fontSize: 20, color: C.g2, lineHeight: 1.5, marginTop: 14, animation: "fade .6s .4s both" } }, t.taglinePlain), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 40, display: "flex", alignItems: "center", gap: 8, animation: "fade .6s .6s both" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontFamily: FONT, fontSize: 13, fontWeight: 500, letterSpacing: ".08em", color: C.g2 } }, loadingLabel), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 14, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums" } }, pct, "%"))));
+  }
+  function Onboard({ t, lang, onDone }) {
+    const [step, setStep] = (0, import_react.useState)(0);
+    const [birth, setBirth] = (0, import_react.useState)("");
+    const grp = ageGroupFromBirth(birth);
+    function profileFor(b) {
+      const g = ageGroupFromBirth(b);
+      return { name: g === "child" ? lang === "ko" ? "\uC900" : "Jun" : "Nick", birth: b, ageGroup: g, conditions: g === "senior" ? lang === "ko" ? ["\uACE0\uD608\uC555", "\uB2F9\uB1E8"] : ["hypertension", "diabetes"] : [] };
+    }
+    function signIn(provider) {
+      const returned = provider === "google" ? "1958-04-10" : null;
+      if (returned) onDone(profileFor(returned));
+      else setStep(1);
+    }
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, minHeight: "100vh", display: "flex", justifyContent: "center", background: `linear-gradient(170deg,${C.g0} 0%,${C.g1} 45%,${C.g2} 100%)` } }, /* @__PURE__ */ import_react.default.createElement("style", null, `@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`), /* @__PURE__ */ import_react.default.createElement("div", { style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", padding: "0 24px", animation: "fade .3s ease" } }, step === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement(Logo, { s: 96 }), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 34, fontWeight: 800, color: C.ink, letterSpacing: "-.03em", marginTop: 20 } }, "MediNote"), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontFamily: HAND, fontSize: 19, color: C.d3, lineHeight: 1.5, marginTop: 8, marginBottom: 36 } }, t.taglinePlain), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("google"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 12, width: "100%", padding: 16, borderRadius: 14, background: "#fff", border: `1px solid ${C.line}`, fontSize: 15, fontWeight: 600, color: C.ink, cursor: "pointer", boxShadow: "0 4px 14px -6px rgba(10,110,78,.18)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "26", height: "26", viewBox: "0 0 24 24" }, /* @__PURE__ */ import_react.default.createElement("path", { fill: "#4285F4", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#34A853", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#FBBC05", d: "M5.84 14.1a6.6 6.6 0 010-4.2V7.06H2.18a11 11 0 000 9.88l3.66-2.84z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#EA4335", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" })), t.google), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("kakao"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 14, background: "#FEE500", border: "none", fontSize: 15, fontWeight: 700, color: "#3C1E1E", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(60,30,30,.22)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "#3C1E1E" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 3C6.5 3 2 6.48 2 10.8c0 2.76 1.86 5.18 4.65 6.55-.15.53-.97 3.35-1 3.57 0 0-.02.17.09.23.11.07.24.02.24.02.32-.04 3.7-2.42 4.28-2.83.56.08 1.14.12 1.74.12 5.5 0 10-3.48 10-7.78S17.5 3 12 3z" })), t.kakao), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("naver"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 14, background: "#03C75A", border: "none", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(3,199,90,.35)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "#fff" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M16.27 3v9.1L7.86 3H3v18h4.73v-9.1L16.14 21H21V3z" })), t.naver), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 11, color: C.d4, textAlign: "center", marginTop: 24, lineHeight: 1.6, whiteSpace: "pre-line" } }, t.consentNote)) : /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: C.g5, fontWeight: 700, textTransform: "uppercase" } }, t.oneThing), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 25, fontWeight: 800, color: C.ink, letterSpacing: "-.02em", margin: "6px 0" } }, t.dobMissTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 14, color: C.d3, lineHeight: 1.6, marginBottom: 20 } }, t.dobMissBody), /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: birth, onChange: (e) => setBirth(e.target.value), style: { width: "100%", border: `1px solid ${C.line}`, borderRadius: 14, padding: "14px 16px", fontSize: 16, color: C.ink, outline: "none", background: C.card } }), birth && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 14, padding: 14, background: C.g1, borderRadius: 14, fontSize: 13.5, color: C.g6, fontWeight: 600 } }, t.ageGroup, ": ", TONES[grp].label[lang]), /* @__PURE__ */ import_react.default.createElement("button", { disabled: !birth, onClick: () => onDone(profileFor(birth)), style: { width: "100%", padding: 16, borderRadius: 14, background: birth ? C.g4 : C.d5, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: birth ? "pointer" : "default", marginTop: 24 } }, t.start))));
+  }
+  function AppBar({ title, onBell, onUser }) {
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, background: "transparent", borderBottom: `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ import_react.default.createElement(Logo, { s: 30 }), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 18, fontWeight: 800, color: C.ink, letterSpacing: "-.02em" } }, title)), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 2 } }, /* @__PURE__ */ import_react.default.createElement("button", { onClick: onBell, "aria-label": "assistant", style: ib }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chat, c: C.d2 })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: onUser, "aria-label": "record", style: ib }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.user, c: C.d2 }))));
+  }
+  var ib = { width: 40, height: 40, borderRadius: 13, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" };
+  function Nav({ t, tab, set }) {
+    const items = [["home", I.home], ["vaccine", I.vaccine], ["assist", I.chat], ["report", I.report], ["my", I.user]];
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { background: C.card, borderTop: `1px solid ${C.line}`, display: "flex", padding: "9px 6px calc(12px + env(safe-area-inset-bottom,0px))", flexShrink: 0 } }, items.map(([k, d]) => {
+      const on = tab === k;
+      return /* @__PURE__ */ import_react.default.createElement("button", { key: k, onClick: () => set(k), style: { flex: 1, background: "none", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer", padding: "4px 0" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 46, height: 30, borderRadius: 16, background: on ? C.g1 : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d, s: 22, c: on ? C.g5 : C.d4, sw: on ? 2.2 : 1.9 })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, fontWeight: on ? 700 : 600, color: on ? C.g5 : C.d4 } }, t.nav[k]));
+    }));
+  }
+  var wrap = { padding: "20px 20px 28px" };
+  var eyebrow = { fontSize: 12, color: C.g5, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" };
+  var bigH = { fontFamily: HAND, fontSize: 30, fontWeight: 700, color: C.ink, lineHeight: 1.25, margin: "5px 0", letterSpacing: "0", whiteSpace: "pre-line" };
+  var sub = { fontSize: 14, color: C.d3, lineHeight: 1.6 };
+  var card = { background: C.card, borderRadius: 22, padding: 20, marginTop: 14, border: `1px solid ${C.line}`, boxShadow: "0 1px 2px rgba(10,110,78,.04)" };
+  var LabChip = ({ t }) => /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 700, color: C.g6, background: C.g1, padding: "5px 11px", borderRadius: 999 } }, t.reviewed);
+  function Home({ t, go, profile }) {
+    const [noti, setNoti] = (0, import_react.useState)(true);
+    const g = profile.ageGroup;
+    const greet = g === "child" ? t.greetChild : g === "senior" ? t.greetSenior : g === "hcw" ? t.greetHcw : t.greetAdult;
+    const notiBody = g === "senior" ? t.notiSenior : g === "child" ? t.notiChild : t.notiAdult;
+    const dueBody = g === "senior" ? t.dueSenior : t.dueAdult;
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, noti && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => {
+      setNoti(false);
+      go("assist");
+    }, style: { display: "flex", gap: 11, alignItems: "flex-start", background: "rgba(255,255,255,.98)", border: `1px solid ${C.line}`, borderRadius: 16, padding: 13, marginBottom: 14, cursor: "pointer", boxShadow: "0 10px 28px -10px rgba(10,110,78,.35)", animation: "drop .5s cubic-bezier(.2,.9,.3,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 34, height: 34, borderRadius: 11, background: C.g4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 18, c: "#fff" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 12.5, fontWeight: 700, color: C.ink, display: "block" } }, t.notiTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12, color: C.d3, lineHeight: 1.45, marginTop: 2 } }, notiBody), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.d4, marginTop: 3, display: "block" } }, t.notiNow))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.dateStr), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, greet, "\n", profile.name), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => go("assist"), style: { display: "flex", gap: 14, alignItems: "flex-start", background: `linear-gradient(135deg,${C.g6},${C.g7})`, borderRadius: 22, padding: 19, marginTop: 16, cursor: "pointer", boxShadow: "0 8px 24px -10px rgba(10,110,78,.5)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 22, c: C.g3 })), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 15.5, fontWeight: 800, color: "#fff", display: "block" } }, t.dueTitle), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.g2, lineHeight: 1.55, display: "block", marginTop: 5 } }, dueBody), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, fontWeight: 700, color: C.g3, marginTop: 11, display: "flex", alignItems: "center", gap: 4 } }, t.askAssistant, " ", /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 13, c: C.g3 })))), /* @__PURE__ */ import_react.default.createElement("div", { style: { ...card, background: C.g0, border: `1px solid ${C.g2}`, display: "flex", alignItems: "center", gap: 17 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: 76, height: 76, flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "76", height: "76", style: { transform: "rotate(-90deg)" } }, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g2, strokeWidth: "7" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g4, strokeWidth: "7", strokeLinecap: "round", strokeDasharray: "195", strokeDashoffset: "97" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 18, fontWeight: 800, color: C.g6 } }, "2/4"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.g5 } }, t.doses))), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 800, color: C.ink } }, t.todayMed), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 5, fontSize: 13.5, whiteSpace: "pre-line" } }, t.medHalf))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.today), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.check, done: true, b: t.morningDone, s: t.bpDm }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.pill, b: t.eveningDose, s: t.eveningWhen, chev: true }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.vaccine, kind: "new", b: t.fluComing, s: t.fluWhen, chev: true, onClick: () => go("vaccine") }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.plane, kind: "warn", b: t.nairobi, s: t.nairobiSub, chev: true, onClick: () => go("assist") }));
+  }
+  function Task({ ic, b, s, done, kind, chev, onClick }) {
+    let bg = C.g1, st = C.g5, grad = `linear-gradient(135deg,${C.g0},${C.card})`;
+    if (done) {
+      bg = C.g4;
+      st = "#fff";
+      grad = `linear-gradient(135deg,${C.g1},${C.card})`;
+    }
+    if (kind === "new") {
+      bg = C.amberBg;
+      st = C.amberD;
+      grad = `linear-gradient(135deg,${C.amberBg},${C.card})`;
+    }
+    if (kind === "warn") {
+      bg = `linear-gradient(135deg,${C.burg},${C.burgD})`;
+      st = "#fff";
+      grad = `linear-gradient(135deg,${C.burgBg},${C.card})`;
+    }
+    return /* @__PURE__ */ import_react.default.createElement("div", { onClick, style: { display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: 18, background: grad, border: `1px solid ${C.line}`, marginTop: 10, cursor: onClick ? "pointer" : "default", boxShadow: "0 2px 8px -4px rgba(10,110,78,.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 15, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: ic, s: 21, c: st })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d4 } }, s)), chev && /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d5 }));
+  }
+  function Warn({ t, children, kind = "warn" }) {
+    const isDanger = kind === "danger";
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 12, padding: "15px 16px", borderRadius: 16, marginTop: 14, background: isDanger ? `linear-gradient(135deg,${C.burgBg},${C.burgBg2})` : C.amberBg, border: isDanger ? `1px solid ${C.burgBg2}` : "none" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flexShrink: 0, marginTop: 1 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.warn, s: 18, c: isDanger ? C.burg : C.amberD })), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: isDanger ? C.burgD : C.amberD, lineHeight: 1.55 } }, children));
+  }
+  function Vaccine({ t, lang, profile }) {
+    const init = profile.ageGroup === "child" ? "child" : profile.ageGroup === "hcw" ? "hcw" : profile.ageGroup === "senior" ? "senior" : "adult";
+    const [open, setOpen] = (0, import_react.useState)(init);
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.vaccine), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.lifeSched), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 8 } }, TAB_KEYS.map((k, i) => {
+      const isOpen = open === k;
+      const list = VAC[lang][k];
+      const isTravel = k === "travel";
+      return /* @__PURE__ */ import_react.default.createElement("div", { key: k, style: { marginTop: 10, borderRadius: 18, overflow: "hidden", border: `1px solid ${isOpen ? C.g2 : C.line}`, background: C.card, boxShadow: isOpen ? "0 6px 18px -10px rgba(10,110,78,.28)" : "0 1px 2px rgba(10,110,78,.03)", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setOpen(isOpen ? null : k), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "16px 17px", border: "none", cursor: "pointer", background: isOpen ? `linear-gradient(135deg,${C.g0},${C.g1})` : "transparent" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 38, height: 38, borderRadius: 12, background: isOpen ? C.g4 : C.g1, display: "flex", alignItems: "center", justifyContent: "center", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: GRP_ICON[k], s: 20, c: isOpen ? "#fff" : C.g5 })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, TAB_LABELS[lang][i])), /* @__PURE__ */ import_react.default.createElement("div", { style: { transform: isOpen ? "rotate(90deg)" : "none", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d4 }))), isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "2px 15px 16px" } }, isTravel && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, lang === "ko" ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "\uD574\uC678 \uC811\uC885 \uC815\uBCF4"), "\uB294 \uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uD574\uC678\uAC10\uC5FC\uBCD1NOW \uAE30\uC900\uC73C\uB85C \uC790\uB3D9 \uC5C5\uB370\uC774\uD2B8\uB429\uB2C8\uB2E4. \uBC29\uBB38\uAD6D\xB7\uC77C\uC815\uC5D0 \uB530\uB77C \uD56D\uBAA9\uC774 \uB2EC\uB77C\uC838\uC694.") : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "Travel vaccine info"), " updates automatically from KDCA's overseas-infection guidance. Items vary by destination and dates.")), (k === "senior" || k === "adult") && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, /* @__PURE__ */ import_react.default.createElement("b", null, t.newVac), t.newVacBody), list.map(([n, due, note, badge], j) => /* @__PURE__ */ import_react.default.createElement("div", { key: j, style: { padding: "13px 4px", borderBottom: j === list.length - 1 ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink } }, n), badge === "gov" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.g1, c: C.g6 }, t.gov), badge === "newv" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.amberBg, c: C.amberD }, t.newB), badge === "rec" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.burgBg, c: C.burg }, t.cert)), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, color: C.d2, marginTop: 5 } }, t.when, " \xB7 ", due), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11.5, color: C.d4, marginTop: 2 } }, note)))));
+    })), /* @__PURE__ */ import_react.default.createElement(Warn, { t, kind: "danger" }, t.sampleWarn));
+  }
+  var GRP_ICON = {
+    child: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "7", r: "3.2" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M6 21c0-4 2.7-7 6-7s6 3 6 7" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 10.5c1 1 1.5 1.5 3 1.5s2-.5 3-1.5" })),
+    adult: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "7", r: "3.5" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M5 21c0-4 3-7 7-7s7 3 7 7" })),
+    senior: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "6.5", r: "3" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M6 21c0-4 2.7-6.5 6-6.5S18 17 18 21" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M17 12l3 2-3 2" })),
+    hcw: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 3l7 3v5c0 5-3.5 8-7 9.5C8.5 19 5 16 5 11V6z" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v6M9 11h6" })),
+    travel: /* @__PURE__ */ import_react.default.createElement("path", { d: "M2 16l20-6L2 4l3 6-3 6z" })
+  };
+  var Bdg = ({ children, bg, c }) => /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 8, background: bg, color: c } }, children);
+  function Assistant({ t, lang, profile }) {
+    const tone = TONES[profile.ageGroup];
+    const [msgs, setMsgs] = (0, import_react.useState)([]);
+    const [input, setInput] = (0, import_react.useState)("");
+    const [loading, setLoading] = (0, import_react.useState)(false);
+    const endRef = (0, import_react.useRef)(null);
+    (0, import_react.useEffect)(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [msgs, loading]);
+    const SUG = {
+      ko: {
+        child: ["\uC62C\uD574 \uC544\uC774\uAC00 \uB9DE\uC544\uC57C \uD560 \uC811\uC885\uC740?", "\uB3C5\uAC10 \uBC31\uC2E0\uC740 \uC5B4\uB9B0\uC774\uC5D0\uAC8C \uC548\uC804\uD55C\uAC00\uC694?", "\uC8FC\uC758\uD560 \uBD80\uC791\uC6A9\uC774 \uC788\uB098\uC694?"],
+        hcw: ["\uC81C\uAC00 \uB9DE\uC544\uC57C \uD560 \uC9C1\uC5ED \uC811\uC885\uC740?", "\uB300\uC0C1\uD3EC\uC9C4 \uC7AC\uC870\uD569 \uBC31\uC2E0 \uCD5C\uC2E0 \uC9C0\uCE68\uC740?", "B\uD615\uAC04\uC5FC \uB178\uCD9C \uD6C4 \uC608\uBC29\uC740?"],
+        def: ["\uC62C\uD574 \uC81C\uAC00 \uB9DE\uC544\uC57C \uD560 \uC811\uC885\uC774 \uC788\uB098\uC694?", "\uC778\uD50C\uB8E8\uC5D4\uC790 \uC811\uC885 \uBD80\uC791\uC6A9\uC774 \uAD81\uAE08\uD574\uC694", "\uACE0\uD608\uC555\xB7\uB2F9\uB1E8\uAC00 \uC788\uB294\uB370 \uB3C5\uAC10 \uBC31\uC2E0 \uB9DE\uC544\uB3C4 \uB418\uB098\uC694?"]
+      },
+      en: {
+        child: ["What vaccines does my child need this year?", "Is the flu shot safe for young children?", "What side effects should I watch for?"],
+        hcw: ["Which occupational vaccines am I due for?", "Latest guidance on recombinant shingles vaccine?", "Post-exposure prophylaxis for hepatitis B?"],
+        def: ["Do I have any vaccines due this year?", "What are the side effects of the flu shot?", "I have hypertension and diabetes \u2014 is the flu shot okay?"]
+      }
+    };
+    const suggestions = profile.ageGroup === "child" ? SUG[lang].child : profile.ageGroup === "hcw" ? SUG[lang].hcw : SUG[lang].def;
+    async function ask(q) {
+      const question = (q ?? input).trim();
+      if (!question || loading) return;
+      setInput("");
+      setMsgs((m) => [...m, { role: "user", text: question }]);
+      setLoading(true);
+      const system = `You are the in-app assistant for 'MediNote', a Korean vaccination and medication guidance app, reviewed by the Bang Joon-seok lab at Sookmyung Women's University College of Pharmacy.
+[User] ${profile.name} \xB7 age group ${profile.ageGroup} \xB7 conditions: ${(profile.conditions || []).join(", ") || "none"}
+[Tone] ${tone.voice}
+[Reply language] ${lang === "ko" ? "Korean" : "English"}
+[Absolute rules]
+1. You do not practice medicine. Never tell the user to take or avoid a specific drug/vaccine.
+2. Answer only as information + referral: per KDCA guidance for their age/condition, then advise confirming with a doctor or pharmacist.
+3. If current schedule/eligibility is needed, use web_search to check KDCA and authoritative Korean sources.
+4. Match the tone above; keep it clear and short.
+5. For side effects, separate common from rare-serious; for serious reactions advise contacting 1339 or a medical facility.`;
+      const history = [...msgs, { role: "user", text: question }].map((m) => ({ role: m.role, content: m.text }));
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1e3, system, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }) });
+        const data = await res.json();
+        const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+        const used = (data.content || []).some((b) => b.type === "server_tool_use" || b.type === "web_search_tool_result");
+        setMsgs((m) => [...m, { role: "assistant", text: text || (lang === "ko" ? "\uB2F5\uBCC0\uC744 \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694." : "Couldn't load a response."), searched: used }]);
+      } catch (e) {
+        setMsgs((m) => [...m, { role: "assistant", text: lang === "ko" ? "\uC5F0\uACB0\uC5D0 \uBB38\uC81C\uAC00 \uC0DD\uACBC\uC5B4\uC694." : "Connection problem. Try again." }]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "20px 16px" } }, msgs.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.assist), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: { ...bigH, padding: "0 4px" } }, t.askAnything), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, padding: "0 4px", marginBottom: 10 } }, profile.name, t.assistIntro), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, padding: 14, background: C.g0, border: `1px solid ${C.g2}`, borderRadius: 16, margin: "4px 4px 16px" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 18, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.searchNote)), suggestions.map((s) => /* @__PURE__ */ import_react.default.createElement("button", { key: s, onClick: () => ask(s), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: "15px 16px", marginBottom: 9, fontSize: 13.5, fontWeight: 600, color: C.d2, cursor: "pointer", boxShadow: "0 1px 2px rgba(10,110,78,.03)" } }, /* @__PURE__ */ import_react.default.createElement("span", null, s), /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 16, c: C.d5 })))), msgs.map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 12, animation: "fade .3s ease" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { maxWidth: "86%", padding: "13px 15px", borderRadius: 18, fontSize: 13.5, lineHeight: 1.62, whiteSpace: "pre-wrap", background: m.role === "user" ? C.g4 : C.card, color: m.role === "user" ? "#fff" : C.d2, border: m.role === "user" ? "none" : `1px solid ${C.line}`, borderBottomRightRadius: m.role === "user" ? 5 : 18, borderBottomLeftRadius: m.role === "user" ? 18 : 5, boxShadow: m.role === "user" ? "0 4px 12px -4px rgba(18,185,129,.4)" : "0 1px 2px rgba(10,110,78,.03)" } }, m.searched && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.g5, marginBottom: 6, fontWeight: 700 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 13, c: C.g5 }), t.searched), m.text))), loading && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 17px", borderRadius: 18, background: C.card, border: `1px solid ${C.line}`, display: "flex", gap: 5 } }, [0, 1, 2].map((i) => /* @__PURE__ */ import_react.default.createElement("span", { key: i, style: { width: 7, height: 7, borderRadius: "50%", background: C.g4, animation: `bl 1.2s ${i * 0.15}s infinite` } })))), /* @__PURE__ */ import_react.default.createElement("div", { ref: endRef })), /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "10px 14px 14px", background: C.card, borderTop: `1px solid ${C.line}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ import_react.default.createElement("textarea", { value: input, onChange: (e) => setInput(e.target.value), onKeyDown: (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        ask();
+      }
+    }, placeholder: t.placeholder, rows: 1, style: { flex: 1, resize: "none", border: `1px solid ${C.line}`, borderRadius: 15, padding: "13px 15px", fontSize: 14, fontFamily: FONT, outline: "none", color: C.ink, maxHeight: 100, background: C.paper } }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => ask(), disabled: loading || !input.trim(), "aria-label": "send", style: { width: 48, height: 48, borderRadius: 15, border: "none", background: input.trim() ? C.g4 : C.d5, display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() ? "pointer" : "default", flexShrink: 0, transition: ".15s", boxShadow: input.trim() ? "0 4px 12px -4px rgba(18,185,129,.5)" : "none" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.send, s: 20, c: "#fff" }))), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10.5, color: C.d4, textAlign: "center", marginTop: 9, lineHeight: 1.4 } }, t.assistFoot)));
+  }
+  function Report({ t }) {
+    const ko = t.reviewed === STR.ko.reviewed;
+    const labels = ko ? [["\uC811\uC885\uBD80\uC704 \uD1B5\uC99D", 40, "\uC57D\uD568", C.g4], ["\uBC1C\uC5F4", 15, "\uC5C6\uC74C", C.g4], ["\uD53C\uB85C\uAC10", 55, "\uBCF4\uD1B5", C.amber], ["\uB450\uD1B5", 10, "\uC5C6\uC74C", C.g4]] : [["Injection pain", 40, "Mild", C.g4], ["Fever", 15, "None", C.g4], ["Fatigue", 55, "Moderate", C.amber], ["Headache", 10, "None", C.g4]];
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.report), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.reactionLog), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, t.reactionSub), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 800, color: C.ink } }, t.latest, " \xB7 ", t.influenzaLatest), labels.map(([l, w, v, col]) => /* @__PURE__ */ import_react.default.createElement("div", { key: l, style: { display: "flex", alignItems: "center", gap: 11, marginTop: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d2, width: 96, flexShrink: 0 } }, l), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, height: 9, borderRadius: 6, background: C.g1, overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { height: "100%", width: `${w}%`, background: col, borderRadius: 6 } })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4, width: 56, textAlign: "right" } }, v)))), /* @__PURE__ */ import_react.default.createElement("button", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: 16, borderRadius: 16, background: `linear-gradient(135deg,${C.g5},${C.g6})`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", marginTop: 14, boxShadow: "0 6px 16px -6px rgba(13,162,152,.5)" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 5v14M5 12h14" }), s: 18, c: "#fff" }), t.logToday), /* @__PURE__ */ import_react.default.createElement(Warn, { t, kind: "danger" }, t.emergency), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.reportShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginBottom: 4, fontSize: 13.5 } }, t.reportShareSub), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.building, b: t.toKdca, s: t.toKdcaSub, chev: true, onClick: () => {
+    } }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.hospital, b: t.toClinic, s: t.toClinicSub, chev: true, onClick: () => {
+    } })));
+  }
+  function My({ t, lang, profile }) {
+    const events = lang === "ko" ? [["\uC601\uC720\uC544\uAE30", "BCG\xB7B\uD615\uAC04\uC5FC\xB7DTaP \uB4F1 \uAE30\uCD08\uC811\uC885", "1958~1959 \xB7 \uD45C\uC900 \uC77C\uC815 \uC644\uB8CC", "done"], ["\uC131\uC778\uAE30", "A\uD615\uAC04\uC5FC \xB7 Tdap", "2015 \xB7 OO\uC758\uC6D0", "done"], ["\uB178\uB144\uAE30", "\uD3D0\uB834\uAD6C\uADE0(PPSV23)", "2024.03.02 \xB7 OO\uB0B4\uACFC", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2025.10.14 \xB7 OO\uBCF4\uAC74\uC18C", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2026.10 \uC608\uC815 \xB7 \uC54C\uB9BC \uC124\uC815\uB428", "open"], ["", "\uB300\uC0C1\uD3EC\uC9C4", "\uBBF8\uC811\uC885 \xB7 \uC0C1\uB2F4 \uAD8C\uC7A5", "warn"]] : [["Infancy", "BCG \xB7 Hep B \xB7 DTaP (primary series)", "1958\u20131959 \xB7 completed", "done"], ["Adulthood", "Hepatitis A \xB7 Tdap", "2015 \xB7 OO clinic", "done"], ["Later life", "Pneumococcal (PPSV23)", "2024.03.02 \xB7 OO internal med", "done"], ["", "Influenza (flu)", "2025.10.14 \xB7 OO health center", "done"], ["", "Influenza (flu)", "Oct 2026 \xB7 reminder set", "open"], ["", "Shingles", "Not yet \xB7 worth discussing", "warn"]];
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.my), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.myRecord), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, profile.name, " \xB7 ", TONES[profile.ageGroup].label[lang], " \xB7 ", t.lifelong), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, marginTop: 14 } }, [["12", t.done, C.g1, C.g5], ["1", t.upcoming, C.card, C.ink], ["1", t.discuss, C.coralBg, C.coralD]].map(([n, l, bg, col], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { flex: 1, borderRadius: 18, padding: "16px 8px", textAlign: "center", background: bg, border: bg === C.card ? `1px solid ${C.line}` : "none" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 24, fontWeight: 800, color: col, display: "block" } }, n), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: C.d4, marginTop: 5, display: "block" } }, l)))), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", paddingLeft: 24 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: 6, top: 8, bottom: 8, width: 2, background: C.g2 } }), events.map(([era, b, s, st], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { position: "relative", marginBottom: i === events.length - 1 ? 0 : 17 } }, era && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: C.g5, marginBottom: 8 } }, era), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: -24, top: era ? 27 : 2, width: 14, height: 14, borderRadius: "50%", background: st === "done" ? C.g4 : C.card, border: `3px solid ${st === "warn" ? C.coral : st === "open" ? C.g4 : C.card}`, boxShadow: st === "done" ? "none" : `0 0 0 1px ${C.g2}` } }), /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, display: "block", marginTop: 1, color: st === "warn" ? C.coralD : st === "open" ? C.g5 : C.d4 } }, s))))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.connect), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkHealth, s: t.linkHealthSub }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkPgx, s: t.linkPgxSub, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.violetBg } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.violetD }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.violetD, lineHeight: 1.5 } }, t.sensitive)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.hwShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#4285F4", letter: "G", b: t.hwGoogle, s: t.hwGoogleSub, tip: t.hwTipGoogle }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#C15F3C", letter: "A", b: t.hwAnthropic, s: t.hwAnthropicSub, tip: t.hwTipAnthropic }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#10A37F", letter: "C", b: t.hwChatgpt, s: t.hwChatgptSub, tip: t.hwTipChatgpt, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.g0, border: `1px solid ${C.g2}` } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.hwNote)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.notif), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.kkoInfo, s: t.kkoInfoSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.timing, s: t.timingSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.flightChk, s: t.flightChkSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.newsNew, s: t.newsNewSub, last: true })));
+  }
+  function HwRow({ color, letter, b, s, tip, last }) {
+    const [hover, setHover] = (0, import_react.useState)(false);
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", borderBottom: last ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false), onClick: () => setHover((h) => !h), style: { display: "flex", alignItems: "center", gap: 12, padding: "13px 2px", cursor: "pointer" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 36, height: 36, borderRadius: 11, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 16, fontWeight: 800 } }, letter), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4 } }, s)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 6l6 6-6 6" }), s: 18, c: C.d5 }))), hover && tip && /* @__PURE__ */ import_react.default.createElement("div", { style: { margin: "0 2px 12px", padding: "12px 13px", background: `linear-gradient(135deg,${C.g0},${C.g1})`, border: `1px solid ${C.g2}`, borderRadius: 12, fontSize: 12, color: C.g6, lineHeight: 1.55, animation: "fade .2s ease" } }, tip));
+  }
+  function Tog({ b, s, defOn, last }) {
+    const [on, setOn] = (0, import_react.useState)(defOn || false);
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 2px", borderBottom: last ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 600, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4 } }, s)), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setOn(!on), style: { width: 48, height: 28, borderRadius: 999, background: on ? C.g4 : C.d5, position: "relative", cursor: "pointer", transition: ".22s", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", top: 3, left: on ? 23 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: ".22s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" } })));
+  }
+  var __root = ReactDOM.createRoot(document.getElementById("root"));
+  __root.render(import_react.default.createElement(App));
+})();
+</script>
+<!-- ===== MediNote HW read 레이어 (기존 UI 변경 없음 · Web Bluetooth 실제 기기 읽기) ===== -->
+<style>
+.mnhw-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(6,65,62,.45);display:none;align-items:flex-end;justify-content:center;font-family:'Pretendard',-apple-system,sans-serif;}
+.mnhw-ov.on{display:flex;}
+.mnhw-sheet{width:100%;max-width:440px;background:#fff;border-radius:22px 22px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px);color:#324744;max-height:84vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(6,65,62,.25);}
+.mnhw-h{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.mnhw-h b{font-size:18px;color:#122423;font-weight:800;letter-spacing:-.02em;}
+.mnhw-h .x{margin-left:auto;font-size:24px;color:#8FA6A2;cursor:pointer;line-height:1;padding:0 4px;}
+.mnhw-sub{font-size:12.5px;color:#5A716D;margin-bottom:14px;line-height:1.6;}
+.mnhw-btn{width:100%;padding:13px;border:none;border-radius:13px;font-family:inherit;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,#12BDB0,#0A7168);cursor:pointer;box-shadow:0 6px 16px rgba(18,189,176,.3);}
+.mnhw-btn.ghost{background:#fff;color:#0A7168;border:1.5px solid #E1F1EE;box-shadow:none;margin-top:9px;}
+.mnhw-read{display:flex;align-items:center;gap:12px;background:#EEFBF8;border:1px solid #D8F5EF;border-radius:14px;padding:12px 14px;margin-top:9px;}
+.mnhw-read .ic{width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.mnhw-read .t{font-size:12.5px;color:#5A716D;font-weight:700;}
+.mnhw-read .v{font-size:20px;font-weight:800;color:#0A7168;}
+.mnhw-note{font-size:11.5px;color:#8FA6A2;line-height:1.6;margin-top:12px;}
+.mnhw-st{font-size:12.5px;color:#0A7168;margin-top:10px;min-height:16px;font-weight:700;}
+</style>
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var readings={};
+
+  // (1) 기존 "Google 건강기기 연결 / Health Connect" 항목 클릭을 감지 → 실제 기기 읽기 실행 (새 UI 요소 없음)
+  document.addEventListener("click",function(e){
+    try{
+      var n=e.target,depth=0;
+      while(n&&depth<6){ var t=(n.textContent||""); if(t.length<90&&/(건강기기|Health Connect|건강 기기 연결|건강기기 연결)/.test(t)){ openSheet(); connect(); return; } n=n.parentElement; depth++; }
+    }catch(_){}
+  },true);
+
+  function ensureSheet(){
+    var ov=document.getElementById("mnhwOv");
+    if(ov) return ov;
+    ov=document.createElement("div"); ov.className="mnhw-ov"; ov.id="mnhwOv";
+    ov.innerHTML='<div class="mnhw-sheet" id="mnhwSheet"></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("on"); });
+    return ov;
+  }
+  function openSheet(){
+    var ov=ensureSheet(), s=document.getElementById("mnhwSheet");
+    var supported=!!(navigator.bluetooth);
+    s.innerHTML=
+      '<div class="mnhw-h"><b>건강 기기 읽기</b><span class="x" id="mnhwX">×</span></div>'+
+      '<div class="mnhw-sub">동의 기반으로 블루투스 건강기기(심박·체온·혈압·배터리)를 연결해 값을 읽어옵니다. 앱은 정보 제공까지만 하며 판정·처방은 하지 않습니다.</div>'+
+      (supported
+        ? '<button class="mnhw-btn" id="mnhwConn">블루투스 기기 연결·읽기</button><div id="mnhwOut"></div><button class="mnhw-btn ghost" id="mnhwSave" style="display:none">읽은 값 클라우드에 저장</button><div class="mnhw-st" id="mnhwSt"></div>'
+        : '<div class="mnhw-note">이 브라우저는 Web Bluetooth 미지원입니다. Android Chrome에서 열어 주세요(iOS Safari 미지원).</div>')+
+      '<div class="mnhw-note">※ Health Connect·Wear OS(안드로이드 건강데이터)는 웹에서 직접 접근이 불가하며, 앱을 Play스토어용 TWA로 감쌀 때 네이티브 브리지가 필요합니다. 여기서는 표준 블루투스(BLE) 기기를 직접 읽습니다.</div>';
+    document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
+    var c=document.getElementById("mnhwConn"); if(c) c.onclick=connect;
+    var sv=document.getElementById("mnhwSave"); if(sv) sv.onclick=saveCloud;
+    ov.classList.add("on");
+  }
+  function st(m){ var e=document.getElementById("mnhwSt"); if(e) e.textContent=m; }
+  function addRead(icon,label,val){
+    readings[label]={value:val,ts:Date.now()};
+    var out=document.getElementById("mnhwOut"); if(!out) return;
+    var id="mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"");
+    var html='<div class="mnhw-read" id="'+id+'"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>';
+    var ex=document.getElementById(id); if(ex) ex.outerHTML=html; else out.insertAdjacentHTML("beforeend",html);
+    var sv=document.getElementById("mnhwSave"); if(sv) sv.style.display="block";
+  }
+  async function connect(){
+    if(!navigator.bluetooth){ st("이 브라우저는 Web Bluetooth 미지원입니다."); return; }
+    try{
+      st("기기를 선택하세요…");
+      var dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:["heart_rate","health_thermometer","blood_pressure","battery_service"]});
+      st((dev.name||"기기")+" 연결 중…");
+      var server=await dev.gatt.connect();
+      st((dev.name||"기기")+" 연결됨 · 값 읽는 중…");
+      try{ var bs=await server.getPrimaryService("battery_service"); var bc=await bs.getCharacteristic("battery_level"); var bv=await bc.readValue(); addRead("🔋","기기 배터리",bv.getUint8(0)+"%"); }catch(_){}
+      try{ var hs=await server.getPrimaryService("heart_rate"); var hc=await hs.getCharacteristic("heart_rate_measurement"); await hc.startNotifications();
+        hc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var hr=(f&1)?d.getUint16(1,true):d.getUint8(1); addRead("❤️","심박수",hr+" bpm"); }); }catch(_){}
+      try{ var ts=await server.getPrimaryService("health_thermometer"); var tc=await ts.getCharacteristic("temperature_measurement"); await tc.startNotifications();
+        tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); var exp=d.getInt8(4); var t=mant*Math.pow(10,exp); addRead("🌡️","체온",t.toFixed(1)+" ℃"); }); }catch(_){}
+      try{ var ps=await server.getPrimaryService("blood_pressure"); var pc=await ps.getCharacteristic("blood_pressure_measurement"); await pc.startNotifications();
+        pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); } addRead("🩸","혈압",Math.round(sf(1))+"/"+Math.round(sf(3))+" mmHg"); }); }catch(_){}
+      st("값을 읽었습니다. 안 나오는 항목은 그 기기가 지원하지 않는 것입니다.");
+    }catch(e){
+      var m=(e&&e.message)||String(e);
+      if(/permissions policy|disallowed|SecurityError|not allowed in this context|iframe/i.test(m)){
+        st("이 화면이 미리보기·다른 페이지(iframe) 안에서 열려 블루투스가 차단됐습니다. 배포한 주소를 Android Chrome에서 '단독 탭'으로 열면 정상 작동합니다.");
+      } else if(/cancel/i.test(m)){
+        st("기기 선택을 취소했습니다.");
+      } else {
+        st("연결 실패: "+m);
+      }
+    }
+  }
+  async function saveCloud(){
+    st("저장 중…");
+    try{
+      var key="medinote:hw:guest";
+      var g=await fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(key)+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});
+      var rows=g.ok?await g.json():[]; var val=(rows[0]&&rows[0].value)||{logs:[]}; if(!Array.isArray(val.logs)) val.logs=[];
+      val.logs.push({at:new Date().toISOString(),readings:readings});
+      await fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{key:key,value:val,updated_at:new Date().toISOString()}])});
+      st("클라우드에 저장했습니다.");
+    }catch(e){ st("저장 실패: "+(e.message||e)); }
+  }
+  window.MediNoteHW={ connect:function(){ openSheet(); return connect(); }, open:openSheet, readings:function(){ return readings; } };
+})();
+</script>
+<!-- ===== /HW read 레이어 ===== -->
+<!-- ===== MediNote 접종 알림 웹푸시 구독 (기존 UI 변경 없음) ===== -->
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  // ↓↓↓ 웹푸시 VAPID '공개키'를 발급받아 여기에 붙여넣으세요(가이드 참고). 비어 있으면 브라우저 알림 권한만 요청합니다.
+  var VAPID_PUBLIC="";
+  function b64ToU8(s){ var pad="=".repeat((4-s.length%4)%4); var b=(s+pad).replace(/-/g,"+").replace(/_/g,"/"); var raw=atob(b); var a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
+  async function subscribe(){
+    try{
+      if(!("serviceWorker" in navigator)||!("PushManager" in window)){ alert("이 브라우저는 푸시 알림을 지원하지 않습니다 (Android Chrome 권장)."); return; }
+      var perm=await Notification.requestPermission();
+      if(perm!=="granted"){ alert("알림을 받으려면 알림 권한을 허용해 주세요."); return; }
+      if(!VAPID_PUBLIC){ alert("알림 권한을 켰습니다. 실제 접종 알림 발송은 서버 설정(VAPID 키)을 넣으면 동작합니다."); return; }
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC)});
+      await fetch(SB_URL+"/rest/v1/push_subscriptions",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{endpoint:sub.endpoint, sub:sub.toJSON(), created_at:new Date().toISOString()}])});
+      alert("접종 시기 알림을 켰습니다. 예정일 2주 전·3일 전에 알려드립니다.");
+    }catch(e){ alert("알림 설정 실패: "+(e.message||e)); }
+  }
+  document.addEventListener("click",function(e){
+    try{ var n=e.target,d=0; while(n&&d<6){ var t=(n.textContent||""); if(t.length<70&&/(접종 시기 알림|접종 알림)/.test(t)){ subscribe(); return; } n=n.parentElement; d++; } }catch(_){}
+  },true);
+  window.MediNotePush={ subscribe:subscribe };
+})();
+</script>
+<!-- ===== /웹푸시 구독 레이어 ===== -->
+<!-- ===== MediNote 도우미 답변 → 안내카드 렌더 (기존 UI 변경 없음) ===== -->
+<style>
+.mncard-ov{position:fixed;inset:0;z-index:2147483200;background:rgba(6,65,62,.5);display:none;align-items:center;justify-content:center;padding:16px;font-family:'Pretendard',-apple-system,sans-serif;}
+.mncard-ov.on{display:flex;}
+.mncard{width:100%;max-width:402px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:22px;padding:22px 20px 18px;box-shadow:0 24px 60px rgba(6,65,62,.35);color:#324744;letter-spacing:-.01em;}
+.mncard-eb{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.mncard-eb .dot{width:6px;height:6px;border-radius:50%;background:#12BDB0;box-shadow:0 0 0 4px rgba(18,189,176,.14);}
+.mncard-eb span{font-size:11.5px;font-weight:800;color:#0A7168;letter-spacing:.3px;}
+.mncard-eb .x{margin-left:auto;font-size:23px;color:#8FA6A2;cursor:pointer;line-height:1;padding:0 4px;}
+.mncard h2{font-size:20px;font-weight:800;color:#122423;letter-spacing:-.02em;line-height:1.3;}
+.mncard-lead{margin-top:12px;background:linear-gradient(135deg,#EEFBF8,#D8F5EF);border:1px solid #AEEAE2;border-radius:14px;padding:13px 15px;position:relative;}
+.mncard-lead::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:4px;background:#12BDB0;}
+.mncard-lead .k{font-size:11px;font-weight:800;color:#0DA298;letter-spacing:1px;margin-bottom:3px;padding-left:9px;}
+.mncard-lead .v{font-size:15px;font-weight:800;color:#06413E;line-height:1.5;padding-left:9px;}
+.mncard-sec{margin-top:15px;}
+.mncard-sec .lb{font-size:14.5px;font-weight:800;color:#122423;margin-bottom:5px;}
+.mncard-sec p{font-size:14.5px;color:#324744;line-height:1.66;}
+.mncard-sec ul{list-style:none;}
+.mncard-sec li{position:relative;padding-left:16px;font-size:14.5px;color:#324744;line-height:1.6;margin-bottom:2px;}
+.mncard-sec li::before{content:"";position:absolute;left:2px;top:10px;width:6px;height:6px;border-radius:50%;background:#12BDB0;}
+.mncard-urg{margin-top:15px;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:14px;padding:13px 15px;}
+.mncard-urg .t{font-size:14px;font-weight:800;color:#E4573E;margin-bottom:6px;}
+.mncard-urg ul{list-style:none;}
+.mncard-urg li{position:relative;padding-left:16px;font-size:14px;color:#7A3327;line-height:1.55;margin-bottom:2px;}
+.mncard-urg li::before{content:"";position:absolute;left:3px;top:9px;width:6px;height:6px;border-radius:50%;background:#E4573E;}
+.mncard-call{display:inline-flex;align-items:center;gap:6px;margin-top:9px;background:#E4573E;color:#fff;text-decoration:none;font-weight:800;font-size:13px;border-radius:10px;padding:8px 14px;}
+.mncard-cau{margin-top:15px;background:#FBF3E4;border:1px solid #F1E1C4;border-radius:14px;padding:13px 15px;}
+.mncard-cau .t{font-size:13.5px;font-weight:800;color:#C9832B;margin-bottom:3px;}
+.mncard-cau p{font-size:14px;color:#7A5B22;line-height:1.6;}
+.mncard-ft{margin-top:16px;padding-top:13px;border-top:1px solid #E1F1EE;font-size:11.5px;color:#8FA6A2;line-height:1.55;}
+</style>
+<script>
+(function(){
+  "use strict";
+  function E(s){ return String(s==null?"":s).replace(/[&<>]/g,function(x){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[x];}); }
+  function showCard(c){
+    var ov=document.getElementById("mncardOv");
+    if(!ov){ ov=document.createElement("div"); ov.id="mncardOv"; ov.className="mncard-ov"; ov.innerHTML='<div class="mncard" id="mncardBody"></div>'; document.body.appendChild(ov); ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("on"); }); }
+    var secs=(c.sections||[]).map(function(s){
+      var inner=(s.items&&s.items.length)?('<ul>'+s.items.map(function(i){return '<li>'+E(i)+'</li>';}).join("")+'</ul>'):(s.text?'<p>'+E(s.text)+'</p>':'');
+      return '<div class="mncard-sec"><div class="lb">'+E(s.label||"")+'</div>'+inner+'</div>';
+    }).join("");
+    var urg=(c.urgent&&c.urgent.items&&c.urgent.items.length)?('<div class="mncard-urg"><div class="t">⚠ 이럴 땐 즉시 도움을 받으세요</div><ul>'+c.urgent.items.map(function(i){return '<li>'+E(i)+'</li>';}).join("")+'</ul>'+(c.urgent.call?'<a class="mncard-call" href="tel:'+E(c.urgent.call)+'">'+E(c.urgent.call)+' 전화</a>':'')+'</div>'):'';
+    var cau=c.caution?('<div class="mncard-cau"><div class="t">접종·복용 전 확인</div><p>'+E(c.caution)+'</p></div>'):'';
+    document.getElementById("mncardBody").innerHTML=
+      '<div class="mncard-eb"><span class="dot"></span><span>AI 도우미 · 방준석 연구실 감수</span><span class="x" id="mncardX">×</span></div>'+
+      '<h2>'+E(c.title||"안내")+'</h2>'+
+      (c.summary?'<div class="mncard-lead"><div class="k">한눈에</div><div class="v">'+E(c.summary)+'</div></div>':'')+
+      secs+urg+cau+
+      '<div class="mncard-ft">'+(c.sources?'출처 · '+E(c.sources)+'<br>':'')+'정보 제공·상담 연결까지만 하며, 최종 판단은 진료 의사·약사와 상의해 주세요.</div>';
+    document.getElementById("mncardX").onclick=function(){ ov.classList.remove("on"); };
+    ov.classList.add("on");
+  }
+  window.MediNoteCard={ show:showCard };
+
+  // === DB에 미리 채운 예시 카드 세트 (AI가 만들어 저장 → 앱이 가져와 채움) ===
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  // 내장 예시 카드(seed_cards 반영) — DB 없이도 바로 작동. DB에 medinote:cards가 있으면 그것으로 교체됨.
+  var DBCARDS=[
+    { id:"flu_shot", keywords:["독감 접종","인플루엔자 접종","독감 예방","독감 맞","인플루엔자 예방","독감 백신"],
+      card:{ title:"독감 예방접종 안내", summary:"만성질환이 있으실수록 독감 예방접종의 이점이 큽니다. 만 65세 이상은 국가 무료 대상입니다.",
+        sections:[{label:"이런 분께 특히 권장",items:["만 65세 이상","심장·폐 질환, 당뇨·고혈압 등 만성질환","임신부·영유아 등 고위험군"]},{label:"무료 접종",text:"만 65세 이상은 주소지와 관계없이 전국 위탁의료기관·보건소에서 무료로 접종할 수 있습니다. 정확한 대상·기간은 예방접종도우미(nip.kdca.go.kr)에서 확인하세요."}],
+        caution:"과거 독감 백신 후 중증 알레르기나 계란에 심한 알레르기가 있으시면 접종 전 의사와 상담하세요.", urgent:null, sources:"질병관리청(KDCA)" } },
+    { id:"flu_side", keywords:["독감 부작용","인플루엔자 부작용","독감 이상반응","접종 부작용","백신 부작용","독감 후유증"],
+      card:{ title:"인플루엔자 접종 후 이상반응", summary:"대부분 가벼운 반응으로 곧 사라집니다. 드물게 심한 알레르기 반응 시 즉시 도움을 받으세요.",
+        sections:[{label:"흔한 이상반응",items:["접종 부위 통증·발적 (약 10~20%)","가벼운 발열, 근육통, 피로감"]}],
+        caution:"과거 백신 후 중증 알레르기나 계란 알레르기가 있으면 접종 전 의사와 상담하세요.",
+        urgent:{items:["두드러기, 얼굴·입 부위 붓기","숨이 가빠지거나 호흡 곤란","심한 어지러움, 의식이 흐릿해짐","반복적인 구토"],call:"1339"}, sources:"질병관리청(KDCA)" } },
+    { id:"pneumo", keywords:["폐렴구균","폐렴 예방","폐렴 백신","23가","13가"],
+      card:{ title:"폐렴구균 예방접종 안내", summary:"폐렴구균은 폐렴·수막염 등을 일으킬 수 있어, 만 65세 이상과 고위험군에 접종이 권장됩니다.",
+        sections:[{label:"대상",items:["만 65세 이상 (23가 다당질백신 국가 무료 1회)","만성질환·면역저하 등 고위험군"]},{label:"참고",text:"백신 종류(23가·13가)와 접종 순서는 나이·기저질환에 따라 다릅니다. 정확한 일정은 의사와 상의하거나 예방접종도우미에서 확인하세요."}],
+        caution:"과거 폐렴구균 백신 성분에 중증 알레르기가 있었다면 접종 전 상담이 필요합니다.", urgent:null, sources:"질병관리청(KDCA)" } },
+    { id:"shingles", keywords:["대상포진","포진","싱그릭스","조스타박스"],
+      card:{ title:"대상포진 예방접종 안내", summary:"대상포진은 통증과 신경통 합병증을 남길 수 있어, 중장년 이상에서 예방접종이 권장됩니다.",
+        sections:[{label:"대상",items:["보통 만 50세 이상에서 권장","면역저하 상태는 백신 종류를 의료진과 상의"]},{label:"참고",text:"백신 종류·접종 횟수는 제품·건강 상태에 따라 다르며, 국가 지원 여부는 지역·시기별로 다를 수 있어 확인이 필요합니다."}],
+        caution:"임신 중이거나 면역저하 상태라면 접종 가능 여부를 반드시 의사와 상담하세요.", urgent:null, sources:"질병관리청(KDCA)" } },
+    { id:"covid", keywords:["코로나","코로나19","covid","코로나 백신","코로나 접종"],
+      card:{ title:"코로나19 예방접종 안내", summary:"고령자·기저질환자 등 고위험군은 예방접종으로 중증·합병증 위험을 줄일 수 있습니다.",
+        sections:[{label:"참고",items:["대상·접종 시기·백신 종류는 시기별로 변경됩니다","최신 권고는 예방접종도우미(nip.kdca.go.kr)에서 확인"]}],
+        caution:"과거 코로나 백신 후 중증 알레르기가 있었다면 접종 전 상담이 필요합니다.", urgent:null, sources:"질병관리청(KDCA)" } },
+    { id:"meds_interaction", keywords:["같이 먹어도","함께 먹어도","같이 복용","함께 복용","상호작용","병용","같이 드셔"],
+      card:{ title:"약을 함께 먹어도 되는지 궁금할 때", summary:"여러 약·건강기능식품을 함께 드실 때는 상호작용 확인이 안전합니다. 정확한 판단은 약사와 상의하세요.",
+        sections:[{label:"이렇게 하세요",items:["복용 중인 약·영양제 목록을 약사께 보여주기","새 약(감기약·진통제 등) 추가 전 확인","같은 성분 중복 복용 주의 (예: 해열진통제)"]}],
+        caution:"평소와 다른 증상(심한 어지러움·출혈·발진 등)이 나타나면 복용을 멈추고 약사·의사와 상의하세요.", urgent:null, sources:"약사 상담 권장" } }
+  ];
+  function loadDbCards(){
+    try{
+      fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent("medinote:cards")+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){ if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.cards)) DBCARDS=rows[0].value.cards; })
+        .catch(function(){});
+    }catch(e){}
+  }
+  loadDbCards();
+  window.MediNoteCard.reload=loadDbCards;
+  function matchCard(q){
+    q=(q||"").toLowerCase();
+    for(var i=0;i<DBCARDS.length;i++){ var c=DBCARDS[i], kw=c.keywords||[];
+      for(var j=0;j<kw.length;j++){ if(kw[j] && q.indexOf(String(kw[j]).toLowerCase())>-1) return c.card||c; } }
+    return null;
+  }
+  window.MediNoteCard.match=matchCard;
+  window.MediNoteCard.count=function(){ return DBCARDS.length; };
+
+  // 도우미의 Anthropic 응답을 가로채 카드 JSON을 받아 렌더 (실패 시 원문 그대로 → 도우미 정상)
+  var _f = window.fetch ? window.fetch.bind(window) : null;
+  if(_f){
+    window.fetch = async function(url, opts){
+      var u=(typeof url==="string")?url:(url&&url.url)||"";
+      if(u.indexOf("api.anthropic.com")===-1) return _f(url,opts);
+      // 내부 자동채움 등 [[NOCARD]] 요청은 카드 처리 없이 통과
+      try{ var _b=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}); if(_b&&typeof _b.system==="string"&&_b.system.indexOf("[[NOCARD]]")>-1) return _f(url,opts); }catch(e){}
+      // ① DB에 미리 채운 예시 카드가 질문과 맞으면 AI 호출 없이 즉시 표시
+      try{
+        var qb0=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{});
+        var ms=qb0.messages||[], lastQ="";
+        for(var mi=ms.length-1;mi>=0;mi--){ if(ms[mi].role==="user"){ lastQ=(typeof ms[mi].content==="string")?ms[mi].content:JSON.stringify(ms[mi].content); break; } }
+        var pre=matchCard(lastQ);
+        if(pre){ try{ showCard(pre); }catch(e){} return new Response(JSON.stringify({content:[{type:"text",text:(pre.summary||pre.title||"카드로 안내해 드렸어요.")}]}),{status:200,headers:{"Content-Type":"application/json"}}); }
+      }catch(e){}
+      // ② 없으면 실시간 AI가 카드로 답하도록 요청
+      try{
+        opts=opts||{};
+        var body = (typeof opts.body==="string") ? JSON.parse(opts.body) : (opts.body||{});
+        var instr="\n\n[출력형식] 반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). 이모지·과한 감탄 금지, 담백하고 신뢰감 있는 존댓말, 어르신 친화 짧은 문장. "+
+          '스키마: {"title":"간결한 제목","summary":"핵심 1~2문장","sections":[{"label":"소제목","items":["항목",...]} 또는 {"label":"소제목","text":"문장"}],"caution":"접종/복용 전 상담이 필요한 경우 문장(없으면 \\"\\")","urgent":{"items":["즉시 도움이 필요한 증상",...],"call":"1339"} 또는 null,"sources":"출처(예: 질병관리청)"}';
+        if(typeof body.system==="string") body.system += instr; else body.system = instr;
+        body.max_tokens = Math.max(body.max_tokens||1024, 1400);
+        opts.body = JSON.stringify(body);
+      }catch(e){ return _f(url,opts); }
+      var res = await _f(url, opts);
+      var data; try{ data = await res.clone().json(); }catch(e){ return res; }
+      var text=""; try{ text=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n"); }catch(e){}
+      var card=null; try{ card=JSON.parse(text.replace(/```json|```/g,"").trim()); }catch(e){}
+      if(card && card.title){
+        try{ showCard(card); }catch(e){}
+        var reshaped=Object.assign({},data);
+        reshaped.content=[{type:"text",text:(card.summary||card.title||"카드로 안내해 드렸어요.")}];
+        return new Response(JSON.stringify(reshaped),{status:res.status,statusText:res.statusText||"OK",headers:{"Content-Type":"application/json"}});
+      }
+      return res; // 카드 파싱 실패 → 원문 그대로
+    };
+  }
+})();
+</script>
+<!-- ===== /도우미 카드 렌더 레이어 ===== -->
+
+<!-- ===== 오늘 증상기록 레이어 (비침습 · UI 유지) ===== -->
+<style>
+#mnsy-back{position:fixed;inset:0;background:rgba(6,65,62,.34);backdrop-filter:blur(2px);z-index:99998;opacity:0;pointer-events:none;transition:opacity .22s;}
+#mnsy-back.on{opacity:1;pointer-events:auto;}
+#mnsy-sheet{position:fixed;left:0;right:0;bottom:0;z-index:99999;max-width:480px;margin:0 auto;background:#fff;
+  border-radius:24px 24px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.22);padding:8px 20px calc(22px + env(safe-area-inset-bottom));
+  transform:translateY(102%);transition:transform .26s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;font-family:'Pretendard',-apple-system,sans-serif;letter-spacing:-.01em;}
+#mnsy-sheet.on{transform:translateY(0);}
+#mnsy-sheet .grip{width:42px;height:5px;border-radius:5px;background:#D8E9E6;margin:8px auto 12px;}
+#mnsy-sheet .hd{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
+#mnsy-sheet .hd .em{font-family:'Gaegu',cursive;font-weight:700;font-size:21px;color:#0DA298;}
+#mnsy-sheet .hd .cl{margin-left:auto;border:none;background:#F1FAF9;color:#5A716D;width:32px;height:32px;border-radius:10px;font-size:17px;cursor:pointer;}
+#mnsy-sheet .sub{font-size:12.5px;color:#5A716D;margin:0 2px 14px;line-height:1.55;}
+#mnsy-sheet label{display:block;font-size:12.5px;font-weight:800;color:#0A7168;margin:14px 2px 6px;}
+#mnsy-sheet input,#mnsy-sheet textarea{width:100%;font-family:inherit;font-size:14.5px;color:#122423;border:1.5px solid #E1F1EE;border-radius:12px;padding:11px 13px;background:#F7FCFB;letter-spacing:-.01em;}
+#mnsy-sheet textarea{resize:vertical;min-height:58px;line-height:1.55;}
+#mnsy-sheet input:focus,#mnsy-sheet textarea:focus{outline:none;border-color:#12BDB0;background:#fff;}
+#mnsy-sheet .sev{display:flex;gap:8px;}
+#mnsy-sheet .sev button{flex:1;font-family:inherit;font-weight:800;font-size:13.5px;border:1.5px solid #E1F1EE;background:#F7FCFB;color:#5A716D;border-radius:12px;padding:10px 0;cursor:pointer;transition:.15s;}
+#mnsy-sheet .sev button.sel{background:linear-gradient(135deg,#12BDB0,#0A7168);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(18,189,176,.28);}
+#mnsy-rxwrap{position:relative;}
+#mnsy-ai{position:absolute;right:6px;top:6px;border:none;border-radius:9px;padding:7px 11px;font-family:inherit;font-weight:800;font-size:12px;color:#fff;
+  background:linear-gradient(135deg,#12BDB0,#0DA298);cursor:pointer;box-shadow:0 4px 10px rgba(18,189,176,.3);}
+#mnsy-ai:disabled{opacity:.6;cursor:default;}
+#mnsy-rx{padding-right:78px;}
+#mnsy-hint{font-size:11.5px;color:#8FA6A2;margin:6px 2px 0;line-height:1.5;min-height:15px;}
+#mnsy-hint b{color:#0A7168;}
+#mnsy-save{width:100%;margin-top:18px;font-family:inherit;font-weight:800;font-size:15px;color:#fff;border:none;border-radius:14px;padding:14px 0;cursor:pointer;
+  background:linear-gradient(135deg,#12BDB0,#0A7168);box-shadow:0 8px 20px rgba(18,189,176,.3);}
+#mnsy-st{font-size:12.5px;font-weight:700;color:#0A7168;text-align:center;margin-top:10px;min-height:16px;}
+#mnsy-list{margin-top:16px;}
+#mnsy-list .it{background:#F7FCFB;border:1px solid #E1F1EE;border-radius:13px;padding:11px 13px;margin-bottom:8px;}
+#mnsy-list .it .r1{display:flex;align-items:center;gap:8px;}
+#mnsy-list .it .dt{font-size:12px;font-weight:800;color:#5A716D;}
+#mnsy-list .it .bg{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;}
+#mnsy-list .it .sy{font-size:14px;font-weight:700;color:#122423;margin-top:4px;}
+#mnsy-list .it .mx{font-size:12px;color:#5A716D;margin-top:2px;}
+#mnsy-foot{font-size:11px;color:#8FA6A2;text-align:center;margin-top:14px;line-height:1.55;border-top:1px solid #EEF6F4;padding-top:12px;}
+</style>
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  function _uid(){ try{ return localStorage.getItem("medinote:uid")||"guest"; }catch(e){ return "guest"; } }
+  function REPORT_KEY(){ return "medinote:report:"+_uid(); }
+  var RX_KEYS=["medinote:rx","medit:rx"];   // QR 약봉투(복약정보) 히스토리 저장 키 후보
+  var SEV=[{k:"약함",bg:"#EAF7EC",c:"#3E8E4E"},{k:"보통",bg:"#FBF3E4",c:"#C9832B"},{k:"심함",bg:"#FDEDE9",c:"#E4573E"}];
+
+  function el(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
+  function todayStr(){var d=new Date();function p(n){return(n<10?"0":"")+n;}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
+
+  var meds=[];       // 복약정보 히스토리에서 뽑은 약 이름들
+  var records=[];    // 저장된 증상기록
+  var sev="보통", built=false;
+
+  function build(){
+    if(built) return; built=true;
+    var back=document.createElement("div"); back.id="mnsy-back";
+    var sheet=document.createElement("div"); sheet.id="mnsy-sheet";
+    sheet.innerHTML=
+      '<div class="grip"></div>'+
+      '<div class="hd"><span class="em">오늘 증상 기록</span>'+
+        '<button class="cl" id="mnsy-x" aria-label="닫기">×</button></div>'+
+      '<div class="sub">오늘 몸 상태를 짧게 남겨 두면, 다음 진료·상담 때 그대로 보여 드릴 수 있어요.</div>'+
+      '<label>날짜</label><input id="mnsy-date" type="date">'+
+      '<label>정도</label><div class="sev" id="mnsy-sev"></div>'+
+      '<label>증상</label><input id="mnsy-sym" placeholder="예: 콧물, 두통, 기운 없음">'+
+      '<label>관련 약 <span style="font-weight:600;color:#8FA6A2">· 복약정보에서 자동으로 채워요</span></label>'+
+      '<div id="mnsy-rxwrap"><input id="mnsy-rx" placeholder="복용 중인 약 (자동 채움)">'+
+        '<button id="mnsy-ai" type="button">AI 채움</button></div>'+
+      '<div id="mnsy-hint"></div>'+
+      '<label>메모 <span style="font-weight:600;color:#8FA6A2">· 선택</span></label>'+
+      '<textarea id="mnsy-memo" placeholder="언제부터, 어떤 상황에서 그런지 등"></textarea>'+
+      '<button id="mnsy-save">이 증상 기록하기</button>'+
+      '<button id="mnsy-toreport" type="button" style="width:100%;margin-top:9px;font-family:inherit;font-weight:800;font-size:14px;color:#0A7168;background:#fff;border:1.5px solid #E1F1EE;border-radius:14px;padding:12px 0;cursor:pointer;">기록으로 신고·공유하기</button>'+
+      '<div id="mnsy-st"></div>'+
+      '<div id="mnsy-list"></div>'+
+      '<div id="mnsy-foot">MediNote · 정보 제공·상담 연결까지만, 판정·처방은 하지 않습니다<br>처방은 의사, 조제·상담은 약사와 상의해 주세요.</div>';
+    document.body.appendChild(back); document.body.appendChild(sheet);
+
+    // 심각도 칩
+    var sv=el("mnsy-sev");
+    SEV.forEach(function(o){ var b=document.createElement("button"); b.textContent=o.k; b.dataset.k=o.k;
+      if(o.k===sev) b.className="sel";
+      b.onclick=function(){ sev=o.k; Array.prototype.forEach.call(sv.children,function(c){c.className=(c.dataset.k===sev)?"sel":"";}); };
+      sv.appendChild(b); });
+
+    el("mnsy-date").value=todayStr();
+    el("mnsy-x").onclick=close; back.onclick=close;
+    el("mnsy-ai").onclick=aiFill;
+    el("mnsy-save").onclick=save;
+    el("mnsy-toreport").onclick=function(){ close(); if(window.MediNoteReport) window.MediNoteReport.open(); };
+  }
+
+  function open(){
+    build();
+    loadMeds();      // QR 복약정보 히스토리 → 관련약 자동채움
+    loadRecords();
+    el("mnsy-back").classList.add("on");
+    requestAnimationFrame(function(){ el("mnsy-sheet").classList.add("on"); });
+  }
+  function close(){ el("mnsy-sheet").classList.remove("on"); el("mnsy-back").classList.remove("on"); }
+
+  // ── QR 약봉투(복약정보) 히스토리 로드 → 약 이름 추출 ──
+  function extractMeds(val){
+    var out=[];
+    function pushName(x){ if(!x) return; var n=(typeof x==="string")?x:(x.name||x.med||x.drug||x.title||x.제품명||x.약품명||""); n=String(n).trim(); if(n && out.indexOf(n)===-1) out.push(n); }
+    try{
+      if(Array.isArray(val)) val.forEach(function(row){
+        if(row && Array.isArray(row.meds)) row.meds.forEach(pushName);
+        else if(row && Array.isArray(row.items)) row.items.forEach(pushName);
+        else pushName(row);
+      });
+      else if(val && Array.isArray(val.history)) val.history.forEach(function(h){ (h.meds||h.items||[]).forEach(pushName); if(!h.meds&&!h.items) pushName(h); });
+      else if(val && Array.isArray(val.meds)) val.meds.forEach(pushName);
+      else if(val && Array.isArray(val.rx)) val.rx.forEach(pushName);
+    }catch(e){}
+    return out;
+  }
+  function loadMeds(){
+    meds=[];
+    // 1) 로컬(localStorage)에서 먼저 (오프라인·즉시)
+    try{ RX_KEYS.forEach(function(k){ var s=localStorage.getItem(k); if(s){ try{ meds=meds.concat(extractMeds(JSON.parse(s))); }catch(e){} } }); }catch(e){}
+    fillRx();
+    // 2) Supabase에서 히스토리 가져와 보강
+    try{
+      var q=RX_KEYS.map(function(k){return "key.eq."+encodeURIComponent(k);}).join(",");
+      fetch(SB_URL+"/rest/v1/hub_state?or=("+q+")&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){ (rows||[]).forEach(function(row){ extractMeds(row.value).forEach(function(m){ if(meds.indexOf(m)===-1) meds.push(m); }); }); fillRx(); })
+        .catch(function(){});
+    }catch(e){}
+  }
+  function fillRx(){
+    var inp=el("mnsy-rx"); if(!inp) return;
+    if(meds.length && !inp.value){ inp.value=meds.slice(0,4).join(", "); }
+    var h=el("mnsy-hint");
+    if(h) h.innerHTML = meds.length
+      ? ('복약정보 히스토리에서 <b>'+meds.length+'개</b> 약을 찾았어요. [AI 채움]을 누르면 오늘 증상과 관련 있는 약만 골라 정리해 드려요.')
+      : '복약정보(QR 약봉투) 기록이 아직 없어요. 약 이름을 직접 적으셔도 됩니다.';
+  }
+
+  // ── AI 자동채움: 증상 + 복약 히스토리 → 관련약·메모 (카드 처리 없이 [[NOCARD]]) ──
+  function aiFill(){
+    var sym=(el("mnsy-sym").value||"").trim();
+    if(!meds.length && !sym){ el("mnsy-hint").innerHTML='먼저 <b>증상</b>을 적어 주시면, 관련 있는 약을 더 잘 골라 드려요.'; return; }
+    var btn=el("mnsy-ai"); btn.disabled=true; var old=btn.textContent; btn.textContent="채우는 중…";
+    var sysP="[[NOCARD]] 너는 복약 기록 정리 도우미다. 처방·진단은 하지 않는다. "+
+      "사용자의 오늘 증상과 복용 약 목록을 보고, 그 증상과 관련 있을 만한 약만 골라 관련약으로 정리한다. "+
+      "판정·처방 표현은 쓰지 않는다. 반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). "+
+      '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
+    var usr="오늘 증상: "+(sym||"(미입력)")+"\n복용 중인 약(복약정보 히스토리): "+(meds.length?meds.join(", "):"(기록 없음)");
+    var body={model:"claude-3-5-haiku-20241022",max_tokens:400,system:sysP,messages:[{role:"user",content:usr}]};
+    fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var t=""; try{ t=(d.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n"); }catch(e){}
+        var o=null; try{ o=JSON.parse(t.replace(/```json|```/g,"").trim()); }catch(e){}
+        if(o && (o.med||o.note)){
+          if(o.med) el("mnsy-rx").value=o.med;
+          el("mnsy-hint").innerHTML= esc(o.note||"관련 약을 정리했어요. 최종 판단은 약사·의사와 상의해 주세요.");
+        }else{
+          // AI 실패 시 히스토리 원문으로 채움(끊김 없이)
+          if(meds.length && !el("mnsy-rx").value) el("mnsy-rx").value=meds.join(", ");
+          el("mnsy-hint").innerHTML='복약정보 기록으로 채웠어요. 관련 약만 남기고 다듬어 주세요.';
+        }
+      })
+      .catch(function(){
+        if(meds.length && !el("mnsy-rx").value) el("mnsy-rx").value=meds.join(", ");
+        el("mnsy-hint").innerHTML='지금은 AI 연결이 어려워, 복약정보 기록으로 채웠어요.';
+      })
+      .then(function(){ btn.disabled=false; btn.textContent=old; });
+  }
+
+  // ── 저장 (로컬 우선 → Supabase 동기화) ──
+  function currentRec(){
+    return { date:el("mnsy-date").value||todayStr(), severity:sev,
+      symptom:(el("mnsy-sym").value||"").trim(), meds:(el("mnsy-rx").value||"").trim(),
+      memo:(el("mnsy-memo").value||"").trim(), ts:new Date().toISOString() };
+  }
+  function save(){
+    var rec=currentRec();
+    if(!rec.symptom){ el("mnsy-st").textContent="증상을 한 가지만 적어 주세요."; return; }
+    records.unshift(rec);
+    try{ localStorage.setItem(REPORT_KEY(), JSON.stringify(records)); }catch(e){}
+    renderList();
+    el("mnsy-st").textContent="기록했어요. 저장 중…";
+    // 입력 초기화(정도·날짜는 유지)
+    el("mnsy-sym").value=""; el("mnsy-memo").value="";
+    try{
+      fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",
+        headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},
+        body:JSON.stringify([{key:REPORT_KEY(),value:{records:records},updated_at:new Date().toISOString()}])})
+        .then(function(r){ el("mnsy-st").textContent=r.ok?"저장 완료 · 기기와 클라우드에 안전하게 담겼어요.":"기기에 저장했어요(클라우드는 다음에 동기화)."; })
+        .catch(function(){ el("mnsy-st").textContent="기기에 저장했어요(오프라인)."; });
+    }catch(e){ el("mnsy-st").textContent="기기에 저장했어요."; }
+  }
+
+  function loadRecords(){
+    records=[];
+    try{ var s=localStorage.getItem(REPORT_KEY()); if(s){ var v=JSON.parse(s); records=Array.isArray(v)?v:(v.records||[]); } }catch(e){}
+    renderList();
+    try{
+      fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(REPORT_KEY())+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){ if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.records)){ records=rows[0].value.records; try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){} renderList(); } })
+        .catch(function(){});
+    }catch(e){}
+  }
+  function renderList(){
+    var box=el("mnsy-list"); if(!box) return;
+    if(!records.length){ box.innerHTML=""; return; }
+    box.innerHTML='<div style="font-size:12.5px;font-weight:800;color:#0A7168;margin:6px 2px 8px">최근 기록 '+records.length+'건</div>'+
+      records.slice(0,8).map(function(r){
+        var o=SEV.filter(function(x){return x.k===r.severity;})[0]||SEV[1];
+        return '<div class="it"><div class="r1"><span class="dt">'+esc(r.date)+'</span>'+
+          '<span class="bg" style="background:'+o.bg+';color:'+o.c+'">'+esc(r.severity)+'</span></div>'+
+          '<div class="sy">'+esc(r.symptom)+'</div>'+
+          (r.meds?'<div class="mx">관련약 · '+esc(r.meds)+'</div>':'')+
+          (r.memo?'<div class="mx">'+esc(r.memo)+'</div>':'')+'</div>';
+      }).join("");
+  }
+
+  // ── "증상 기록" 텍스트 클릭 → 시트 오픈 (기존 UI 그대로, 오버레이만 추가) ──
+  document.addEventListener("click",function(e){
+    var t=e.target;
+    // 시트/오버레이 내부 클릭(닫기·헤더 등)은 훅에서 제외 → 닫힘 방해 안 함
+    if(t && t.closest && t.closest("#mnsy-sheet, #mnsy-back")) return;
+    var hop=0;
+    while(t && hop<4){
+      if(t.id==="mnsy-sheet"||t.id==="mnsy-back") return;
+      var tx=(t.textContent||"").trim();
+      if(tx && tx.length<40 && /(증상\s*기록|오늘\s*증상)/.test(tx)){ e.preventDefault(); open(); return; }
+      t=t.parentElement; hop++;
+    }
+  },true);
+
+  window.MediNoteSymptom={ open:open, close:close, records:function(){return records;}, meds:function(){return meds;} };
+})();
+</script>
+<!-- ===== /오늘 증상기록 레이어 ===== -->
+
+<script>window.__MNRP_SRC="PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImtvIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xLCB2aWV3cG9ydC1maXQ9Y292ZXIiPgo8dGl0bGU+7Kad7IOBIOyLoOqzoMK36rO17JygIMK3IE1lZGlOb3RlPC90aXRsZT4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMxMkJEQjAiPgo8bGluayByZWw9Im1hbmlmZXN0IiBocmVmPSLsi6Dqs6Dqs7XsnKAud2VibWFuaWZlc3QiPgo8bGluayByZWw9InByZWNvbm5lY3QiIGhyZWY9Imh0dHBzOi8vZm9udHMuZ29vZ2xlYXBpcy5jb20iPgo8bGluayBocmVmPSJodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tL2NzczI/ZmFtaWx5PUdhZWd1OndnaHRANzAwJmRpc3BsYXk9c3dhcCIgcmVsPSJzdHlsZXNoZWV0Ij4KPGxpbmsgcmVsPSJzdHlsZXNoZWV0IiBocmVmPSJodHRwczovL2Nkbi5qc2RlbGl2ci5uZXQvZ2gvb3Jpb25jYWN0dXMvcHJldGVuZGFyZEB2MS4zLjkvZGlzdC93ZWIvc3RhdGljL3ByZXRlbmRhcmQuY3NzIj4KPHN0eWxlPgo6cm9vdHsKICAtLWcwOiNFRUZCRjg7LS1nMTojRDhGNUVGOy0tZzI6I0FFRUFFMjstLWc0OiMxMkJEQjA7LS1nNTojMERBMjk4Oy0tZzY6IzBBNzE2ODstLWc3OiMwNjQxM0U7CiAgLS1pbms6IzEyMjQyMzstLWQyOiMzMjQ3NDQ7LS1kMzojNUE3MTZEOy0tZDQ6IzhGQTZBMjstLWxpbmU6I0U2RjFFRTstLW1pc3Q6I0YwRjdGNTsKICAtLWFtYmVyOiNGMEE4M0M7LS1hbWJlcmJnOiNGRkY3RUM7LS1jb3JhbDojRjY3OTZCOy0tY29yYWxiZzojRkZGMUVGOy0tY29yYWxsbjojRjZDN0MwOwogIC0tYmx1ZTojMkI3REM5Oy0tYmx1ZWJnOiNFOUYyRkI7LS1ibHVlbG46I0NERTFGNTstLWtha2FvOiNGRUU1MDA7Cn0KKntib3gtc2l6aW5nOmJvcmRlci1ib3g7bWFyZ2luOjA7cGFkZGluZzowO30KYm9keXtmb250LWZhbWlseTonUHJldGVuZGFyZCcsJ0ludGVyJywtYXBwbGUtc3lzdGVtLHNhbnMtc2VyaWY7Y29sb3I6dmFyKC0tZDIpO2xldHRlci1zcGFjaW5nOi0uMDFlbTtsaW5lLWhlaWdodDoxLjc7CiAgYmFja2dyb3VuZDp2YXIoLS1nNyk7ZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpjZW50ZXI7bWluLWhlaWdodDoxMDB2aDt9Ci53cmFwe3dpZHRoOjEwMCU7bWF4LXdpZHRoOjQzMHB4O21pbi1oZWlnaHQ6MTAwdmg7CiAgYmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTgwZGVnLCNFRUZCRjggMCUsI0ZBRkRGQyAzMCUsI0VFRkJGOCAxMDAlKTsKICBib3gtc2hhZG93OjAgMCA2MHB4IHJnYmEoMCwwLDAsLjI4KTsKICBwYWRkaW5nOjI2cHggMThweCBjYWxjKDUwcHggKyBlbnYoc2FmZS1hcmVhLWluc2V0LWJvdHRvbSkpO30KLmV5ZWJyb3d7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O21hcmdpbjowIDRweCAxMnB4O30KLmV5ZWJyb3cgLmRvdHt3aWR0aDo3cHg7aGVpZ2h0OjdweDtib3JkZXItcmFkaXVzOjUwJTtiYWNrZ3JvdW5kOnZhcigtLWc0KTtib3gtc2hhZG93OjAgMCAwIDRweCByZ2JhKDE4LDE4OSwxNzYsLjE0KTt9Ci5leWVicm93IHNwYW57Zm9udC1zaXplOjEyLjVweDtmb250LXdlaWdodDo4MDA7bGV0dGVyLXNwYWNpbmc6LjRweDtjb2xvcjp2YXIoLS1nNik7fQouZXllYnJvdyAuY3V0ZXtmb250LWZhbWlseTonR2FlZ3UnLGN1cnNpdmU7Zm9udC13ZWlnaHQ6NzAwO2ZvbnQtc2l6ZToxNnB4O2NvbG9yOnZhcigtLWc1KTttYXJnaW4tbGVmdDphdXRvO29wYWNpdHk6Ljk7fQouaDF7Zm9udC1mYW1pbHk6J0dhZWd1JyxjdXJzaXZlO2ZvbnQtd2VpZ2h0OjcwMDtmb250LXNpemU6MjhweDtjb2xvcjp2YXIoLS1pbmspO2xldHRlci1zcGFjaW5nOi0uMDJlbTttYXJnaW46MnB4IDJweDt9Ci5sZWFke2ZvbnQtc2l6ZToxMy41cHg7Y29sb3I6dmFyKC0tZDMpO21hcmdpbjo0cHggMnB4IDEycHg7bGluZS1oZWlnaHQ6MS42O30KLmxlYWQgYntjb2xvcjp2YXIoLS1nNik7fQoKLmNsb3Vke2Rpc3BsYXk6aW5saW5lLWZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo3cHg7Zm9udC1zaXplOjExLjVweDtmb250LXdlaWdodDo4MDA7cGFkZGluZzo1cHggMTFweDtib3JkZXItcmFkaXVzOjIwcHg7bWFyZ2luOjAgMnB4IDE2cHg7CiAgYmFja2dyb3VuZDojRUVGNkY0O2NvbG9yOnZhcigtLWQzKTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO30KLmNsb3VkIC5ke3dpZHRoOjhweDtoZWlnaHQ6OHB4O2JvcmRlci1yYWRpdXM6NTAlO2JhY2tncm91bmQ6I0M3RDNEMTt9Ci5jbG91ZC5vbntiYWNrZ3JvdW5kOiNFQUY3RUM7Y29sb3I6IzJGN0Q0ODtib3JkZXItY29sb3I6I0NERUJENjt9IC5jbG91ZC5vbiAuZHtiYWNrZ3JvdW5kOiMyRkJGNzE7Ym94LXNoYWRvdzowIDAgMCAzcHggcmdiYSg0NywxOTEsMTEzLC4xNik7fQouY2xvdWQub2Zme2JhY2tncm91bmQ6dmFyKC0tY29yYWxiZyk7Y29sb3I6I0IyM0EyODtib3JkZXItY29sb3I6dmFyKC0tY29yYWxsbik7fSAuY2xvdWQub2ZmIC5ke2JhY2tncm91bmQ6dmFyKC0tY29yYWwpO30KCi5jYXJke2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWxpbmUpO2JvcmRlci1yYWRpdXM6MjBweDtwYWRkaW5nOjE4cHggMThweCAxNnB4O2JveC1zaGFkb3c6MCAxNHB4IDQwcHggcmdiYSg2LDY1LDYyLC4wOCk7bWFyZ2luLWJvdHRvbToxNnB4O30KLmNhcmQgLmN0e2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjlweDttYXJnaW4tYm90dG9tOjEwcHg7fQouY2FyZCAuY3QgLmlje3dpZHRoOjMycHg7aGVpZ2h0OjMycHg7Ym9yZGVyLXJhZGl1czo5cHg7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2ZsZXgtc2hyaW5rOjA7YmFja2dyb3VuZDp2YXIoLS1nMCk7Y29sb3I6dmFyKC0tZzYpO30KLmNhcmQgLmN0IC5pYyBzdmd7d2lkdGg6MThweDtoZWlnaHQ6MThweDt9Ci5jYXJkIC5jdCAudHtmb250LXNpemU6MTUuNXB4O2ZvbnQtd2VpZ2h0OjgwMDtjb2xvcjp2YXIoLS1pbmspO30KLmNhcmQgLmN0IC50IHNtYWxse2Rpc3BsYXk6YmxvY2s7Zm9udC1zaXplOjExLjVweDtmb250LXdlaWdodDo2MDA7Y29sb3I6dmFyKC0tZDMpO21hcmdpbi10b3A6MXB4O30KCmxhYmVse2Rpc3BsYXk6YmxvY2s7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6ODAwO2NvbG9yOnZhcigtLWc2KTttYXJnaW46MCAycHggNnB4O30KaW5wdXR7d2lkdGg6MTAwJTtmb250LWZhbWlseTppbmhlcml0O2ZvbnQtc2l6ZToxNC41cHg7Y29sb3I6dmFyKC0taW5rKTtib3JkZXI6MS41cHggc29saWQgdmFyKC0tbGluZSk7Ym9yZGVyLXJhZGl1czoxMnB4O3BhZGRpbmc6MTFweCAxM3B4O2JhY2tncm91bmQ6I0Y3RkNGQjtsZXR0ZXItc3BhY2luZzotLjAxZW07fQppbnB1dDpmb2N1c3tvdXRsaW5lOm5vbmU7Ym9yZGVyLWNvbG9yOnZhcigtLWc0KTtiYWNrZ3JvdW5kOiNmZmY7fQoucm93e2Rpc3BsYXk6ZmxleDtnYXA6OHB4O2FsaWduLWl0ZW1zOmNlbnRlcjt9Ci5yb3cgaW5wdXR7ZmxleDoxO30KLmJ0bntmb250LWZhbWlseTppbmhlcml0O2ZvbnQtd2VpZ2h0OjgwMDtmb250LXNpemU6MTMuNXB4O2JvcmRlcjpub25lO2JvcmRlci1yYWRpdXM6MTFweDtwYWRkaW5nOjExcHggMTRweDtjdXJzb3I6cG9pbnRlcjtjb2xvcjojZmZmOwogIGJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZyx2YXIoLS1nNCksdmFyKC0tZzYpKTtib3gtc2hhZG93OjAgNnB4IDE0cHggcmdiYSgxOCwxODksMTc2LC4yNik7d2hpdGUtc3BhY2U6bm93cmFwO30KLmJ0bi5zbXtwYWRkaW5nOjlweCAxMnB4O2ZvbnQtc2l6ZToxMi41cHg7fQouYnRuLmdob3N0e2JhY2tncm91bmQ6I2ZmZjtjb2xvcjp2YXIoLS1nNik7Ym9yZGVyOjEuNXB4IHNvbGlkIHZhcigtLWxpbmUpO2JveC1zaGFkb3c6bm9uZTt9Ci5idG46ZGlzYWJsZWR7b3BhY2l0eTouNTU7Y3Vyc29yOmRlZmF1bHQ7fQouaGludHtmb250LXNpemU6MTEuNXB4O2NvbG9yOnZhcigtLWQ0KTttYXJnaW4tdG9wOjdweDtsaW5lLWhlaWdodDoxLjU7fQouaGludCBie2NvbG9yOnZhcigtLWc2KTt9CgovKiDqs4TsoJUgKi8KLmFjY3R7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTBweDt9Ci5hY2N0IC5hdnt3aWR0aDozOHB4O2hlaWdodDozOHB4O2JvcmRlci1yYWRpdXM6NTAlO2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZyx2YXIoLS1nNCksdmFyKC0tZzYpKTtjb2xvcjojZmZmO2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtmb250LXdlaWdodDo4MDA7Zm9udC1zaXplOjE1cHg7ZmxleC1zaHJpbms6MDt9Ci5hY2N0IC5ubXtmb250LXNpemU6MTRweDtmb250LXdlaWdodDo4MDA7Y29sb3I6dmFyKC0taW5rKTtsaW5lLWhlaWdodDoxLjI7fQouYWNjdCAuZW17Zm9udC1zaXplOjEycHg7Y29sb3I6dmFyKC0tZDMpO30KLmFjY3QgLmJ0bnttYXJnaW4tbGVmdDphdXRvO30KLmdidG57ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2dhcDo5cHg7d2lkdGg6MTAwJTtmb250LWZhbWlseTppbmhlcml0O2ZvbnQtd2VpZ2h0OjgwMDtmb250LXNpemU6MTRweDtjb2xvcjojM2M0MDQzOwogIGJhY2tncm91bmQ6I2ZmZjtib3JkZXI6MS41cHggc29saWQgI2RhZGNlMDtib3JkZXItcmFkaXVzOjEycHg7cGFkZGluZzoxMXB4IDA7Y3Vyc29yOnBvaW50ZXI7fQouZ2J0biBzdmd7d2lkdGg6MThweDtoZWlnaHQ6MThweDt9CgovKiDshKTsoJXCt+yXsOqysOyDge2DnCAqLwouc2V0e2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEwcHg7cGFkZGluZzoxMXB4IDJweDtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1taXN0KTt9Ci5zZXQ6bGFzdC1jaGlsZHtib3JkZXItYm90dG9tOm5vbmU7fQouc2V0IC5ubXtmb250LXNpemU6MTMuNXB4O2ZvbnQtd2VpZ2h0OjgwMDtjb2xvcjp2YXIoLS1pbmspO30KLnNldCAuZHN7Zm9udC1zaXplOjExLjVweDtjb2xvcjp2YXIoLS1kNCk7bWFyZ2luLXRvcDoxcHg7fQouc2V0IC5waWxse21hcmdpbi1sZWZ0OmF1dG87Zm9udC1zaXplOjExcHg7Zm9udC13ZWlnaHQ6ODAwO3BhZGRpbmc6NHB4IDExcHg7Ym9yZGVyLXJhZGl1czoyMHB4O3doaXRlLXNwYWNlOm5vd3JhcDt9Ci5zZXQgLnBpbGwub257YmFja2dyb3VuZDojRUFGN0VDO2NvbG9yOiMyRjdENDg7fQouc2V0IC5waWxsLm9mZntiYWNrZ3JvdW5kOiNGMEYzRjI7Y29sb3I6IzlBQUFBNzt9Ci5zZXQub2ZmIC5ubXtjb2xvcjojOUFBQUE3O30KCi8qIOqygOyDiSDsnpDrj5nsmYTshLEgKi8KLnNlYXJjaHtwb3NpdGlvbjpyZWxhdGl2ZTt9CiNzdWd7cG9zaXRpb246YWJzb2x1dGU7bGVmdDowO3JpZ2h0OjA7dG9wOmNhbGMoMTAwJSArIDRweCk7ei1pbmRleDo0MDtiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1saW5lKTtib3JkZXItcmFkaXVzOjEycHg7Ym94LXNoYWRvdzowIDEycHggMzBweCByZ2JhKDYsNjUsNjIsLjE0KTtvdmVyZmxvdzpoaWRkZW47ZGlzcGxheTpub25lO30KI3N1Zy5vbntkaXNwbGF5OmJsb2NrO30KI3N1ZyAuc3twYWRkaW5nOjEwcHggMTNweDtmb250LXNpemU6MTMuNXB4O2NvbG9yOnZhcigtLWQyKTtjdXJzb3I6cG9pbnRlcjtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1taXN0KTtkaXNwbGF5OmZsZXg7Z2FwOjhweDthbGlnbi1pdGVtczpjZW50ZXI7fQojc3VnIC5zOmxhc3QtY2hpbGR7Ym9yZGVyLWJvdHRvbTpub25lO30KI3N1ZyAuczpob3Zlciwjc3VnIC5zLmFjdHtiYWNrZ3JvdW5kOnZhcigtLWcwKTt9CiNzdWcgLnMgLnRne2ZvbnQtc2l6ZToxMHB4O2ZvbnQtd2VpZ2h0OjgwMDtwYWRkaW5nOjFweCA3cHg7Ym9yZGVyLXJhZGl1czoyMHB4O2JhY2tncm91bmQ6dmFyKC0tZzEpO2NvbG9yOnZhcigtLWc2KTtmbGV4LXNocmluazowO30KI3N1ZyAucyAudGcubWVke2JhY2tncm91bmQ6dmFyKC0tYW1iZXJiZyk7Y29sb3I6dmFyKC0tYW1iZXIpO30KI3N1ZyAuZW1wdHl7cGFkZGluZzoxMXB4IDEzcHg7Zm9udC1zaXplOjEyLjVweDtjb2xvcjp2YXIoLS1kNCk7fQouY2hpcHN7ZGlzcGxheTpmbGV4O2ZsZXgtd3JhcDp3cmFwO2dhcDo3cHg7bWFyZ2luLXRvcDoxMXB4O30KLmNoaXB7ZGlzcGxheTppbmxpbmUtZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjdweDtiYWNrZ3JvdW5kOnZhcigtLWcwKTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWcyKTtib3JkZXItcmFkaXVzOjIwcHg7cGFkZGluZzo2cHggMTBweCA2cHggMTJweDtmb250LXNpemU6MTIuNXB4O2ZvbnQtd2VpZ2h0OjcwMDtjb2xvcjp2YXIoLS1nNik7fQouY2hpcCAuZHR7Zm9udC13ZWlnaHQ6ODAwO2NvbG9yOnZhcigtLWc3KTt9Ci5jaGlwIC54e2N1cnNvcjpwb2ludGVyO3dpZHRoOjE2cHg7aGVpZ2h0OjE2cHg7Ym9yZGVyLXJhZGl1czo1MCU7YmFja2dyb3VuZDojZmZmO2NvbG9yOnZhcigtLWc2KTtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7Zm9udC1zaXplOjEycHg7fQoubWluaXtmb250LXNpemU6MTEuNXB4O2NvbG9yOnZhcigtLWQ0KTttYXJnaW4tdG9wOjlweDtsaW5lLWhlaWdodDoxLjU7fQoubWluaSBhe2NvbG9yOnZhcigtLWc2KTtmb250LXdlaWdodDo3MDA7Y3Vyc29yOnBvaW50ZXI7fQoKLyog66as7Y+s7Yq4ICovCi5wcmV2e2JhY2tncm91bmQ6dmFyKC0tbWlzdCk7Ym9yZGVyOjFweCBkYXNoZWQgI0M3RTRERjtib3JkZXItcmFkaXVzOjEzcHg7cGFkZGluZzoxMnB4IDEzcHg7Zm9udC1zaXplOjEyLjVweDtjb2xvcjp2YXIoLS1kMik7bGluZS1oZWlnaHQ6MS42NTt3aGl0ZS1zcGFjZTpwcmUtd3JhcDt3b3JkLWJyZWFrOmJyZWFrLXdvcmQ7bWF4LWhlaWdodDoyMDBweDtvdmVyZmxvdzphdXRvO30KLnByZXYuYnVzeXtvcGFjaXR5Oi41NTt9Ci5haXRhZ3tmb250LXNpemU6MTAuNXB4O2ZvbnQtd2VpZ2h0OjgwMDtwYWRkaW5nOjNweCA5cHg7Ym9yZGVyLXJhZGl1czoyMHB4O2JhY2tncm91bmQ6I0VBRjdFQztjb2xvcjojM0U4RTRFO21hcmdpbi1sZWZ0OmF1dG87fQoKLyog7JWh7IWYIOy5tOuTnCAqLwouYWN0e2JvcmRlci1yYWRpdXM6MTZweDtwYWRkaW5nOjE1cHggMTVweCAxNHB4O21hcmdpbi1ib3R0b206MTJweDtib3JkZXI6MXB4IHNvbGlkO30KLmFjdC5rZGNhe2JhY2tncm91bmQ6dmFyKC0tY29yYWxiZyk7Ym9yZGVyLWNvbG9yOnZhcigtLWNvcmFsbG4pO30KLmFjdC5ob3Nwe2JhY2tncm91bmQ6dmFyKC0tZzApO2JvcmRlci1jb2xvcjp2YXIoLS1nMik7fQouYWN0LmJvZ3Vue2JhY2tncm91bmQ6dmFyKC0tYmx1ZWJnKTtib3JkZXItY29sb3I6dmFyKC0tYmx1ZWxuKTt9Ci5hY3QgLmF0e2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEwcHg7Zm9udC1zaXplOjE0LjVweDtmb250LXdlaWdodDo4MDA7bWFyZ2luLWJvdHRvbTo1cHg7fQouYWN0IC5hdCAuaWNve3dpZHRoOjMwcHg7aGVpZ2h0OjMwcHg7Ym9yZGVyLXJhZGl1czo5cHg7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyO2ZsZXgtc2hyaW5rOjA7YmFja2dyb3VuZDojZmZmO30KLmFjdCAuYXQgLmljbyBzdmd7d2lkdGg6MTdweDtoZWlnaHQ6MTdweDt9ICAgICAgICAgIC8qIOKGkCDslYTsnbTsvZgg7YGs6riwIO2GteydvCAqLwouYWN0LmtkY2EgLmF0e2NvbG9yOnZhcigtLWNvcmFsKTt9IC5hY3Qua2RjYSAuaWNve2NvbG9yOnZhcigtLWNvcmFsKTt9Ci5hY3QuaG9zcCAuYXR7Y29sb3I6dmFyKC0tZzYpO30gICAuYWN0Lmhvc3AgLmljb3tjb2xvcjp2YXIoLS1nNik7fQouYWN0LmJvZ3VuIC5hdHtjb2xvcjp2YXIoLS1ibHVlKTt9IC5hY3QuYm9ndW4gLmljb3tjb2xvcjp2YXIoLS1ibHVlKTt9Ci5hY3QgLmFke2ZvbnQtc2l6ZToxMnB4O2NvbG9yOnZhcigtLWQzKTtsaW5lLWhlaWdodDoxLjU1O21hcmdpbi1ib3R0b206MTBweDt9Ci5hY3QgLmVte21hcmdpbi10b3A6OHB4O30KLmFjdCAuYnRuc3tkaXNwbGF5OmZsZXg7Z2FwOjhweDtmbGV4LXdyYXA6d3JhcDttYXJnaW4tdG9wOjlweDt9Ci5hY3QgLmJ0bnMgLmJ0bntmbGV4OjE7bWluLXdpZHRoOjExMHB4O30KLmFjdC5rZGNhIC5idG57YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCNFRTZhNTIsdmFyKC0tY29yYWwpKTtib3gtc2hhZG93OjAgNnB4IDE0cHggcmdiYSgyMjgsODcsNjIsLjI0KTt9Ci5hY3Qua2RjYSAuYnRuLmdob3N0e2JhY2tncm91bmQ6I2ZmZjtjb2xvcjp2YXIoLS1jb3JhbCk7Ym9yZGVyOjEuNXB4IHNvbGlkIHZhcigtLWNvcmFsbG4pO30KLmFjdC5ib2d1biAuYnRue2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNEE5M0Q2LHZhcigtLWJsdWUpKTtib3gtc2hhZG93OjAgNnB4IDE0cHggcmdiYSg0MywxMjUsMjAxLC4yMik7fQouYWN0LmJvZ3VuIC5idG4uZ2hvc3R7YmFja2dyb3VuZDojZmZmO2NvbG9yOnZhcigtLWJsdWUpO2JvcmRlcjoxLjVweCBzb2xpZCB2YXIoLS1ibHVlbG4pO30KLmtidG57YmFja2dyb3VuZDp2YXIoLS1rYWthbykhaW1wb3J0YW50O2NvbG9yOiMzQzFFMUUhaW1wb3J0YW50O2JveC1zaGFkb3c6MCA2cHggMTRweCByZ2JhKDI1NCwyMjksMCwuMzUpIWltcG9ydGFudDt9CiNxcmJveHtkaXNwbGF5Om5vbmU7bWFyZ2luLXRvcDoxMXB4O2JhY2tncm91bmQ6I2ZmZjtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWcyKTtib3JkZXItcmFkaXVzOjE0cHg7cGFkZGluZzoxNHB4O3RleHQtYWxpZ246Y2VudGVyO30KI3FyYm94Lm9ue2Rpc3BsYXk6YmxvY2s7fQojcXJ7ZGlzcGxheTppbmxpbmUtYmxvY2s7fSAjcXIgaW1nLCNxciBjYW52YXN7Ym9yZGVyLXJhZGl1czo4cHg7fQojcXJib3ggLmNhcHtmb250LXNpemU6MTEuNXB4O2NvbG9yOnZhcigtLWQzKTttYXJnaW4tdG9wOjlweDtsaW5lLWhlaWdodDoxLjU7fQouYnN0YXR7Zm9udC1zaXplOjExLjVweDtmb250LXdlaWdodDo3MDA7Y29sb3I6dmFyKC0tYmx1ZSk7bWFyZ2luLXRvcDo4cHg7bWluLWhlaWdodDoxNXB4O2xpbmUtaGVpZ2h0OjEuNTt9CgoubG9nIC5pdHtmb250LXNpemU6MTJweDtjb2xvcjp2YXIoLS1kMyk7Ym9yZGVyLWxlZnQ6M3B4IHNvbGlkIHZhcigtLWcyKTtwYWRkaW5nOjRweCAwIDRweCAxMHB4O21hcmdpbi1ib3R0b206NnB4O2xpbmUtaGVpZ2h0OjEuNTt9Ci5sb2cgLml0IGJ7Y29sb3I6dmFyKC0tZzYpO30KLmVtcHR5e2ZvbnQtc2l6ZToxM3B4O2NvbG9yOnZhcigtLWQ0KTt0ZXh0LWFsaWduOmNlbnRlcjtwYWRkaW5nOjE2cHggMDtsaW5lLWhlaWdodDoxLjY7fQoudG9hc3R7cG9zaXRpb246Zml4ZWQ7bGVmdDo1MCU7Ym90dG9tOjI2cHg7dHJhbnNmb3JtOnRyYW5zbGF0ZVgoLTUwJSkgdHJhbnNsYXRlWSgyMHB4KTtiYWNrZ3JvdW5kOnZhcigtLWc3KTtjb2xvcjojZmZmO2ZvbnQtc2l6ZToxM3B4O2ZvbnQtd2VpZ2h0OjcwMDsKICBwYWRkaW5nOjExcHggMThweDtib3JkZXItcmFkaXVzOjEycHg7Ym94LXNoYWRvdzowIDEwcHggMzBweCByZ2JhKDYsNjUsNjIsLjMpO29wYWNpdHk6MDtwb2ludGVyLWV2ZW50czpub25lO3RyYW5zaXRpb246LjI1czt6LWluZGV4Ojk5OTk7bWF4LXdpZHRoOjg4JTt0ZXh0LWFsaWduOmNlbnRlcjt9Ci50b2FzdC5vbntvcGFjaXR5OjE7dHJhbnNmb3JtOnRyYW5zbGF0ZVgoLTUwJSkgdHJhbnNsYXRlWSgwKTt9Ci5mb290e2ZvbnQtc2l6ZToxMXB4O2NvbG9yOnZhcigtLWQ0KTt0ZXh0LWFsaWduOmNlbnRlcjttYXJnaW4tdG9wOjZweDtsaW5lLWhlaWdodDoxLjY7fQouZm9vdCBie2NvbG9yOnZhcigtLWc2KTt9Ci5zcmN7Zm9udC1zaXplOjEwLjVweDtjb2xvcjojQTlCQ0I4O3RleHQtYWxpZ246Y2VudGVyO21hcmdpbi10b3A6OHB4O2xpbmUtaGVpZ2h0OjEuNzt9Ci5zcmMgYXtjb2xvcjojOEZBNkEyO30KPC9zdHlsZT4KPHNjcmlwdCBzcmM9Imh0dHBzOi8vY2RuLmpzZGVsaXZyLm5ldC9ucG0vQHN1cGFiYXNlL3N1cGFiYXNlLWpzQDIiPjwvc2NyaXB0Pgo8c2NyaXB0IHNyYz0iaHR0cHM6Ly9jZG4uanNkZWxpdnIubmV0L2doL2Rhdmlkc2hpbWpzL3FyY29kZWpzL3FyY29kZS5taW4uanMiPjwvc2NyaXB0Pgo8L2hlYWQ+Cjxib2R5Pgo8ZGl2IGNsYXNzPSJ3cmFwIj4KICA8ZGl2IGNsYXNzPSJleWVicm93Ij48c3BhbiBjbGFzcz0iZG90Ij48L3NwYW4+PHNwYW4+7Kad7IOBIOyLoOqzoCDCtyDqs7XsnKA8L3NwYW4+PHNwYW4gY2xhc3M9ImN1dGUiPuyasOumrCDqsIDsobEg6rG06rCV64W47Yq4PC9zcGFuPjwvZGl2PgogIDxkaXYgY2xhc3M9ImgxIj7quLDroZ3tlZwg7Kad7IOBIOuztOuCtOq4sDwvZGl2PgogIDxkaXYgY2xhc3M9ImxlYWQiPuyVseyXkCDrgqjquLQg7Kad7IOB7J2EIOqygOyDie2VtCDrpqztj6ztirjsl5Ag7LGE7Jqw6rOgLCDsp4jrs5HqtIDrpqzssq0g7Iug6rOgwrfsoJHsooUg67OR7JuQwrfrs7TqsbTshozroZwg67O064OF64uI64ukLiDrpqztj6ztirjripQgPGI+7J6Q64+ZIOyekeyEsTwvYj7rkJjrqbAg6rKA7Yag66eMIO2VmOyLnOuptCDrkKnri4jri6QuPC9kaXY+CiAgPGRpdiBjbGFzcz0iY2xvdWQiIGlkPSJjbG91ZCI+PHNwYW4gY2xhc3M9ImQiPjwvc3Bhbj48c3BhbiBpZD0iY2xvdWR0Ij7tgbTrnbzsmrDrk5wg7IOB7YOcIO2ZleyduCDspJHigKY8L3NwYW4+PC9kaXY+CiAgPHNwYW4gY2xhc3M9ImNsb3VkIiBpZD0iYWNjdGNoaXAiIHN0eWxlPSJtYXJnaW4tbGVmdDo2cHgiPjxzcGFuIGNsYXNzPSJkIiBzdHlsZT0iYmFja2dyb3VuZDojMERBMjk4Ij48L3NwYW4+PHNwYW4gaWQ9ImFjY3R0Ij7qs4TsoJUg7ZmV7J24IOykkeKApjwvc3Bhbj48L3NwYW4+CgogIDwhLS0g7ISk7KCVIMK3IOyXsOqysCDsg4Htg5wgKOyXsOqysCDslYgg65CcIOq4sOuKpeydgCDsnpDrj5kg67mE7Zmc7ISx7ZmUKSAtLT4KICA8ZGl2IGNsYXNzPSJjYXJkIj4KICAgIDxkaXYgY2xhc3M9ImN0Ij48ZGl2IGNsYXNzPSJpYyI+PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPjxwYXRoIGQ9Ik0xOS40IDE1YTEuNjUgMS42NSAwIDAgMCAuMzMgMS44MmwuMDYuMDZhMiAyIDAgMSAxLTIuODMgMi44M2wtLjA2LS4wNmExLjY1IDEuNjUgMCAwIDAtMS44Mi0uMzMgMS42NSAxLjY1IDAgMCAwLTEgMS41MVYyMWEyIDIgMCAwIDEtNCAwdi0uMDlBMS42NSAxLjY1IDAgMCAwIDkgMTkuNGExLjY1IDEuNjUgMCAwIDAtMS44Mi4zM2wtLjA2LjA2YTIgMiAwIDEgMS0yLjgzLTIuODNsLjA2LS4wNmExLjY1IDEuNjUgMCAwIDAgLjMzLTEuODIgMS42NSAxLjY1IDAgMCAwLTEuNTEtMUgzYTIgMiAwIDAgMSAwLTRoLjA5QTEuNjUgMS42NSAwIDAgMCA0LjYgOWExLjY1IDEuNjUgMCAwIDAtLjMzLTEuODJsLS4wNi0uMDZhMiAyIDAgMSAxIDIuODMtMi44M2wuMDYuMDZhMS42NSAxLjY1IDAgMCAwIDEuODIuMzNIOWExLjY1IDEuNjUgMCAwIDAgMS0xLjUxVjNhMiAyIDAgMCAxIDQgMHYuMDlhMS42NSAxLjY1IDAgMCAwIDEgMS41MSAxLjY1IDEuNjUgMCAwIDAgMS44Mi0uMzNsLjA2LS4wNmEyIDIgMCAxIDEgMi44MyAyLjgzbC0uMDYuMDZhMS42NSAxLjY1IDAgMCAwLS4zMyAxLjgyVjlhMS42NSAxLjY1IDAgMCAwIDEuNTEgMUgyMWEyIDIgMCAwIDEgMCA0aC0uMDlhMS42NSAxLjY1IDAgMCAwLTEuNTEgMXoiLz48L3N2Zz48L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0idCI+7ISk7KCVIMK3IOyXsOqysCDsg4Htg5w8c21hbGw+7Jew6rKwIOyViCDrkJwg6riw64ql7J2AIOyekOuPmeycvOuhnCDqurzsoLjsmpQ8L3NtYWxsPjwvZGl2PjwvZGl2PgogICAgPGRpdiBpZD0ic2V0TGlzdCI+PC9kaXY+CiAgPC9kaXY+CgogIDwhLS0g66as7Y+s7Yq4IOyxhOyasOq4sDog6rKA7IOJIOyekOuPmeyZhOyEsSAtLT4KICA8ZGl2IGNsYXNzPSJjYXJkIj4KICAgIDxkaXYgY2xhc3M9ImN0Ij48ZGl2IGNsYXNzPSJpYyI+PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iNyIvPjxwYXRoIGQ9Im0yMSAyMS00LjMtNC4zIi8+PC9zdmc+PC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InQiPuumrO2PrO2KuOyXkCDspp3sg4Eg7LGE7Jqw6riwPHNtYWxsPuyVnuq4gOyekOunjCDsnoXroKXtlZjrqbQg6riw66Gdwrfrs7Xslb0oUVIpIOyghOyytOyXkOyEnCDssL7slYQg7LGE7JuB64uI64ukPC9zbWFsbD48L2Rpdj48L2Rpdj4KICAgIDxkaXYgY2xhc3M9InNlYXJjaCI+CiAgICAgIDxpbnB1dCBpZD0icSIgcGxhY2Vob2xkZXI9IuyYiDog4oCY67Cc7Je04oCZLCDigJgwNy0xOOKAmSwg4oCY7YOA7J2066CI64aA4oCZIOyeheugpSIgYXV0b2NvbXBsZXRlPSJvZmYiPgogICAgICA8ZGl2IGlkPSJzdWciPjwvZGl2PgogICAgPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJjaGlwcyIgaWQ9ImNoaXBzIj48L2Rpdj4KICAgIDxkaXYgY2xhc3M9Im1pbmkiIGlkPSJyZWNtaW5pIj7rtojrn6zsmKTripQg7KSR4oCmPC9kaXY+CiAgPC9kaXY+CgogIDwhLS0g7Iug6rOgIOumrO2PrO2KuCAoQUkg7J6Q64+ZIOyekeyEsSDCtyDqsoDthqAg7KCE7JqpKSAtLT4KICA8ZGl2IGNsYXNzPSJjYXJkIj4KICAgIDxkaXYgY2xhc3M9ImN0Ij48ZGl2IGNsYXNzPSJpYyI+PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE0IDJINmEyIDIgMCAwIDAtMiAydjE2YTIgMiAwIDAgMCAyIDJoMTJhMiAyIDAgMCAwIDItMlY4eiIvPjxwYXRoIGQ9Ik0xNCAydjZoNiIvPjxwYXRoIGQ9Ik04IDEzaDhNOCAxN2g1Ii8+PC9zdmc+PC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InQiPuyLoOqzoMK36rO17JygIOumrO2PrO2KuDxzbWFsbD5BSeqwgCDsnpDrj5kg7J6R7ISxIMK3IOqygO2GoOunjCDtlZjqs6Ag7KCE7IahPC9zbWFsbD48L2Rpdj4KICAgICAgPHNwYW4gY2xhc3M9ImFpdGFnIj5BSSDsnpDrj5k8L3NwYW4+PC9kaXY+CiAgICA8aW5wdXQgaWQ9InJlcG9ydGVyIiBwbGFjZWhvbGRlcj0i7Iug6rOg7J6QIOydtOumhMK37Jew65297LKYKOyEoO2DnSkiIGF1dG9jb21wbGV0ZT0ib2ZmIiBzdHlsZT0ibWFyZ2luLWJvdHRvbTo5cHgiPgogICAgPGRpdiBjbGFzcz0icHJldiIgaWQ9InByZXYiIGFyaWEtcmVhZG9ubHk9InRydWUiPuychOyXkOyEnCDspp3sg4HsnYQg6rKA7IOJ7ZW0IOyxhOyasOuptCDrpqztj6ztirjqsIAg7J6Q64+Z7Jy866GcIOyekeyEseuQqeuLiOuLpC48L2Rpdj4KICAgIDxkaXYgY2xhc3M9InJvdyIgc3R5bGU9Im1hcmdpbi10b3A6MTBweCI+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBzbSIgaWQ9ImFpcmVwIiBzdHlsZT0iZmxleDoyIj5BSeuhnCDrpqztj6ztirgg7J6R7ISxPC9idXR0b24+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBnaG9zdCBzbSIgaWQ9ImNvcHlhbGwiIHN0eWxlPSJmbGV4OjEiPuuzteyCrDwvYnV0dG9uPgogICAgPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJoaW50IiBpZD0icmVwbm90ZSI+7J20IOumrO2PrO2KuOuKlCDsnpDrj5kg7J6R7ISx65Cp64uI64ukLiDtjrjsp5HtlZjsp4Ag7JWK6rOgIDxiPuqygO2GoOunjDwvYj4g7ZWY7IugIOuSpCDslYTrnpgg7LC96rWs66GcIOyghOyGoe2VmOyEuOyalC48L2Rpdj4KICA8L2Rpdj4KCiAgPCEtLSDsp4jrs5HqtIDrpqzssq0gLS0+CiAgPGRpdiBjbGFzcz0iYWN0IGtkY2EiPgogICAgPGRpdiBjbGFzcz0iYXQiPjxkaXYgY2xhc3M9ImljbyI+PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDIyYzUtMyA4LTYgOC0xMVY1bC04LTMtOCAzdjZjMCA1IDMgOCA4IDExeiIvPjxwYXRoIGQ9Ik05IDEybDIgMiA0LTQiLz48L3N2Zz48L2Rpdj7sp4jrs5HqtIDrpqzssq0gwrcg7JiI67Cp7KCR7KKFIO2bhCDsnbTsg4HrsJjsnZEg7Iug6rOgPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJhZCI+7JiI67Cp7KCR7KKFIO2bhCDsnbTsg4HrsJjsnZHsnYAgPGI+7JiI67Cp7KCR7KKF64+E7Jqw66+4PC9iPuyXkOyEnCDsi6Dqs6Dtlanri4jri6QuIOuCtOyaqeydhCDrs7XsgqztlZwg65KkIOyLoOqzoCDtjpjsnbTsp4Drpbwg7Je07Ja0IOu2meyXrOuEo+ycvOyEuOyalC4g6riJ7ZWY66m0IDxiPjEzMzk8L2I+Ljxicj7igLsg7JW9KOydmOyVve2SiCkg67aA7J6R7Jqp7J2AIDxiPktBRVJTPC9iPi48L2Rpdj4KICAgIDxkaXYgY2xhc3M9ImJ0bnMiPgogICAgICA8YnV0dG9uIGNsYXNzPSJidG4iIGlkPSJrZGNhR28iPuuCtOyaqSDrs7XsgqwgKyDsi6Dqs6Ag7Y6Y7J207KeAPC9idXR0b24+CiAgICAgIDxhIGNsYXNzPSJidG4gZ2hvc3QiIGhyZWY9InRlbDoxMzM5IiBzdHlsZT0idGV4dC1hbGlnbjpjZW50ZXI7dGV4dC1kZWNvcmF0aW9uOm5vbmU7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyIj4xMzM5IOyghO2ZlDwvYT4KICAgIDwvZGl2PgogICAgPGRpdiBjbGFzcz0iYnRucyI+PGJ1dHRvbiBjbGFzcz0iYnRuIGdob3N0IiBpZD0ia2FlcnNHbyI+S0FFUlMo7JW9IOu2gOyekeyaqSkg7Je06riwPC9idXR0b24+PC9kaXY+CiAgPC9kaXY+CgogIDwhLS0g7KCR7KKFIOuzkeybkCAtLT4KICA8ZGl2IGNsYXNzPSJhY3QgaG9zcCI+CiAgICA8ZGl2IGNsYXNzPSJhdCI+PGRpdiBjbGFzcz0iaWNvIj48c3ZnIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMyAyMWgxOE01IDIxVjdsOC00djE4TTE5IDIxVjExbC02LTQiLz48cGF0aCBkPSJNOSA5di4wMU05IDEydi4wMU05IDE1di4wMSIvPjwvc3ZnPjwvZGl2Puygkeyiheuwm+ydgCDrs5Hsm5Dsl5Ag6rO17JygPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJhZCI+67OR7JuQIDxiPuydtOuplOydvDwvYj4g65iQ64qUIDxiPuy5tOy5tOyYpO2GoTwvYj7snLzroZwg7KCE64us7ZWY6rGw64KYLCA8Yj5RUuuhnCDtkZzsi5w8L2I+7ZW0IOuzkeybkOyXkOyEnCDsiqTsupTtlZjrj4TroZ0g7ZWp64uI64ukLjwvZGl2PgogICAgPGlucHV0IGNsYXNzPSJlbSIgaWQ9Imhvc3BNYWlsIiB0eXBlPSJlbWFpbCIgcGxhY2Vob2xkZXI9IuuzkeybkCDsnbTrqZTsnbwgKOyYiDogY2xpbmljQGhvc3BpdGFsLmtyKSIgYXV0b2NvbXBsZXRlPSJvZmYiPgogICAgPGlucHV0IGNsYXNzPSJlbSIgaWQ9Imhvc3BLYWthbyIgcGxhY2Vob2xkZXI9IuuzkeybkCDsubTsubTsmKTthqEo7ISg7YOdKSIgYXV0b2NvbXBsZXRlPSJvZmYiPgogICAgPGRpdiBjbGFzcz0iYnRucyI+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biIgaWQ9Imhvc3BTZW5kIj7snbTrqZTsnbzroZwg6rO17JygPC9idXR0b24+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBrYnRuIiBpZD0iaG9zcEthbyI+7Lm07Lm07Jik7YahPC9idXR0b24+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBnaG9zdCIgaWQ9Imhvc3BRciI+UVLroZwg7ZGc7IucPC9idXR0b24+CiAgICA8L2Rpdj4KICAgIDxkaXYgaWQ9InFyYm94Ij48ZGl2IGlkPSJxciI+PC9kaXY+PGRpdiBjbGFzcz0iY2FwIj7rs5Hsm5Dsl5DshJwg7J20IFFS7J2EIOyKpOy6lO2VmOuptCDsmpTslb0g66as7Y+s7Yq466W8IOuzvCDsiJgg7J6I7Iq164uI64ukLjxicj4o7IOB7IS4IOyghOyytOuKlCDsnbTrqZTsnbwv7Lm07Lm07Jik66GcIO2VqOq7mCDrs7TrgrTshLjsmpQpPC9kaXY+PC9kaXY+CiAgPC9kaXY+CgogIDwhLS0g67O06rG07IaMIC0tPgogIDxkaXYgY2xhc3M9ImFjdCBib2d1biI+CiAgICA8ZGl2IGNsYXNzPSJhdCI+PGRpdiBjbGFzcz0iaWNvIj48c3ZnIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMmw5IDR2NmMwIDUtMy44IDguNS05IDEwLTUuMi0xLjUtOS01LTktMTBWNnoiLz48cGF0aCBkPSJNMTIgOHY2TTkgMTFoNiIvPjwvc3ZnPjwvZGl2PuuztOqxtOyGjOyXkCDslYzrpqzquLA8L2Rpdj4KICAgIDxkaXYgY2xhc3M9ImFkIj7rgrQgPGI+7JyE7LmYPC9iPuuhnCDqsIDquYzsmrQg67O06rG07IaM7JmAIOydtOuplOydvOydhCDsnpDrj5nsnLzroZwg7LC+7JWEIOykmOyalC4g67O064K06riwIOyghOyXkCA8Yj7tmZXsnbjrp4w8L2I+IO2VmOyLnOuptCDrkKnri4jri6QuPC9kaXY+CiAgICA8YnV0dG9uIGNsYXNzPSJidG4gZ2hvc3QiIGlkPSJib2d1bkZpbmQiIHN0eWxlPSJ3aWR0aDoxMDAlIj7rgrQg7JyE7LmY66GcIOuztOqxtOyGjCDssL7quLA8L2J1dHRvbj4KICAgIDxkaXYgY2xhc3M9ImJzdGF0IiBpZD0iYm9ndW5TdGF0Ij48L2Rpdj4KICAgIDxpbnB1dCBjbGFzcz0iZW0iIGlkPSJib2d1bk5hbWUiIHBsYWNlaG9sZGVyPSLrs7TqsbTshowg7J2066aEIiBhdXRvY29tcGxldGU9Im9mZiI+CiAgICA8aW5wdXQgY2xhc3M9ImVtIiBpZD0iYm9ndW5BZGRyIiBwbGFjZWhvbGRlcj0i7KO87IaMIiBhdXRvY29tcGxldGU9Im9mZiI+CiAgICA8aW5wdXQgY2xhc3M9ImVtIiBpZD0iYm9ndW5NYWlsIiB0eXBlPSJlbWFpbCIgcGxhY2Vob2xkZXI9IuydtOuplOydvCIgYXV0b2NvbXBsZXRlPSJvZmYiPgogICAgPGRpdiBjbGFzcz0iYnRucyI+CiAgICAgIDxidXR0b24gY2xhc3M9ImJ0biIgaWQ9ImJvZ3VuU2VuZCI+67O06rG07IaM7JeQIOuztOuCtOq4sDwvYnV0dG9uPgogICAgICA8YnV0dG9uIGNsYXNzPSJidG4gZ2hvc3QiIGlkPSJib2d1bkZpbmRNYWlsIj7snbTrqZTsnbwg7LC+6riwPC9idXR0b24+CiAgICA8L2Rpdj4KICA8L2Rpdj4KCiAgPCEtLSDrsJzshqEg7J2066ClIC0tPgogIDxkaXYgY2xhc3M9ImNhcmQgbG9nIj4KICAgIDxkaXYgY2xhc3M9ImN0Ij48ZGl2IGNsYXNzPSJpYyI+PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDh2NGwzIDIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI5Ii8+PC9zdmc+PC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InQiPuuztOuCuCDsnbTroKU8c21hbGw+7J20IOq4sOq4sOyZgCDtgbTrnbzsmrDrk5wo7J6E7IucIERCKeyXkCDquLDroZ3rkKnri4jri6Q8L3NtYWxsPjwvZGl2PjwvZGl2PgogICAgPGRpdiBpZD0ibG9nIj48ZGl2IGNsYXNzPSJlbXB0eSI+7JWE7KeBIOuztOuCuCDsnbTroKXsnbQg7JeG7Iq164uI64ukLjwvZGl2PjwvZGl2PgogIDwvZGl2PgoKICA8ZGl2IGNsYXNzPSJmb290Ij48Yj5NZWRpTm90ZTwvYj4gwrcg7KCV67O0IOygnOqztcK37IOB64u0IOyXsOqysOq5jOyngOunjCwg7YyQ7KCVwrfsspjrsKnsnYAg7ZWY7KeAIOyViuyKteuLiOuLpDxicj7sspjrsKnsnYAg7J2Y7IKsLCDsobDsoJzCt+yDgeuLtOydgCDslb3sgqzsmYAg7IOB7J2Y7ZW0IOyjvOyEuOyalC48L2Rpdj4KICA8ZGl2IGNsYXNzPSJzcmMiPuyLoOqzoCDssL3qtawgwrcg7KeI67OR6rSA66as7LKtIOyYiOuwqeygkeyiheuPhOyasOuvuChuaXAua2RjYS5nby5rcikgwrcg7IOB64u0IDEzMzkgwrcgS0FFUlMoa2FlcnMuZHJ1Z3NhZmUub3Iua3IpIMK3IOychOy5mOKGkuyjvOyGjCBPcGVuU3RyZWV0TWFwPC9kaXY+CjwvZGl2PgoKPGRpdiBjbGFzcz0idG9hc3QiIGlkPSJ0b2FzdCI+PC9kaXY+Cgo8c2NyaXB0PgovKiA9PT09PSBNZWRpTm90ZSDspp3sg4Eg7Iug6rOgwrfqs7XsnKAgwrcg6rKA7IOJ7LGE7JuAICsgUVIgKyBHUFMg67O06rG07IaMICsg7YG065287Jqw65Oc7IOB7YOcID09PT09ICovCihmdW5jdGlvbigpewogICJ1c2Ugc3RyaWN0IjsKICB2YXIgU0JfVVJMPSJodHRwczovL3hhY2xxdnZlcHB2Y2NkcGVienN6LnN1cGFiYXNlLmNvIjsKICB2YXIgU0JfS0VZPSJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKcGMzTWlPaUp6ZFhCaFltRnpaU0lzSW5KbFppSTZJbmhoWTJ4eGRuWmxjSEIyWTJOa2NHVmllbk42SWl3aWNtOXNaU0k2SW1GdWIyNGlMQ0pwWVhRaU9qRTNPRE0zTlRrek56RXNJbVY0Y0NJNk1qQTVPVE16TlRNM01YMC5xWjlxV1Yza1ZtSlc0aFV3alA4Tl9QR2RkTzM3c0p2TENIeC1YYVlMSjlVIjsKICB2YXIgS0RDQV9VUkw9Imh0dHBzOi8vbmlwLmtkY2EuZ28ua3IvaXJocC9pbmZtL2dvVmNudEluZm8uZG8/bWVudUx2PTEmbWVudUNkPTE2NiI7CiAgdmFyIEtBRVJTX1VSTD0iaHR0cHM6Ly9rYWVycy5kcnVnc2FmZS5vci5rci8iOwogIHZhciBQUk9YWT0iaHR0cHM6Ly94YWNscXZ2ZXBwdmNjZHBlYnpzei5mdW5jdGlvbnMuc3VwYWJhc2UuY28vZ292LWRhdGEiOyAvLyDrs7TqsbTquLDqtIAg7J2066mU7J28IOyekOuPmeyhsO2ajCjshKDtg53Ct3NlcnZpY2VLZXkg7ISk7KCVIOyLnCkKICB2YXIgUlhfS0VZUz1bIm1lZGlub3RlOnJ4IiwibWVkaXQ6cngiXTsKICB2YXIgJD1mdW5jdGlvbihpZCl7cmV0dXJuIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKGlkKTt9OwogIGZ1bmN0aW9uIGVzYyhzKXtyZXR1cm4gU3RyaW5nKHM9PW51bGw/IiI6cykucmVwbGFjZSgvWyY8PiJdL2csZnVuY3Rpb24obSl7cmV0dXJueyImIjoiJmFtcDsiLCI8IjoiJmx0OyIsIj4iOiImZ3Q7IiwnIic6IiZxdW90OyJ9W21dO30pO30KCiAgdmFyIHNiPW51bGwsIHVzZXI9bnVsbDsKICB2YXIgdWlkPShmdW5jdGlvbigpeyB0cnl7IHJldHVybiBsb2NhbFN0b3JhZ2UuZ2V0SXRlbSgibWVkaW5vdGU6dWlkIil8fCIiOyB9Y2F0Y2goZSl7IHJldHVybiAiIjsgfSB9KSgpfHwiZ3Vlc3QiOwogIGZ1bmN0aW9uIHJlcG9ydEtleSgpeyByZXR1cm4gIm1lZGlub3RlOnJlcG9ydDoiK3VpZDsgfQogIGZ1bmN0aW9uIHNlbnRLZXkoKXsgcmV0dXJuICJtZWRpbm90ZTpyZXBvcnRzX3NlbnQ6Iit1aWQ7IH0KICB2YXIgU0VWPVt7azoi7JW97ZWoIixiZzoiI0VBRjdFQyIsYzoiIzNFOEU0RSJ9LHtrOiLrs7TthrUiLGJnOiIjRkJGM0U0IixjOiIjQzk4MzJCIn0se2s6IuyLrO2VqCIsYmc6IiNGREVERTkiLGM6IiNFNDU3M0UifV07CgogIHZhciByZWNvcmRzPVtdLCBwaWNrZWQ9e30sIG1lZHM9W10sIHNlbnRMb2c9W10sIGFpUmVwb3J0PW51bGw7CgogIGZ1bmN0aW9uIHRvYXN0KG0peyB2YXIgdD0kKCJ0b2FzdCIpOyB0LnRleHRDb250ZW50PW07IHQuY2xhc3NMaXN0LmFkZCgib24iKTsgY2xlYXJUaW1lb3V0KHQuX3QpOyB0Ll90PXNldFRpbWVvdXQoZnVuY3Rpb24oKXt0LmNsYXNzTGlzdC5yZW1vdmUoIm9uIik7fSwyMTAwKTsgfQogIGZ1bmN0aW9uIGNvcHkodGV4dCl7CiAgICBpZihuYXZpZ2F0b3IuY2xpcGJvYXJkJiZuYXZpZ2F0b3IuY2xpcGJvYXJkLndyaXRlVGV4dCl7IG5hdmlnYXRvci5jbGlwYm9hcmQud3JpdGVUZXh0KHRleHQpLnRoZW4oZnVuY3Rpb24oKXt0b2FzdCgi64K07Jqp7J2EIOuzteyCrO2WiOyWtOyalCIpO30sZmIpOyB9IGVsc2UgZmIoKTsKICAgIGZ1bmN0aW9uIGZiKCl7IHRyeXsgdmFyIHRhPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInRleHRhcmVhIik7IHRhLnZhbHVlPXRleHQ7IHRhLnN0eWxlLnBvc2l0aW9uPSJmaXhlZCI7IHRhLnN0eWxlLm9wYWNpdHk9IjAiOyBkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHRhKTsgdGEuc2VsZWN0KCk7IGRvY3VtZW50LmV4ZWNDb21tYW5kKCJjb3B5Iik7IGRvY3VtZW50LmJvZHkucmVtb3ZlQ2hpbGQodGEpOyB0b2FzdCgi64K07Jqp7J2EIOuzteyCrO2WiOyWtOyalCIpOyB9Y2F0Y2goZSl7IHRvYXN0KCLrs7XsgqzqsIAg7JWIIOuPvOyalC4g6ri46rKMIOuIjOufrCDrs7XsgqztlbQg7KO87IS47JqUIik7IH0gfQogIH0KCiAgLyog4pSA4pSAIO2BtOudvOyasOuTnChTdXBhYmFzZSkg7IOB7YOcIO2ZleyduCDilIDilIAgKi8KICB2YXIgY2xvdWRTdGF0ZT1udWxsOwogIGZ1bmN0aW9uIGNoZWNrQ2xvdWQoKXsKICAgIHZhciBjPSQoImNsb3VkIiksIHQ9JCgiY2xvdWR0Iik7CiAgICBmZXRjaChTQl9VUkwrIi9yZXN0L3YxL2h1Yl9zdGF0ZT9zZWxlY3Q9a2V5JmxpbWl0PTEiLHtoZWFkZXJzOnthcGlrZXk6U0JfS0VZLEF1dGhvcml6YXRpb246IkJlYXJlciAiK1NCX0tFWX19KQogICAgICAudGhlbihmdW5jdGlvbihyKXsKICAgICAgICBpZihyLm9rKXsgY2xvdWRTdGF0ZT10cnVlOyBjLmNsYXNzTmFtZT0iY2xvdWQgb24iOyB0LnRleHRDb250ZW50PSLtgbTrnbzsmrDrk5wgT04gwrcgU3VwYWJhc2Ug7Jew6rKw65CoKGh1Yl9zdGF0ZSkiOyB9CiAgICAgICAgZWxzZSBpZihyLnN0YXR1cz09PTQwNHx8ci5zdGF0dXM9PT00MDApeyBjbG91ZFN0YXRlPWZhbHNlOyBjLmNsYXNzTmFtZT0iY2xvdWQgb2ZmIjsgdC50ZXh0Q29udGVudD0i7YG065287Jqw65OcIOuMgOq4sCDCtyBodWJfc3RhdGUg7YWM7J2067iUIOyDneyEsSDtlYTsmpQo66Gc7LusIOyggOyepeydgCDsnpHrj5kpIjsgfQogICAgICAgIGVsc2UgeyBjbG91ZFN0YXRlPWZhbHNlOyBjLmNsYXNzTmFtZT0iY2xvdWQgb2ZmIjsgdC50ZXh0Q29udGVudD0i7YG065287Jqw65OcIOydkeuLtSDsmKTrpZgoIityLnN0YXR1cysiKSDCtyDroZzsu6wg7KCA7J6l7J2AIOyekeuPmSI7IH0KICAgICAgICByZW5kZXJTZXR0aW5ncygpOwogICAgICB9KQogICAgICAuY2F0Y2goZnVuY3Rpb24oKXsgY2xvdWRTdGF0ZT1mYWxzZTsgYy5jbGFzc05hbWU9ImNsb3VkIG9mZiI7IHQudGV4dENvbnRlbnQ9Iu2BtOudvOyasOuTnCBPRkYgwrcg64Sk7Yq47JuM7YGsL+uvuOumrOuztOq4sCDssKjri6go66Gc7LusIOyggOyepeydgCDsnpHrj5kpIjsgcmVuZGVyU2V0dGluZ3MoKTsgfSk7CiAgfQoKICAvKiDilIDilIAg7ISk7KCVIMK3IOyXsOqysCDsg4Htg5wgKOyXsOqysCDslYgg65CcIOq4sOuKpeydgCDsnpDrj5kg67mE7Zmc7ISx7ZmUKSDilIDilIAgKi8KICBmdW5jdGlvbiBscyhrKXsgdHJ5eyByZXR1cm4gbG9jYWxTdG9yYWdlLmdldEl0ZW0oayk7IH1jYXRjaChlKXsgcmV0dXJuIG51bGw7IH0gfQogIGZ1bmN0aW9uIGZlYXR1cmVzKCl7IHJldHVybiBbCiAgICB7bm06Iu2BtOudvOyasOuTnCDsoIDsnqUiLCBkczoi6riw66Gd7J2EIO2BtOudvOyasOuTnOyXkCDrs7TqtIAiLCBvbjogY2xvdWRTdGF0ZT09PXRydWV9LAogICAge25tOiLroZzqt7jsnbgiLCBkczoi6rOE7KCV7Jy866GcIOq4sOuhnSDsnbTslrTrs7TquLAiLCBvbjogISF1c2VyIHx8IHVpZCE9PSJndWVzdCJ9LAogICAge25tOiJBSSDrpqztj6ztirgiLCBkczoi66as7Y+s7Yq466W8IOunpOuBhOufveqyjCDsnpDrj5kg7J6R7ISxIiwgb246ICEhYXBpS2V5KCl9LAogICAge25tOiLrs7TqsbTshowg7J2066mU7J28IOywvuq4sCIsIGRzOiLqs7Xqs7XrjbDsnbTthLAg7Jew6rKw7J20IO2VhOyalO2VtOyalCIsIG9uOiBscygibWVkaXQ6Z292cHJveHkiKT09PSIxIn0sCiAgICB7bm06Iuy5tOy5tOyYpO2GoSDqs7XsnKAiLCBkczoi7Lm07Lm07JikIOyVse2CpCDsl7DqsrDsnbQg7ZWE7JqU7ZW07JqUIiwgb246ICEhbHMoIm1lZGl0Omtha2Fva2V5Iil9CiAgXTsgfQogIGZ1bmN0aW9uIGdhdGUoaWQsb24peyB2YXIgZWw9JChpZCk7IGlmKCFlbCkgcmV0dXJuOyBlbC5kaXNhYmxlZD0hb247IGVsLnN0eWxlLm9wYWNpdHk9b24/IiI6Ii40NSI7IGVsLnRpdGxlPW9uPyIiOiLshKTsoJXsl5DshJwg7Jew6rKw7ZWY66m0IOyCrOyaqe2VoCDsiJgg7J6I7Ja07JqUIjsgfQogIGZ1bmN0aW9uIHJlbmRlclNldHRpbmdzKCl7CiAgICB2YXIgYm94PSQoInNldExpc3QiKTsgaWYoIWJveCkgcmV0dXJuOwogICAgYm94LmlubmVySFRNTD1mZWF0dXJlcygpLm1hcChmdW5jdGlvbihmKXsKICAgICAgcmV0dXJuICc8ZGl2IGNsYXNzPSJzZXQnKyhmLm9uPyIiOiIgb2ZmIikrJyI+PGRpdj48ZGl2IGNsYXNzPSJubSI+Jytlc2MoZi5ubSkrJzwvZGl2PjxkaXYgY2xhc3M9ImRzIj4nK2VzYyhmLmRzKSsnPC9kaXY+PC9kaXY+JysKICAgICAgICAnPHNwYW4gY2xhc3M9InBpbGwgJysoZi5vbj8ib24iOiJvZmYiKSsnIj4nKyhmLm9uPyLsl7DqsrDrkKgiOiLsl7DqsrAg7JWIIOuQqCIpKyc8L3NwYW4+PC9kaXY+JzsKICAgIH0pLmpvaW4oIiIpOwogICAgLy8g7Jew6rKwIOyViCDrkJwg6riw64ql7J2YIOuyhO2KvOydhCDruYTtmZzshLHtmZQKICAgIGdhdGUoImFpcmVwIiwgISFhcGlLZXkoKSk7CiAgICBnYXRlKCJib2d1bkZpbmRNYWlsIiwgbHMoIm1lZGl0OmdvdnByb3h5Iik9PT0iMSIpOwogICAgZ2F0ZSgiaG9zcEthbyIsICEhbHMoIm1lZGl0Omtha2Fva2V5IikpOwogIH0KCiAgLyog4pSA4pSAIOq4sOuhnSArIOuzteyVvShRUikg66Gc65OcIOKGkiDqsoDsg4kg7J24642x7IqkIOKUgOKUgCAqLwogIGZ1bmN0aW9uIG5vcm1SZWNzKHYpeyBpZighdikgcmV0dXJuIFtdOyBpZihBcnJheS5pc0FycmF5KHYpKSByZXR1cm4gdjsgaWYoQXJyYXkuaXNBcnJheSh2LnJlY29yZHMpKSByZXR1cm4gdi5yZWNvcmRzOyByZXR1cm4gW107IH0KICBmdW5jdGlvbiBsb2FkUmVjb3JkcygpewogICAgcmVjb3Jkcz1bXTsgcGlja2VkPXt9OwogICAgdHJ5eyB2YXIgcz1sb2NhbFN0b3JhZ2UuZ2V0SXRlbShyZXBvcnRLZXkoKSk7IGlmKHMpIHJlY29yZHM9bm9ybVJlY3MoSlNPTi5wYXJzZShzKSk7IH1jYXRjaChlKXt9CiAgICByZW5kZXJDaGlwcygpOyByZWZyZXNoUmVwb3J0KCk7CiAgICB0cnl7CiAgICAgIGZldGNoKFNCX1VSTCsiL3Jlc3QvdjEvaHViX3N0YXRlP2tleT1lcS4iK2VuY29kZVVSSUNvbXBvbmVudChyZXBvcnRLZXkoKSkrIiZzZWxlY3Q9dmFsdWUiLHtoZWFkZXJzOnthcGlrZXk6U0JfS0VZLEF1dGhvcml6YXRpb246IkJlYXJlciAiK1NCX0tFWX19KQogICAgICAgIC50aGVuKGZ1bmN0aW9uKHIpeyByZXR1cm4gci5vaz9yLmpzb24oKTpbXTsgfSkKICAgICAgICAudGhlbihmdW5jdGlvbihyb3dzKXsgaWYocm93c1swXSYmcm93c1swXS52YWx1ZSl7IHZhciBycj1ub3JtUmVjcyhyb3dzWzBdLnZhbHVlKTsgaWYocnIubGVuZ3RoKXsgcmVjb3Jkcz1ycjsgdHJ5eyBsb2NhbFN0b3JhZ2Uuc2V0SXRlbShyZXBvcnRLZXkoKSxKU09OLnN0cmluZ2lmeShyZWNvcmRzKSk7IH1jYXRjaChlKXt9IH0gfSB1cGRhdGVNaW5pKCk7IH0pCiAgICAgICAgLmNhdGNoKGZ1bmN0aW9uKCl7IHVwZGF0ZU1pbmkoKTsgfSk7CiAgICB9Y2F0Y2goZSl7IHVwZGF0ZU1pbmkoKTsgfQogICAgbG9hZE1lZHMoKTsKICB9CiAgZnVuY3Rpb24gZXh0cmFjdE1lZHModmFsKXsKICAgIHZhciBvdXQ9W107IGZ1bmN0aW9uIHBuKHgpeyBpZigheCkgcmV0dXJuOyB2YXIgbj0odHlwZW9mIHg9PT0ic3RyaW5nIik/eDooeC5uYW1lfHx4Lm1lZHx8eC5kcnVnfHx4LnRpdGxlfHx4LuygnO2SiOuqhXx8eC7slb3tkojrqoV8fCIiKTsgbj1TdHJpbmcobikudHJpbSgpOyBpZihuJiZvdXQuaW5kZXhPZihuKT09PS0xKSBvdXQucHVzaChuKTsgfQogICAgdHJ5eyBpZihBcnJheS5pc0FycmF5KHZhbCkpIHZhbC5mb3JFYWNoKGZ1bmN0aW9uKHIpeyBpZihyJiZBcnJheS5pc0FycmF5KHIubWVkcykpIHIubWVkcy5mb3JFYWNoKHBuKTsgZWxzZSBpZihyJiZBcnJheS5pc0FycmF5KHIuaXRlbXMpKSByLml0ZW1zLmZvckVhY2gocG4pOyBlbHNlIHBuKHIpOyB9KTsKICAgICAgZWxzZSBpZih2YWwmJkFycmF5LmlzQXJyYXkodmFsLmhpc3RvcnkpKSB2YWwuaGlzdG9yeS5mb3JFYWNoKGZ1bmN0aW9uKGgpeyAoaC5tZWRzfHxoLml0ZW1zfHxbXSkuZm9yRWFjaChwbik7IGlmKCFoLm1lZHMmJiFoLml0ZW1zKSBwbihoKTsgfSk7CiAgICAgIGVsc2UgaWYodmFsJiZBcnJheS5pc0FycmF5KHZhbC5tZWRzKSkgdmFsLm1lZHMuZm9yRWFjaChwbik7CiAgICAgIGVsc2UgaWYodmFsJiZBcnJheS5pc0FycmF5KHZhbC5yeCkpIHZhbC5yeC5mb3JFYWNoKHBuKTsKICAgIH1jYXRjaChlKXt9CiAgICByZXR1cm4gb3V0OwogIH0KICBmdW5jdGlvbiBsb2FkTWVkcygpewogICAgbWVkcz1bXTsKICAgIHRyeXsgUlhfS0VZUy5mb3JFYWNoKGZ1bmN0aW9uKGspeyB2YXIgcz1sb2NhbFN0b3JhZ2UuZ2V0SXRlbShrKTsgaWYocyl7IHRyeXsgbWVkcz1tZWRzLmNvbmNhdChleHRyYWN0TWVkcyhKU09OLnBhcnNlKHMpKSk7IH1jYXRjaChlKXt9IH0gfSk7IH1jYXRjaChlKXt9CiAgICB1cGRhdGVNaW5pKCk7CiAgICB0cnl7CiAgICAgIHZhciBxPVJYX0tFWVMubWFwKGZ1bmN0aW9uKGspe3JldHVybiAia2V5LmVxLiIrZW5jb2RlVVJJQ29tcG9uZW50KGspO30pLmpvaW4oIiwiKTsKICAgICAgZmV0Y2goU0JfVVJMKyIvcmVzdC92MS9odWJfc3RhdGU/b3I9KCIrcSsiKSZzZWxlY3Q9dmFsdWUiLHtoZWFkZXJzOnthcGlrZXk6U0JfS0VZLEF1dGhvcml6YXRpb246IkJlYXJlciAiK1NCX0tFWX19KQogICAgICAgIC50aGVuKGZ1bmN0aW9uKHIpeyByZXR1cm4gci5vaz9yLmpzb24oKTpbXTsgfSkKICAgICAgICAudGhlbihmdW5jdGlvbihyb3dzKXsgKHJvd3N8fFtdKS5mb3JFYWNoKGZ1bmN0aW9uKHJvdyl7IGV4dHJhY3RNZWRzKHJvdy52YWx1ZSkuZm9yRWFjaChmdW5jdGlvbihtKXsgaWYobWVkcy5pbmRleE9mKG0pPT09LTEpIG1lZHMucHVzaChtKTsgfSk7IH0pOyB1cGRhdGVNaW5pKCk7IH0pCiAgICAgICAgLmNhdGNoKGZ1bmN0aW9uKCl7fSk7CiAgICB9Y2F0Y2goZSl7fQogIH0KICBmdW5jdGlvbiB1cGRhdGVNaW5pKCl7CiAgICB2YXIgbT0kKCJyZWNtaW5pIik7CiAgICBpZighbSkgcmV0dXJuOwogICAgbS5pbm5lckhUTUw9Iuq4sOuhnSA8Yj4iK3JlY29yZHMubGVuZ3RoKyLqsbQ8L2I+IMK3IOuzteyVvShRUikgPGI+IittZWRzLmxlbmd0aCsi7KKFPC9iPuyXkOyEnCDqsoDsg4nrkKnri4jri6QuICIrCiAgICAgIChyZWNvcmRzLmxlbmd0aD8nPGEgaWQ9ImFkZGFsbCI+7KCE7LK0IOuLtOq4sDwvYT4gwrcgPGEgaWQ9ImNsciI+67mE7Jqw6riwPC9hPic6J+yVseydmCDigJzsmKTripgg7Kad7IOBIOq4sOuhneKAneyXkOyEnCDrqLzsoIAg64Ko6rKoIOyjvOyEuOyalC4nKTsKICAgIGlmKCQoImFkZGFsbCIpKSAkKCJhZGRhbGwiKS5vbmNsaWNrPWZ1bmN0aW9uKCl7IHJlY29yZHMuZm9yRWFjaChmdW5jdGlvbihfLGkpe3BpY2tlZFtpXT10cnVlO30pOyByZW5kZXJDaGlwcygpOyByZWZyZXNoUmVwb3J0KCk7IH07CiAgICBpZigkKCJjbHIiKSkgJCgiY2xyIikub25jbGljaz1mdW5jdGlvbigpeyBwaWNrZWQ9e307IHJlbmRlckNoaXBzKCk7IHJlZnJlc2hSZXBvcnQoKTsgfTsKICB9CgogIC8qIOKUgOKUgCDqsoDsg4kg7J6Q64+Z7JmE7ISxIOKUgOKUgCAqLwogIGZ1bmN0aW9uIHJlY0xhYmVsKHIpeyByZXR1cm4gKHIuZGF0ZXx8IiIpKyIgIisoci5zeW1wdG9tfHwiIikrIiAiKyhyLnNldmVyaXR5fHwiIikrIiAiKyhyLm1lZHN8fCIiKSsiICIrKHIubWVtb3x8IiIpOyB9CiAgZnVuY3Rpb24gc2VhcmNoKHFzKXsKICAgIHFzPShxc3x8IiIpLnRyaW0oKS50b0xvd2VyQ2FzZSgpOyBpZighcXMpIHJldHVybiBbXTsKICAgIHZhciByZXM9W107CiAgICByZWNvcmRzLmZvckVhY2goZnVuY3Rpb24ocixpKXsgaWYoIXBpY2tlZFtpXSAmJiByZWNMYWJlbChyKS50b0xvd2VyQ2FzZSgpLmluZGV4T2YocXMpPi0xKSByZXMucHVzaCh7dHlwZToicmVjIixpOmkscjpyfSk7IH0pOwogICAgbWVkcy5mb3JFYWNoKGZ1bmN0aW9uKG0peyBpZihTdHJpbmcobSkudG9Mb3dlckNhc2UoKS5pbmRleE9mKHFzKT4tMSkgcmVzLnB1c2goe3R5cGU6Im1lZCIsbmFtZTptfSk7IH0pOwogICAgcmV0dXJuIHJlcy5zbGljZSgwLDgpOwogIH0KICB2YXIgc3VnSWR4PS0xLCBzdWdJdGVtcz1bXTsKICBmdW5jdGlvbiByZW5kZXJTdWcoKXsKICAgIHZhciBib3g9JCgic3VnIiksIHFzPSQoInEiKS52YWx1ZTsKICAgIHN1Z0l0ZW1zPXNlYXJjaChxcyk7IHN1Z0lkeD0tMTsKICAgIGlmKCFxcy50cmltKCkpeyBib3guY2xhc3NMaXN0LnJlbW92ZSgib24iKTsgYm94LmlubmVySFRNTD0iIjsgcmV0dXJuOyB9CiAgICBpZighc3VnSXRlbXMubGVuZ3RoKXsgYm94LmlubmVySFRNTD0nPGRpdiBjbGFzcz0iZW1wdHkiPuydvOy5mO2VmOuKlCDquLDroZ3Ct+uzteyVveydtCDsl4bslrTsmpQ8L2Rpdj4nOyBib3guY2xhc3NMaXN0LmFkZCgib24iKTsgcmV0dXJuOyB9CiAgICBib3guaW5uZXJIVE1MPXN1Z0l0ZW1zLm1hcChmdW5jdGlvbihpdCxuKXsKICAgICAgaWYoaXQudHlwZT09PSJyZWMiKXsgdmFyIG89U0VWLmZpbHRlcihmdW5jdGlvbih4KXtyZXR1cm4geC5rPT09aXQuci5zZXZlcml0eTt9KVswXXx8U0VWWzFdOwogICAgICAgIHJldHVybiAnPGRpdiBjbGFzcz0icyIgZGF0YS1uPSInK24rJyI+PHNwYW4gY2xhc3M9InRnIj7spp3sg4E8L3NwYW4+PHNwYW4+Jytlc2MoaXQuci5kYXRlfHwiIikrJyDCtyAnK2VzYyhpdC5yLnN5bXB0b218fCIiKSsnIDxiIHN0eWxlPSJjb2xvcjonK28uYysnIj4nK2VzYyhpdC5yLnNldmVyaXR5fHwiIikrJzwvYj48L3NwYW4+PC9kaXY+JzsgfQogICAgICByZXR1cm4gJzxkaXYgY2xhc3M9InMiIGRhdGEtbj0iJytuKyciPjxzcGFuIGNsYXNzPSJ0ZyBtZWQiPuuzteyVvTwvc3Bhbj48c3Bhbj4nK2VzYyhpdC5uYW1lKSsnIOq0gOugqCDquLDroZ0g64u06riwPC9zcGFuPjwvZGl2Pic7CiAgICB9KS5qb2luKCIiKTsKICAgIGJveC5jbGFzc0xpc3QuYWRkKCJvbiIpOwogICAgQXJyYXkucHJvdG90eXBlLmZvckVhY2guY2FsbChib3gucXVlcnlTZWxlY3RvckFsbCgiLnMiKSxmdW5jdGlvbihlbCl7IGVsLm9uY2xpY2s9ZnVuY3Rpb24oKXsgY2hvb3NlKCtlbC5kYXRhc2V0Lm4pOyB9OyB9KTsKICB9CiAgZnVuY3Rpb24gY2hvb3NlKG4pewogICAgdmFyIGl0PXN1Z0l0ZW1zW25dOyBpZighaXQpIHJldHVybjsKICAgIGlmKGl0LnR5cGU9PT0icmVjIil7IHBpY2tlZFtpdC5pXT10cnVlOyB9CiAgICBlbHNlIHsgcmVjb3Jkcy5mb3JFYWNoKGZ1bmN0aW9uKHIsaSl7IGlmKChyLm1lZHN8fCIiKS50b0xvd2VyQ2FzZSgpLmluZGV4T2YoU3RyaW5nKGl0Lm5hbWUpLnRvTG93ZXJDYXNlKCkpPi0xKSBwaWNrZWRbaV09dHJ1ZTsgfSk7IHRvYXN0KCLigJgiK2l0Lm5hbWUrIuKAmSDqtIDroKgg6riw66Gd7J2EIOuLtOyVmOyWtOyalCIpOyB9CiAgICAkKCJxIikudmFsdWU9IiI7ICQoInN1ZyIpLmNsYXNzTGlzdC5yZW1vdmUoIm9uIik7ICQoInN1ZyIpLmlubmVySFRNTD0iIjsKICAgIHJlbmRlckNoaXBzKCk7IHJlZnJlc2hSZXBvcnQoKTsKICB9CiAgZnVuY3Rpb24gcmVuZGVyQ2hpcHMoKXsKICAgIHZhciBib3g9JCgiY2hpcHMiKTsKICAgIHZhciBpZHhzPU9iamVjdC5rZXlzKHBpY2tlZCkuZmlsdGVyKGZ1bmN0aW9uKGkpe3JldHVybiBwaWNrZWRbaV07fSk7CiAgICBpZighaWR4cy5sZW5ndGgpeyBib3guaW5uZXJIVE1MPSIiOyByZXR1cm47IH0KICAgIGJveC5pbm5lckhUTUw9aWR4cy5tYXAoZnVuY3Rpb24oaSl7IHZhciByPXJlY29yZHNbaV18fHt9OyByZXR1cm4gJzxzcGFuIGNsYXNzPSJjaGlwIj48c3BhbiBjbGFzcz0iZHQiPicrZXNjKHIuZGF0ZXx8IiIpKyc8L3NwYW4+ICcrZXNjKChyLnN5bXB0b218fCIiKS5zbGljZSgwLDE0KSkrJzxzcGFuIGNsYXNzPSJ4IiBkYXRhLWk9IicraSsnIj7Dlzwvc3Bhbj48L3NwYW4+JzsgfSkuam9pbigiIik7CiAgICBBcnJheS5wcm90b3R5cGUuZm9yRWFjaC5jYWxsKGJveC5xdWVyeVNlbGVjdG9yQWxsKCIueCIpLGZ1bmN0aW9uKGVsKXsgZWwub25jbGljaz1mdW5jdGlvbigpeyBwaWNrZWRbZWwuZGF0YXNldC5pXT1mYWxzZTsgcmVuZGVyQ2hpcHMoKTsgcmVmcmVzaFJlcG9ydCgpOyB9OyB9KTsKICB9CgogIC8qIOKUgOKUgCDrpqztj6ztirgg4pSA4pSAICovCiAgZnVuY3Rpb24gcGlja2VkUmVjcygpeyByZXR1cm4gcmVjb3Jkcy5maWx0ZXIoZnVuY3Rpb24oXyxpKXtyZXR1cm4gcGlja2VkW2ldO30pOyB9CiAgZnVuY3Rpb24gcmVmcmVzaFJlcG9ydCgpeyBhaVJlcG9ydD1udWxsOyB2YXIgc2VsPXBpY2tlZFJlY3MoKTsgdmFyIHB2PSQoInByZXYiKTsKICAgIHB2LnRleHRDb250ZW50ID0gc2VsLmxlbmd0aCA/IGJ1aWxkRnVsbFJlcG9ydChzZWwpIDogIuychOyXkOyEnCDspp3sg4HsnYQg6rKA7IOJ7ZW0IOyxhOyasOuptCDrpqztj6ztirjqsIAg7J6Q64+Z7Jy866GcIOyekeyEseuQqeuLiOuLpC4iOyB9CiAgZnVuY3Rpb24gYnVpbGRGdWxsUmVwb3J0KHNlbCl7CiAgICB2YXIgcmVwPSgkKCJyZXBvcnRlciIpJiYkKCJyZXBvcnRlciIpLnZhbHVlfHwiIikudHJpbSgpOyB2YXIgTD1bXTsKICAgIEwucHVzaCgi77y7TWVkaU5vdGUg7Kad7IOBIOyLoOqzoMK36rO17JygIOumrO2PrO2KuO+8vSIpOyBMLnB1c2goIiIpOwogICAgTC5wdXNoKCLigJUg6rCc7JqUIOKAlSIpOyBMLnB1c2goIuqzhOyglShJRCk6ICIrdWlkKTsgaWYocmVwKSBMLnB1c2goIuyLoOqzoOyekDogIityZXApOwogICAgTC5wdXNoKCLsnpHshLHsnbw6ICIrbmV3IERhdGUoKS50b0lTT1N0cmluZygpLnNsaWNlKDAsMTApKTsgTC5wdXNoKCLstJ0g6riw66GdOiAiK3NlbC5sZW5ndGgrIuqxtCIpOyBMLnB1c2goIiIpOwogICAgTC5wdXNoKCLigJUg7Kad7IOBIOqyveqzvCDigJUiKTsKICAgIHNlbC5mb3JFYWNoKGZ1bmN0aW9uKHIsbil7IEwucHVzaCgobisxKSsiLiAiKyhyLmRhdGV8fCIiKSsiICDCtyAg7KCV64+EICIrKHIuc2V2ZXJpdHl8fCLrs7TthrUiKSk7CiAgICAgIEwucHVzaCgiICAgLSDspp3sg4E6ICIrKHIuc3ltcHRvbXx8Iijrr7jquLDsnqwpIikpOyBpZihyLm1lZHMpIEwucHVzaCgiICAgLSDqtIDroKjslb06ICIrci5tZWRzKTsgaWYoci5tZW1vKSBMLnB1c2goIiAgIC0g66mU66qoOiAiK3IubWVtbyk7IH0pOwogICAgTC5wdXNoKCIiKTsgdmFyIHNjPXt9OyBzZWwuZm9yRWFjaChmdW5jdGlvbihyKXsgdmFyIGs9ci5zZXZlcml0eXx8IuuztO2GtSI7IHNjW2tdPShzY1trXXx8MCkrMTsgfSk7CiAgICBMLnB1c2goIuKAlSDsooXtlakg7JqU7JW9IOKAlSIpOyBMLnB1c2goIuygleuPhCDrtoTtj6w6ICIrT2JqZWN0LmtleXMoc2MpLm1hcChmdW5jdGlvbihrKXtyZXR1cm4gaysiICIrc2Nba10rIuqxtCI7fSkuam9pbigiLCAiKSk7IEwucHVzaCgiIik7CiAgICBMLnB1c2goIuuzuCDrgrTsmqnsnYAg7KCV67O0IOygnOqzteyaqeydtOupsCwg7LWc7KKFIO2MkOuLqMK37LKY67Cp7J2AIOydmOujjOynhOqzvCDsg4HsnZjtlanri4jri6QuIik7CiAgICByZXR1cm4gTC5qb2luKCJcbiIpOwogIH0KICBmdW5jdGlvbiBjb21wYWN0Rm9yUVIoc2VsKXsKICAgIHZhciBMPVsiW01lZGlOb3RlIOymneyDgeyalOyVvV0iLCJJRDoiK3VpZCwi7J6R7ISxOiIrbmV3IERhdGUoKS50b0lTT1N0cmluZygpLnNsaWNlKDAsMTApXTsKICAgIHNlbC5zbGljZSgwLDQpLmZvckVhY2goZnVuY3Rpb24ocil7IEwucHVzaCgiwrcgIisoci5kYXRlfHwiIikrIiAiKyhyLnNldmVyaXR5fHwiIikrIiAiKyhyLnN5bXB0b218fCIiKS5zbGljZSgwLDE2KSk7IH0pOwogICAgaWYoc2VsLmxlbmd0aD40KSBMLnB1c2goIuyZuCAiKyhzZWwubGVuZ3RoLTQpKyLqsbQiKTsKICAgIEwucHVzaCgi7IOB7IS464qUIOydtOuplOydvCDssLjqs6AiKTsKICAgIHJldHVybiBMLmpvaW4oIlxuIik7CiAgfQogIGZ1bmN0aW9uIGN1cnJlbnRSZXBvcnQoKXsgdmFyIHNlbD1waWNrZWRSZWNzKCk7IGlmKCFzZWwubGVuZ3RoKSByZXR1cm4gbnVsbDsgcmV0dXJuIGFpUmVwb3J0fHxidWlsZEZ1bGxSZXBvcnQoc2VsKTsgfQogIGZ1bmN0aW9uIG5lZWQoKXsgdmFyIHNlbD1waWNrZWRSZWNzKCk7IGlmKCFzZWwubGVuZ3RoKXsgdG9hc3QoIuuovOyggCDspp3sg4HsnYQg6rKA7IOJ7ZW0IOumrO2PrO2KuOyXkCDri7TslYQg7KO87IS47JqUIik7IHJldHVybiBudWxsOyB9IHJldHVybiBjdXJyZW50UmVwb3J0KCk7IH0KCiAgZnVuY3Rpb24gYXBpS2V5KCl7IHRyeXsgcmV0dXJuIGxvY2FsU3RvcmFnZS5nZXRJdGVtKCJtZWRpdDphcGlrZXkiKXx8IiI7IH1jYXRjaChlKXsgcmV0dXJuICIiOyB9IH0KICBmdW5jdGlvbiBhaUdlbmVyYXRlKCl7CiAgICB2YXIgc2VsPXBpY2tlZFJlY3MoKTsgaWYoIXNlbC5sZW5ndGgpeyB0b2FzdCgi66i87KCAIOymneyDgeydhCDqsoDsg4ntlbQg64u07JWEIOyjvOyEuOyalCIpOyByZXR1cm47IH0KICAgIHZhciBiYXNlPWJ1aWxkRnVsbFJlcG9ydChzZWwpLCBrZXk9YXBpS2V5KCk7CiAgICBpZigha2V5KXsgYWlSZXBvcnQ9YmFzZTsgJCgicHJldiIpLnRleHRDb250ZW50PWJhc2U7ICQoInJlcG5vdGUiKS5pbm5lckhUTUw9IkFJIO2CpOqwgCDsl4bslrQgPGI+7J6Q64+ZIOygleumrOuzuDwvYj7snLzroZwg7KCE67aAIOuLtOyVmOyKteuLiOuLpC4g6rKA7Yag66eMIO2VmOqzoCDsoITshqHtlZjshLjsmpQuIjsgcmV0dXJuOyB9CiAgICB2YXIgYnRuPSQoImFpcmVwIik7IGJ0bi5kaXNhYmxlZD10cnVlOyB2YXIgb2xkPWJ0bi50ZXh0Q29udGVudDsgYnRuLnRleHRDb250ZW50PSLsnpHshLEg7KSR4oCmIjsgJCgicHJldiIpLmNsYXNzTGlzdC5hZGQoImJ1c3kiKTsKICAgIHZhciByZXA9KCQoInJlcG9ydGVyIikmJiQoInJlcG9ydGVyIikudmFsdWV8fCIiKS50cmltKCk7CiAgICB2YXIgc3lzPSLrhIjripQg7JiI67Cp7KCR7KKFIO2bhCDspp3sg4HCt+ydtOyDgeuwmOydkSDsi6Dqs6Ag66as7Y+s7Yq466W8IOygleumrO2VmOuKlCDrj4TsmrDrr7jri6QuIOynhOuLqMK37LKY67Cp7J2AIO2VmOyngCDslYrripTri6QuIOyjvOyWtOynhCDspp3sg4Eg6riw66GdIOyghOu2gOulvCDruaDsp5Dsl4bsnbQg64u07JWELCDri7TrsLHtlZjqs6Ag7Iug66Kw6rCQIOyeiOuKlCDsobTrjJPrp5DroZwg7Iug6rOgwrfqs7XsnKDsmqkg66as7Y+s7Yq466W8IOyekeyEse2VnOuLpC4g7J2066qo7KeAwrfqs7ztlZwg6rCQ7YOEIOq4iOyngCwg7Ken7J2AIOusuOyepS4g7L2U65Oc7Y6c7IqkIOyXhuydtCDtj4nrrLgg7YWN7Iqk7Yq466Gc66eMIOy2nOugpS4g6rWs7ISxOiDqsJzsmpQv7Kad7IOBIOqyveqzvC/sooXtlakg7JqU7JW9LCDrp4jsp4Drp4kg7KSEICfrs7gg64K07Jqp7J2AIOygleuztCDsoJzqs7XsmqnsnbTrqbAsIOy1nOyihSDtjJDri6jCt+yymOuwqeydgCDsnZjro4zsp4Tqs7wg7IOB7J2Y7ZWp64uI64ukLiciOwogICAgdmFyIHBheWxvYWQ9e2FjY291bnQ6dWlkLHJlcG9ydGVyOnJlcHx8bnVsbCx0b2RheTpuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkuc2xpY2UoMCwxMCkscmVjb3JkczpzZWx9OwogICAgdmFyIGJvZHk9e21vZGVsOiJjbGF1ZGUtMy01LWhhaWt1LTIwMjQxMDIyIixtYXhfdG9rZW5zOjEzMDAsc3lzdGVtOnN5cyxtZXNzYWdlczpbe3JvbGU6InVzZXIiLGNvbnRlbnQ6IuuLpOydjCDrjbDsnbTthLAoSlNPTinroZwg66as7Y+s7Yq466W8IOyekeyEse2VtCDso7zshLjsmpQ6XG4iK0pTT04uc3RyaW5naWZ5KHBheWxvYWQpfV19OwogICAgZmV0Y2goImh0dHBzOi8vYXBpLmFudGhyb3BpYy5jb20vdjEvbWVzc2FnZXMiLHttZXRob2Q6IlBPU1QiLGhlYWRlcnM6eyJDb250ZW50LVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwieC1hcGkta2V5IjprZXksImFudGhyb3BpYy12ZXJzaW9uIjoiMjAyMy0wNi0wMSIsImFudGhyb3BpYy1kYW5nZXJvdXMtZGlyZWN0LWJyb3dzZXItYWNjZXNzIjoidHJ1ZSJ9LGJvZHk6SlNPTi5zdHJpbmdpZnkoYm9keSl9KQogICAgICAudGhlbihmdW5jdGlvbihyKXsgcmV0dXJuIHIuanNvbigpOyB9KQogICAgICAudGhlbihmdW5jdGlvbihkKXsgdmFyIHQ9IiI7IHRyeXsgdD0oZC5jb250ZW50fHxbXSkuZmlsdGVyKGZ1bmN0aW9uKGIpe3JldHVybiBiLnR5cGU9PT0idGV4dCI7fSkubWFwKGZ1bmN0aW9uKGIpe3JldHVybiBiLnRleHQ7fSkuam9pbigiXG4iKS50cmltKCk7IH1jYXRjaChlKXt9CiAgICAgICAgaWYodCl7IGFpUmVwb3J0PXQ7ICQoInByZXYiKS50ZXh0Q29udGVudD10OyAkKCJyZXBub3RlIikuaW5uZXJIVE1MPSJBSeqwgCDsnpHshLHtlZwgPGI+7LSI7JWIPC9iPuyeheuLiOuLpC4g6rKA7Yag66eMIO2VmOqzoCDsoITshqHtlZjshLjsmpQuIjsgfQogICAgICAgIGVsc2UgeyBhaVJlcG9ydD1iYXNlOyAkKCJwcmV2IikudGV4dENvbnRlbnQ9YmFzZTsgJCgicmVwbm90ZSIpLnRleHRDb250ZW50PSLsnpDrj5kg7KCV66as67O47Jy866GcIOuLtOyVmOyKteuLiOuLpC4g6rKA7YagIO2bhCDsoITshqHtlZjshLjsmpQuIjsgfSB9KQogICAgICAuY2F0Y2goZnVuY3Rpb24oKXsgYWlSZXBvcnQ9YmFzZTsgJCgicHJldiIpLnRleHRDb250ZW50PWJhc2U7ICQoInJlcG5vdGUiKS50ZXh0Q29udGVudD0iQUkg7Jew6rKw7J20IOyWtOugpOybjCDsnpDrj5kg7KCV66as67O47Jy866GcIOuLtOyVmOyKteuLiOuLpC4g6rKA7YagIO2bhCDsoITshqHtlZjshLjsmpQuIjsgfSkKICAgICAgLnRoZW4oZnVuY3Rpb24oKXsgYnRuLmRpc2FibGVkPWZhbHNlOyBidG4udGV4dENvbnRlbnQ9b2xkOyAkKCJwcmV2IikuY2xhc3NMaXN0LnJlbW92ZSgiYnVzeSIpOyB9KTsKICB9CgogIC8qIOKUgOKUgCDrsJzshqEg7J2066ClIOKUgOKUgCAqLwogIGZ1bmN0aW9uIGxvYWRTZW50KCl7CiAgICBzZW50TG9nPVtdOyB0cnl7IHZhciBzPWxvY2FsU3RvcmFnZS5nZXRJdGVtKHNlbnRLZXkoKSk7IGlmKHMpeyB2YXIgdj1KU09OLnBhcnNlKHMpOyBzZW50TG9nPUFycmF5LmlzQXJyYXkodik/djoodi5sb2d8fFtdKTsgfSB9Y2F0Y2goZSl7fQogICAgcmVuZGVyTG9nKCk7CiAgICB0cnl7IGZldGNoKFNCX1VSTCsiL3Jlc3QvdjEvaHViX3N0YXRlP2tleT1lcS4iK2VuY29kZVVSSUNvbXBvbmVudChzZW50S2V5KCkpKyImc2VsZWN0PXZhbHVlIix7aGVhZGVyczp7YXBpa2V5OlNCX0tFWSxBdXRob3JpemF0aW9uOiJCZWFyZXIgIitTQl9LRVl9fSkKICAgICAgLnRoZW4oZnVuY3Rpb24ocil7IHJldHVybiByLm9rP3IuanNvbigpOltdOyB9KQogICAgICAudGhlbihmdW5jdGlvbihyb3dzKXsgaWYocm93c1swXSYmcm93c1swXS52YWx1ZSYmQXJyYXkuaXNBcnJheShyb3dzWzBdLnZhbHVlLmxvZykpeyBzZW50TG9nPXJvd3NbMF0udmFsdWUubG9nOyB0cnl7IGxvY2FsU3RvcmFnZS5zZXRJdGVtKHNlbnRLZXkoKSxKU09OLnN0cmluZ2lmeShzZW50TG9nKSk7IH1jYXRjaChlKXt9IHJlbmRlckxvZygpOyB9IH0pCiAgICAgIC5jYXRjaChmdW5jdGlvbigpe30pOyB9Y2F0Y2goZSl7fQogIH0KICBmdW5jdGlvbiBsb2dTZW5kKGNoYW5uZWwsdGFyZ2V0LGNvdW50KXsKICAgIHNlbnRMb2cudW5zaGlmdCh7Y2hhbm5lbDpjaGFubmVsLHRhcmdldDp0YXJnZXR8fCIiLGNvdW50OmNvdW50LHRzOm5ldyBEYXRlKCkudG9JU09TdHJpbmcoKX0pOwogICAgdHJ5eyBsb2NhbFN0b3JhZ2Uuc2V0SXRlbShzZW50S2V5KCksSlNPTi5zdHJpbmdpZnkoc2VudExvZykpOyB9Y2F0Y2goZSl7fQogICAgcmVuZGVyTG9nKCk7CiAgICB0cnl7IGZldGNoKFNCX1VSTCsiL3Jlc3QvdjEvaHViX3N0YXRlIix7bWV0aG9kOiJQT1NUIixoZWFkZXJzOnthcGlrZXk6U0JfS0VZLEF1dGhvcml6YXRpb246IkJlYXJlciAiK1NCX0tFWSwiQ29udGVudC1UeXBlIjoiYXBwbGljYXRpb24vanNvbiIsUHJlZmVyOiJyZXNvbHV0aW9uPW1lcmdlLWR1cGxpY2F0ZXMscmV0dXJuPW1pbmltYWwifSwKICAgICAgYm9keTpKU09OLnN0cmluZ2lmeShbe2tleTpzZW50S2V5KCksdmFsdWU6e2xvZzpzZW50TG9nfSx1cGRhdGVkX2F0Om5ldyBEYXRlKCkudG9JU09TdHJpbmcoKX1dKX0pLmNhdGNoKGZ1bmN0aW9uKCl7fSk7IH1jYXRjaChlKXt9CiAgfQogIGZ1bmN0aW9uIHJlbmRlckxvZygpewogICAgdmFyIGJveD0kKCJsb2ciKTsgaWYoIXNlbnRMb2cubGVuZ3RoKXsgYm94LmlubmVySFRNTD0nPGRpdiBjbGFzcz0iZW1wdHkiPuyVhOyngSDrs7Trgrgg7J2066Cl7J20IOyXhuyKteuLiOuLpC48L2Rpdj4nOyByZXR1cm47IH0KICAgIGJveC5pbm5lckhUTUw9c2VudExvZy5zbGljZSgwLDEyKS5tYXAoZnVuY3Rpb24oZSl7IHZhciB3aGVuPShlLnRzfHwiIikucmVwbGFjZSgiVCIsIiAiKS5zbGljZSgwLDE2KTsKICAgICAgcmV0dXJuICc8ZGl2IGNsYXNzPSJpdCI+PGI+Jytlc2MoZS5jaGFubmVsKSsnPC9iPiDCtyAnK2VzYyhlLmNvdW50fHwwKSsn6rG0JysoZS50YXJnZXQ/KCcg4oaSICcrZXNjKGUudGFyZ2V0KSk6JycpKyc8YnI+Jytlc2Mod2hlbikrJzwvZGl2Pic7IH0pLmpvaW4oIiIpOwogIH0KCiAgLyog4pSA4pSAIOyghOyGoSDtlbjrk6Trn6wg4pSA4pSAICovCiAgZnVuY3Rpb24gb3Blbldpbih1KXsgdmFyIHc9d2luZG93Lm9wZW4odSwiX2JsYW5rIiwibm9vcGVuZXIiKTsgaWYoIXcpIGxvY2F0aW9uLmhyZWY9dTsgfQogIGZ1bmN0aW9uIG1haWx0byh0byxzdWIsYm9keSl7IGxvY2F0aW9uLmhyZWY9Im1haWx0bzoiK2VuY29kZVVSSUNvbXBvbmVudCh0b3x8IiIpKyI/c3ViamVjdD0iK2VuY29kZVVSSUNvbXBvbmVudChzdWIpKyImYm9keT0iK2VuY29kZVVSSUNvbXBvbmVudChib2R5KTsgfQoKICBmdW5jdGlvbiBzaG93UVIoKXsKICAgIHZhciB0PW5lZWQoKTsgaWYoIXQpIHJldHVybjsKICAgIHZhciBzZWw9cGlja2VkUmVjcygpOyB2YXIgYm94PSQoInFyYm94IiksIGhvbGRlcj0kKCJxciIpOyBob2xkZXIuaW5uZXJIVE1MPSIiOwogICAgdHJ5eyBuZXcgUVJDb2RlKGhvbGRlcix7dGV4dDpjb21wYWN0Rm9yUVIoc2VsKSx3aWR0aDoxODAsaGVpZ2h0OjE4MCxjb3JyZWN0TGV2ZWw6UVJDb2RlLkNvcnJlY3RMZXZlbC5NfSk7IGJveC5jbGFzc0xpc3QuYWRkKCJvbiIpOyBsb2dTZW5kKCLrs5Hsm5Ag6rO17JygIMK3IFFSIiwiUVIg7ZGc7IucIixzZWwubGVuZ3RoKTsgfQogICAgY2F0Y2goZSl7IHRvYXN0KCJRUiDsg53shLHsnYQg67aI65+s7Jik7KeAIOuqu+2WiOyWtOyalCjri6jrj4Ug7YOt7JeQ7IScIOyXtOyWtCDso7zshLjsmpQpIik7IH0KICB9CgogIC8qIOKUgOKUgCDrs7TqsbTshow6IEdQUyDsnpDrj5kg7LC+6riwIOKUgOKUgCAqLwogIGZ1bmN0aW9uIHNldEJTdGF0KG0peyAkKCJib2d1blN0YXQiKS50ZXh0Q29udGVudD1tfHwiIjsgfQogIGZ1bmN0aW9uIGZpbmRCb2d1bigpewogICAgaWYoIW5hdmlnYXRvci5nZW9sb2NhdGlvbil7IHNldEJTdGF0KCLsnbQg67iM65287Jqw7KCA64qUIOychOy5mOulvCDsp4Dsm5DtlZjsp4Ag7JWK7JWE7JqULiIpOyByZXR1cm47IH0KICAgIHNldEJTdGF0KCLsnITsuZgg7ZmV7J24IOykkeKApiAo6raM7ZWcIO2XiOyaqSDtlYTsmpQpIik7CiAgICBuYXZpZ2F0b3IuZ2VvbG9jYXRpb24uZ2V0Q3VycmVudFBvc2l0aW9uKGZ1bmN0aW9uKHBvcyl7CiAgICAgIHZhciBsYXQ9cG9zLmNvb3Jkcy5sYXRpdHVkZSwgbG9uPXBvcy5jb29yZHMubG9uZ2l0dWRlOwogICAgICBmZXRjaCgiaHR0cHM6Ly9ub21pbmF0aW0ub3BlbnN0cmVldG1hcC5vcmcvcmV2ZXJzZT9mb3JtYXQ9anNvbiZhY2NlcHQtbGFuZ3VhZ2U9a28mem9vbT0xNCZsYXQ9IitsYXQrIiZsb249Iitsb24se2hlYWRlcnM6e0FjY2VwdDoiYXBwbGljYXRpb24vanNvbiJ9fSkKICAgICAgICAudGhlbihmdW5jdGlvbihyKXsgcmV0dXJuIHIuanNvbigpOyB9KQogICAgICAgIC50aGVuKGZ1bmN0aW9uKGQpewogICAgICAgICAgdmFyIGE9ZC5hZGRyZXNzfHx7fTsKICAgICAgICAgIHZhciBndT1hLmNpdHlfZGlzdHJpY3R8fGEuYm9yb3VnaHx8YS5jb3VudHl8fGEuZGlzdHJpY3R8fGEuY2l0eXx8YS50b3dufHwiIjsKICAgICAgICAgIHZhciBmdWxsPWQuZGlzcGxheV9uYW1lfHwiIjsKICAgICAgICAgIHZhciBuYW1lID0gLyjqtax86rWwfOyLnCkkLy50ZXN0KGd1KSA/IChndSsi67O06rG07IaMIikgOiAoZ3U/Z3UrIiDrs7TqsbTshowiOiLqtIDtlaAg67O06rG07IaMIik7CiAgICAgICAgICAkKCJib2d1bk5hbWUiKS52YWx1ZT1uYW1lOyAkKCJib2d1bkFkZHIiKS52YWx1ZT1mdWxsOwogICAgICAgICAgc2V0QlN0YXQoIuqwgOq5jOyatCDrs7TqsbTshow6ICIrbmFtZSsiIMK3IFvsnbTrqZTsnbwg7LC+6riwXeulvCDriIzrn6wg7KO87IS47JqULiIpOwogICAgICAgICAgYXV0b2ZpbGxNYWlsKG5hbWUsIGEuY2l0eXx8YS5wcm92aW5jZXx8IiIpOwogICAgICAgIH0pCiAgICAgICAgLmNhdGNoKGZ1bmN0aW9uKCl7IHNldEJTdGF0KCLso7zshowg67OA7ZmYIOyLpO2MqC4g7J6g7IucIO2bhCDri6Tsi5wg7Iuc64+E7ZWY7IS47JqULiIpOyB9KTsKICAgIH0sIGZ1bmN0aW9uKCl7IHNldEJTdGF0KCLsnITsuZgg6raM7ZWc7J20IO2VhOyalO2VqeuLiOuLpC4g67iM65287Jqw7KCA7JeQ7IScIO2XiOyaqe2VtCDso7zshLjsmpQuIik7IH0sIHtlbmFibGVIaWdoQWNjdXJhY3k6dHJ1ZSx0aW1lb3V0OjEyMDAwLG1heGltdW1BZ2U6NjAwMDB9KTsKICB9CiAgZnVuY3Rpb24gYXV0b2ZpbGxNYWlsKG5hbWUsIHJlZ2lvbil7CiAgICAvLyAxKSDqs7Xqs7XrjbDsnbTthLAg67O06rG06riw6rSAIO2RnOykgOuNsOydtO2EsCDtlITroZ3si5zqsIAg7ISk7KCV64+8IOyeiOycvOuptCDsnbTrqZTsnbwg7J6Q64+Z7KGw7ZqMCiAgICB2YXIgYmFzZT0iaHR0cHM6Ly9hcGlzLmRhdGEuZ28ua3IvQjU1MTk4Mi9oIS9nZXRIb3NwQmFzaXNMaXN0IjsgLy8g7JiI7IucIGJhc2Ug4oCUIOyLpOygnCDrs7TqsbTquLDqtIAgQVBJIOyjvOyGjOuhnCDqtZDssrQKICAgIHRyeXsKICAgICAgZmV0Y2goUFJPWFkrIj9iYXNlPSIrZW5jb2RlVVJJQ29tcG9uZW50KGJhc2UpKyImbnVtT2ZSb3dzPTEmeWFkbU5tPSIrZW5jb2RlVVJJQ29tcG9uZW50KG5hbWUpLHt9KQogICAgICAgIC50aGVuKGZ1bmN0aW9uKHIpeyByZXR1cm4gci5vaz9yLmpzb24oKTpudWxsOyB9KQogICAgICAgIC50aGVuKGZ1bmN0aW9uKGQpewogICAgICAgICAgdmFyIGVtYWlsPWZpbmRFbWFpbERlZXAoZCk7CiAgICAgICAgICBpZihlbWFpbCl7ICQoImJvZ3VuTWFpbCIpLnZhbHVlPWVtYWlsOyBzZXRCU3RhdCgi7J2066mU7J287J2EIOywvuyVmOyWtOyalDogIitlbWFpbCsiIMK3IO2ZleyduCDtm4Qg67O064K07IS47JqULiIpOyB9CiAgICAgICAgfSkuY2F0Y2goZnVuY3Rpb24oKXt9KTsKICAgIH1jYXRjaChlKXt9CiAgfQogIGZ1bmN0aW9uIGZpbmRFbWFpbERlZXAobyl7IHRyeXsgdmFyIHM9SlNPTi5zdHJpbmdpZnkob3x8e30pOyB2YXIgbT1zLm1hdGNoKC9bXHcuKy1dK0BbXHctXStcLltcdy4tXSsvKTsgcmV0dXJuIG0/bVswXToiIjsgfWNhdGNoKGUpeyByZXR1cm4gIiI7IH0gfQogIGZ1bmN0aW9uIGZpbmRCb2d1bk1haWwoKXsKICAgIHZhciBuYW1lPSgkKCJib2d1bk5hbWUiKS52YWx1ZXx8IiIpLnRyaW0oKTsKICAgIGlmKCFuYW1lKXsgc2V0QlN0YXQoIuuovOyggCBb64K0IOychOy5mOuhnCDrs7TqsbTshowg7LC+6riwXeulvCDriIzrn6wg7KO87IS47JqULiIpOyByZXR1cm47IH0KICAgIHNldEJTdGF0KCLsnbTrqZTsnbwg7LC+64qUIOykkeKApiIpOwogICAgYXV0b2ZpbGxNYWlsKG5hbWUsIiIpOwogICAgLy8g7J6Q64+Z7Jy866GcIOuquyDssL7snLzrqbQg6rKA7IOJ7Jy866GcIOyViOuCtAogICAgc2V0VGltZW91dChmdW5jdGlvbigpeyBpZighKCQoImJvZ3VuTWFpbCIpLnZhbHVlfHwiIikudHJpbSgpKXsKICAgICAgc2V0QlN0YXQoIuydtOuplOydvOydhCDrqrsg7LC+7JWY7Ja07JqULiDqsoDsg4nsnLzroZwg7ZmV7J247ZW0IOyjvOyEuOyalC4iKTsKICAgICAgb3BlbldpbigiaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS9zZWFyY2g/cT0iK2VuY29kZVVSSUNvbXBvbmVudChuYW1lKyIg7J2066mU7J28IOyjvOyGjCIpKTsKICAgIH0gfSwxNTAwKTsKICB9CgogIC8qIOKUgOKUgCDqs4TsoJUoR29vZ2xlKSDilIDilIAgKi8KICBmdW5jdGlvbiB1cGRhdGVVaWRIaW50KCl7IHZhciBoPSQoInVpZGhpbnQiKTsgaWYoaCl7IHZhciB3aG89KHVpZD09PSJndWVzdCIpPyLqsozsiqTtirgiOnVpZDsgaC5pbm5lckhUTUw9Iu2YhOyerCDqs4TsoJUgPGI+Iitlc2Mod2hvKSsiPC9iPiI7IH0gfQogIGZ1bmN0aW9uIHNldEFjY3QoKXsgdmFyIGVsPSQoImFjY3R0Iik7IGlmKCFlbCkgcmV0dXJuOyBlbC50ZXh0Q29udGVudD0odWlkPT09Imd1ZXN0Iik/IuqyjOyKpO2KuCDCtyDslbHsl5DshJwg66Gc6re47J24IjooIuqzhOyglSAiK3VpZCk7IH0KICBmdW5jdGlvbiBzZXRVaWQodil7IHVpZD12fHwiZ3Vlc3QiOyB0cnl7IGxvY2FsU3RvcmFnZS5zZXRJdGVtKCJtZWRpbm90ZTp1aWQiLHVpZCk7IH1jYXRjaChlKXt9IH0KICBmdW5jdGlvbiByZWxvYWRBbGwoKXsgbG9hZFJlY29yZHMoKTsgbG9hZFNlbnQoKTsgfQogIGZ1bmN0aW9uIHJlbmRlckFjY3QoKXsKICAgIHZhciBib3g9JCgiYWNjdEJveCIpOyBpZighYm94KXsgdXBkYXRlVWlkSGludCgpOyBzZXRBY2N0KCk7IHJlbmRlclNldHRpbmdzKCk7IHJldHVybjsgfQogICAgaWYodXNlcil7IHZhciBlbWFpbD11c2VyLmVtYWlsfHx1c2VyLmlkOyB2YXIgbm09KHVzZXIudXNlcl9tZXRhZGF0YSYmKHVzZXIudXNlcl9tZXRhZGF0YS5mdWxsX25hbWV8fHVzZXIudXNlcl9tZXRhZGF0YS5uYW1lKSl8fFN0cmluZyhlbWFpbCkuc3BsaXQoIkAiKVswXTsgdmFyIGluaT0obm18fCJVIikuc2xpY2UoMCwxKS50b1VwcGVyQ2FzZSgpOwogICAgICBib3guaW5uZXJIVE1MPSc8ZGl2IGNsYXNzPSJhY2N0Ij48ZGl2IGNsYXNzPSJhdiI+Jytlc2MoaW5pKSsnPC9kaXY+PGRpdj48ZGl2IGNsYXNzPSJubSI+Jytlc2Mobm0pKyc8L2Rpdj48ZGl2IGNsYXNzPSJlbSI+Jytlc2MoZW1haWwpKyc8L2Rpdj48L2Rpdj48YnV0dG9uIGNsYXNzPSJidG4gZ2hvc3Qgc20iIGlkPSJsb2dvdXQiPuuhnOq3uOyVhOybgzwvYnV0dG9uPjwvZGl2Pic7CiAgICAgICQoImxvZ291dCIpLm9uY2xpY2s9ZG9Mb2dvdXQ7CiAgICB9IGVsc2UgewogICAgICBib3guaW5uZXJIVE1MPSc8YnV0dG9uIGNsYXNzPSJnYnRuIiBpZD0iZ2xvZ2luIj48c3ZnIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzQyODVGNCIgZD0iTTIyLjU2IDEyLjI1YzAtLjc4LS4wNy0xLjUzLS4yLTIuMjVIMTJ2NC4yNmg1LjkyYTUuMDYgNS4wNiAwIDAgMS0yLjIgMy4zMnYyLjc2aDMuNTZjMi4wOC0xLjkyIDMuMjgtNC43NCAzLjI4LTguMDl6Ii8+PHBhdGggZmlsbD0iIzM0QTg1MyIgZD0iTTEyIDIzYzIuOTcgMCA1LjQ2LS45OCA3LjI4LTIuNjZsLTMuNTYtMi43NmMtLjk4LjY2LTIuMjMgMS4wNi0zLjcyIDEuMDYtMi44NiAwLTUuMjktMS45My02LjE2LTQuNTNIMi4xOHYyLjg0QTExIDExIDAgMCAwIDEyIDIzeiIvPjxwYXRoIGZpbGw9IiNGQkJDMDUiIGQ9Ik01Ljg0IDE0LjExYTYuNiA2LjYgMCAwIDEgMC00LjIyVjcuMDVIMi4xOGExMSAxMSAwIDAgMCAwIDkuOWwzLjY2LTIuODR6Ii8+PHBhdGggZmlsbD0iI0VBNDMzNSIgZD0iTTEyIDUuMzhjMS42MiAwIDMuMDYuNTYgNC4yMSAxLjY0bDMuMTUtMy4xNUMxNy40NSAyLjA5IDE0Ljk3IDEgMTIgMSA3LjcgMSAzLjk5IDMuNDcgMi4xOCA3LjA1bDMuNjYgMi44NEM2LjcxIDcuMzEgOS4xNCA1LjM4IDEyIDUuMzh6Ii8+PC9zdmc+R29vZ2xl66GcIOuhnOq3uOyduDwvYnV0dG9uPic7CiAgICAgICQoImdsb2dpbiIpLm9uY2xpY2s9ZG9Mb2dpbjsKICAgIH0KICAgIHVwZGF0ZVVpZEhpbnQoKTsKICAgIHJlbmRlclNldHRpbmdzKCk7CiAgfQogIGZ1bmN0aW9uIGRvTG9naW4oKXsgaWYoIXNiKXsgdG9hc3QoIuuhnOq3uOyduCDrqqjrk4jsnYQg67aI65+s7Jik7KeAIOuqu+2WiOyKteuLiOuLpCIpOyByZXR1cm47IH0KICAgIHNiLmF1dGguc2lnbkluV2l0aE9BdXRoKHtwcm92aWRlcjoiZ29vZ2xlIixvcHRpb25zOntyZWRpcmVjdFRvOmxvY2F0aW9uLmhyZWYuc3BsaXQoIiMiKVswXX19KQogICAgICAudGhlbihmdW5jdGlvbihyKXsgaWYociYmci5lcnJvcikgdG9hc3QoIkdvb2dsZSDroZzqt7jsnbgg7ISk7KCV7J20IO2VhOyalO2VqeuLiOuLpCjqs7XquInsnpAg7Zmc7ISx7ZmUKSIpOyB9KQogICAgICAuY2F0Y2goZnVuY3Rpb24oKXsgdG9hc3QoIuuhnOq3uOyduOydhCDsi5zsnpHtlaAg7IiYIOyXhuyKteuLiOuLpCIpOyB9KTsgfQogIGZ1bmN0aW9uIGRvTG9nb3V0KCl7IGlmKCFzYil7IHVzZXI9bnVsbDsgc2V0VWlkKCJndWVzdCIpOyByZW5kZXJBY2N0KCk7IHJlbG9hZEFsbCgpOyByZXR1cm47IH0KICAgIHNiLmF1dGguc2lnbk91dCgpLnRoZW4oZnVuY3Rpb24oKXsgdXNlcj1udWxsOyBzZXRVaWQoImd1ZXN0Iik7IHJlbmRlckFjY3QoKTsgcmVsb2FkQWxsKCk7IH0pOyB9CiAgZnVuY3Rpb24gaW5pdEF1dGgoKXsKICAgIHRyeXsgaWYod2luZG93LnN1cGFiYXNlJiZ3aW5kb3cuc3VwYWJhc2UuY3JlYXRlQ2xpZW50KXsKICAgICAgc2I9d2luZG93LnN1cGFiYXNlLmNyZWF0ZUNsaWVudChTQl9VUkwsU0JfS0VZKTsKICAgICAgc2IuYXV0aC5nZXRTZXNzaW9uKCkudGhlbihmdW5jdGlvbihyZXMpeyB2YXIgcz1yZXMmJnJlcy5kYXRhJiZyZXMuZGF0YS5zZXNzaW9uOyBpZihzJiZzLnVzZXIpeyB1c2VyPXMudXNlcjsgc2V0VWlkKHVzZXIuZW1haWx8fHVzZXIuaWQpOyB9IHJlbmRlckFjY3QoKTsgcmVsb2FkQWxsKCk7IH0pLmNhdGNoKGZ1bmN0aW9uKCl7IHJlbmRlckFjY3QoKTsgcmVsb2FkQWxsKCk7IH0pOwogICAgICBzYi5hdXRoLm9uQXV0aFN0YXRlQ2hhbmdlKGZ1bmN0aW9uKF9lLHNlc3Npb24peyBpZihzZXNzaW9uJiZzZXNzaW9uLnVzZXIpeyB1c2VyPXNlc3Npb24udXNlcjsgc2V0VWlkKHVzZXIuZW1haWx8fHVzZXIuaWQpOyB9IGVsc2UgdXNlcj1udWxsOyByZW5kZXJBY2N0KCk7IHJlbG9hZEFsbCgpOyB9KTsKICAgICAgcmV0dXJuOwogICAgfSB9Y2F0Y2goZSl7fQogICAgcmVuZGVyQWNjdCgpOyByZWxvYWRBbGwoKTsKICB9CgogIC8qIOKUgOKUgCBiaW5kIOKUgOKUgCAqLwogIGZ1bmN0aW9uIGJpbmQoKXsKICAgICQoInEiKS5hZGRFdmVudExpc3RlbmVyKCJpbnB1dCIscmVuZGVyU3VnKTsKICAgICQoInEiKS5hZGRFdmVudExpc3RlbmVyKCJrZXlkb3duIixmdW5jdGlvbihlKXsgdmFyIGJveD0kKCJzdWciKTsgaWYoIWJveC5jbGFzc0xpc3QuY29udGFpbnMoIm9uIikpIHJldHVybjsKICAgICAgaWYoZS5rZXk9PT0iQXJyb3dEb3duIil7IGUucHJldmVudERlZmF1bHQoKTsgc3VnSWR4PU1hdGgubWluKHN1Z0l0ZW1zLmxlbmd0aC0xLHN1Z0lkeCsxKTsgbWFyaygpOyB9CiAgICAgIGVsc2UgaWYoZS5rZXk9PT0iQXJyb3dVcCIpeyBlLnByZXZlbnREZWZhdWx0KCk7IHN1Z0lkeD1NYXRoLm1heCgwLHN1Z0lkeC0xKTsgbWFyaygpOyB9CiAgICAgIGVsc2UgaWYoZS5rZXk9PT0iRW50ZXIiKXsgZS5wcmV2ZW50RGVmYXVsdCgpOyBjaG9vc2Uoc3VnSWR4PDA/MDpzdWdJZHgpOyB9CiAgICAgIGVsc2UgaWYoZS5rZXk9PT0iRXNjYXBlIil7IGJveC5jbGFzc0xpc3QucmVtb3ZlKCJvbiIpOyB9IH0pOwogICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigiY2xpY2siLGZ1bmN0aW9uKGUpeyBpZighZS50YXJnZXQuY2xvc2VzdHx8IWUudGFyZ2V0LmNsb3Nlc3QoIi5zZWFyY2giKSkgJCgic3VnIikuY2xhc3NMaXN0LnJlbW92ZSgib24iKTsgfSk7CiAgICAkKCJyZXBvcnRlciIpLmFkZEV2ZW50TGlzdGVuZXIoImlucHV0IixyZWZyZXNoUmVwb3J0KTsKICAgICQoImFpcmVwIikub25jbGljaz1haUdlbmVyYXRlOwogICAgJCgiY29weWFsbCIpLm9uY2xpY2s9ZnVuY3Rpb24oKXsgdmFyIHQ9bmVlZCgpOyBpZih0KSBjb3B5KHQpOyB9OwogICAgJCgia2RjYUdvIikub25jbGljaz1mdW5jdGlvbigpeyB2YXIgdD1uZWVkKCk7IGlmKCF0KSByZXR1cm47IGNvcHkodCk7IGxvZ1NlbmQoIuyniOuzkeq0gOumrOyyrSDsnbTsg4HrsJjsnZEg7Iug6rOgIiwi7JiI67Cp7KCR7KKF64+E7Jqw66+4IixwaWNrZWRSZWNzKCkubGVuZ3RoKTsgdG9hc3QoIuuzteyCrCDsmYTro4wgwrcg7Iug6rOgIO2OmOydtOyngOulvCDsl73ri4jri6QiKTsgc2V0VGltZW91dChmdW5jdGlvbigpeyBvcGVuV2luKEtEQ0FfVVJMKTsgfSw1MDApOyB9OwogICAgJCgia2FlcnNHbyIpLm9uY2xpY2s9ZnVuY3Rpb24oKXsgdmFyIHQ9bmVlZCgpOyBpZih0KXsgY29weSh0KTsgbG9nU2VuZCgiS0FFUlMg7JW9IOu2gOyekeyaqSDrs7Tqs6AiLCJrYWVycy5kcnVnc2FmZS5vci5rciIscGlja2VkUmVjcygpLmxlbmd0aCk7IH0gc2V0VGltZW91dChmdW5jdGlvbigpeyBvcGVuV2luKEtBRVJTX1VSTCk7IH0sMzAwKTsgfTsKICAgICQoImhvc3BTZW5kIikub25jbGljaz1mdW5jdGlvbigpeyB2YXIgdD1uZWVkKCk7IGlmKCF0KSByZXR1cm47IHZhciB0bz0oJCgiaG9zcE1haWwiKS52YWx1ZXx8IiIpLnRyaW0oKTsgaWYoIXRvKXsgdG9hc3QoIuuzkeybkCDsnbTrqZTsnbzsnYQg7J6F66Cl7ZWY7IS47JqUIik7ICQoImhvc3BNYWlsIikuZm9jdXMoKTsgcmV0dXJuOyB9IGxvZ1NlbmQoIuygkeyihSDrs5Hsm5Ag6rO17JygKOydtOuplOydvCkiLHRvLHBpY2tlZFJlY3MoKS5sZW5ndGgpOyBtYWlsdG8odG8sIltNZWRpTm90ZV0g7Kad7IOBIOq4sOuhnSDqs7XsnKAg67CPIO2bhOyGjSDsg4Hri7Qg7JqU7LKtIix0KTsgfTsKICAgICQoImhvc3BLYW8iKS5vbmNsaWNrPWZ1bmN0aW9uKCl7IHZhciB0PW5lZWQoKTsgaWYoIXQpIHJldHVybjsgY29weSh0KTsgdmFyIGtrPSgkKCJob3NwS2FrYW8iKS52YWx1ZXx8IiIpLnRyaW0oKTsgbG9nU2VuZCgi7KCR7KKFIOuzkeybkCDqs7XsnKAo7Lm07Lm07JikKSIsa2t8fCLsubTsubTsmKTthqEiLHBpY2tlZFJlY3MoKS5sZW5ndGgpOyB0b2FzdCgi64K07Jqp7J2EIOuzteyCrO2WiOyWtOyalCDCtyDsubTsubTsmKTthqHsnYQg7Je964uI64ukIik7IHNldFRpbWVvdXQoZnVuY3Rpb24oKXsgb3BlbldpbigiaHR0cHM6Ly9hY2NvdW50cy5rYWthby5jb20vd2VibG9naW4vZnJpZW5kcGljayIpOyB9LDUwMCk7IH07CiAgICAkKCJob3NwUXIiKS5vbmNsaWNrPXNob3dRUjsKICAgICQoImJvZ3VuRmluZCIpLm9uY2xpY2s9ZmluZEJvZ3VuOwogICAgJCgiYm9ndW5GaW5kTWFpbCIpLm9uY2xpY2s9ZmluZEJvZ3VuTWFpbDsKICAgICQoImJvZ3VuU2VuZCIpLm9uY2xpY2s9ZnVuY3Rpb24oKXsgdmFyIHQ9bmVlZCgpOyBpZighdCkgcmV0dXJuOyB2YXIgbm09KCQoImJvZ3VuTmFtZSIpLnZhbHVlfHwiIikudHJpbSgpLCB0bz0oJCgiYm9ndW5NYWlsIikudmFsdWV8fCIiKS50cmltKCksIGFkPSgkKCJib2d1bkFkZHIiKS52YWx1ZXx8IiIpLnRyaW0oKTsKICAgICAgdmFyIGJvZHk9KG5tPygiWyIrbm0rIuyXkCDrs7TrgrTripQg7Kad7IOBIOyViOuCtF1cbiIpOiIiKSsoYWQ/KCLso7zshow6ICIrYWQrIlxuIik6IiIpKyJcbiIrdDsKICAgICAgbG9nU2VuZCgi67O06rG07IaM7JeQIOuztOuCtOq4sCIsbm18fHRvfHwi67O06rG07IaMIixwaWNrZWRSZWNzKCkubGVuZ3RoKTsKICAgICAgaWYodG8pIG1haWx0byh0bywiW01lZGlOb3RlXSDsmIjrsKnsoJHsooUg6rSA66CoIOymneyDgSDslYjrgrQiLGJvZHkpOwogICAgICBlbHNlIHsgY29weShib2R5KTsgdG9hc3QoIuydtOuplOydvOydtCDsl4bslrQg64K07Jqp7J2EIOuzteyCrO2WiOyWtOyalC4gW+ydtOuplOydvCDssL7quLBdIO2bhCDrs7TrgrTshLjsmpQiKTsgfSB9OwogIH0KICBmdW5jdGlvbiBtYXJrKCl7IHZhciBib3g9JCgic3VnIik7IEFycmF5LnByb3RvdHlwZS5mb3JFYWNoLmNhbGwoYm94LnF1ZXJ5U2VsZWN0b3JBbGwoIi5zIiksZnVuY3Rpb24oZWwpeyBlbC5jbGFzc0xpc3QudG9nZ2xlKCJhY3QiLCtlbC5kYXRhc2V0Lm49PT1zdWdJZHgpOyB9KTsgfQoKICAvKiBzdGFydCAqLwogIGJpbmQoKTsKICBzZXRBY2N0KCk7CiAgcmVuZGVyU2V0dGluZ3MoKTsKICBjaGVja0Nsb3VkKCk7CiAgaW5pdEF1dGgoKTsKICAvLyDslbHsl5DshJwg66Gc6re47J24KOqzhOyglSDrs4Dqsr0pIOyLnCDsi6Tsi5zqsIQg67CY7JiBCiAgd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoInN0b3JhZ2UiLCBmdW5jdGlvbihlKXsgaWYoZS5rZXk9PT0ibWVkaW5vdGU6dWlkIil7IHVpZD0oZS5uZXdWYWx1ZXx8Imd1ZXN0Iik7IHNldEFjY3QoKTsgdXBkYXRlVWlkSGludCgpOyByZW5kZXJTZXR0aW5ncygpOyByZWxvYWRBbGwoKTsgfSB9KTsKICBpZigic2VydmljZVdvcmtlciIgaW4gbmF2aWdhdG9yKXsgdHJ5eyBuYXZpZ2F0b3Iuc2VydmljZVdvcmtlci5yZWdpc3RlcigiTWVkaU5vdGUuc3cuanMiKS5jYXRjaChmdW5jdGlvbigpe30pOyB9Y2F0Y2goZSl7fSB9Cn0pKCk7Cjwvc2NyaXB0Pgo8L2JvZHk+CjwvaHRtbD4K";</script>
+<!-- ===== 증상 신고·공유 레이어 (비침습 · 증상신고_공유.html 임베드) ===== -->
+<style>
+#mnrp-back{position:fixed;inset:0;background:rgba(6,65,62,.34);z-index:100000;opacity:0;pointer-events:none;transition:opacity .22s;}
+#mnrp-back.on{opacity:1;pointer-events:auto;}
+#mnrp-wrap{position:fixed;left:0;right:0;bottom:0;z-index:100001;max-width:480px;margin:0 auto;height:94vh;background:#e9f7f4;
+  border-radius:22px 22px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.24);transform:translateY(102%);transition:transform .28s cubic-bezier(.22,1,.36,1);
+  display:flex;flex-direction:column;overflow:hidden;}
+#mnrp-wrap.on{transform:translateY(0);}
+#mnrp-bar{display:flex;align-items:center;gap:9px;padding:12px 16px calc(12px);background:#fff;border-bottom:1px solid #E1F1EE;flex-shrink:0;}
+#mnrp-bar .gp{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:42px;height:5px;border-radius:5px;background:#D8E9E6;}
+#mnrp-bar .tt{font-family:'Gaegu',cursive;font-weight:700;font-size:19px;color:#0A7168;}
+#mnrp-bar .cl{margin-left:auto;border:none;background:#F1FAF9;color:#5A716D;width:34px;height:34px;border-radius:11px;font-size:18px;cursor:pointer;}
+#mnrp-frame{flex:1;width:100%;border:none;background:#e9f7f4;}
+</style>
+<script>
+(function(){
+  "use strict";
+  var built=false;
+  function build(){
+    if(built) return; built=true;
+    var back=document.createElement("div"); back.id="mnrp-back";
+    var wrap=document.createElement("div"); wrap.id="mnrp-wrap";
+    wrap.innerHTML=
+      '<div id="mnrp-bar"><span class="gp"></span><span class="tt">증상 신고·공유</span>'+
+        '<button class="cl" id="mnrp-x" aria-label="닫기">×</button></div>'+
+      '<iframe id="mnrp-frame" title="증상 신고·공유" allow="geolocation; clipboard-write; clipboard-read"></iframe>';
+    document.body.appendChild(back); document.body.appendChild(wrap);
+    document.getElementById("mnrp-x").onclick=close; back.onclick=close;
+  }
+  function open(){
+    build();
+    var fr=document.getElementById("mnrp-frame");
+    if(!fr.getAttribute("data-loaded")){ try{ fr.srcdoc=new TextDecoder().decode(Uint8Array.from(atob(window.__MNRP_SRC),function(c){return c.charCodeAt(0);})); fr.setAttribute("data-loaded","1"); }catch(e){ fr.setAttribute("src","증상신고_공유.html"); } }
+    document.getElementById("mnrp-back").classList.add("on");
+    requestAnimationFrame(function(){ document.getElementById("mnrp-wrap").classList.add("on"); });
+  }
+  function close(){
+    var w=document.getElementById("mnrp-wrap"), b=document.getElementById("mnrp-back");
+    if(w) w.classList.remove("on"); if(b) b.classList.remove("on");
+  }
+
+  // "이상반응 신고 / 증상 신고·공유 / 공유하기" 텍스트 클릭 → 오버레이 오픈
+  document.addEventListener("click",function(e){
+    var t=e.target;
+    if(t && t.closest && t.closest("#mnrp-wrap, #mnrp-back, #mnsy-sheet, #mnsy-back")) return; // 내부/증상시트 제외
+    var hop=0;
+    while(t && hop<4){
+      if(t.id==="mnrp-wrap"||t.id==="mnrp-back") return;
+      var tx=(t.textContent||"").trim();
+      if(tx && tx.length<40 && /(이상반응\s*신고|증상\s*신고|신고\s*·?\s*공유|증상\s*공유|공유하기)/.test(tx)){ e.preventDefault(); open(); return; }
+      t=t.parentElement; hop++;
+    }
+  },true);
+
+  window.MediNoteReport={ open:open, close:close };
+})();
+</script>
+<!-- ===== /증상 신고·공유 레이어 ===== -->
+
+<!-- ===== 앱 설치(다운로드) 레이어 ===== -->
+<style>
+#mnin-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;z-index:100050;
+  background:#fff;border:1px solid #E1F1EE;border-radius:16px;box-shadow:0 16px 40px rgba(6,65,62,.18);
+  padding:12px 14px;display:none;align-items:center;gap:12px;font-family:'Pretendard',-apple-system,sans-serif;}
+#mnin-bar.on{display:flex;}
+#mnin-bar .ic{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#12BDB0,#0A7168);color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+#mnin-bar .ic svg{width:22px;height:22px;}
+#mnin-bar .tx{flex:1;min-width:0;}
+#mnin-bar .tx .a{font-size:13.5px;font-weight:800;color:#122423;letter-spacing:-.01em;}
+#mnin-bar .tx .b{font-size:11.5px;color:#5A716D;margin-top:1px;}
+#mnin-bar .go{border:none;background:linear-gradient(135deg,#12BDB0,#0A7168);color:#fff;font-family:inherit;font-weight:800;font-size:13px;border-radius:11px;padding:10px 14px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 14px rgba(18,189,176,.28);}
+#mnin-bar .cl{border:none;background:transparent;color:#8FA6A2;font-size:20px;cursor:pointer;width:26px;height:26px;flex-shrink:0;}
+#mnin-ios{position:fixed;inset:0;z-index:100060;background:rgba(6,65,62,.4);display:none;align-items:flex-end;justify-content:center;}
+#mnin-ios.on{display:flex;}
+#mnin-ios .sh{background:#fff;max-width:456px;width:calc(100% - 24px);margin:0 12px 18px;border-radius:18px;padding:18px;font-family:'Pretendard',sans-serif;text-align:center;}
+#mnin-ios .sh h4{font-size:16px;font-weight:800;color:#122423;margin-bottom:8px;}
+#mnin-ios .sh p{font-size:13px;color:#5A716D;line-height:1.6;}
+#mnin-ios .sh b{color:#0A7168;}
+#mnin-ios .sh button{margin-top:14px;border:none;background:#F1FAF9;color:#0A7168;font-family:inherit;font-weight:800;font-size:14px;border-radius:12px;padding:11px 20px;cursor:pointer;}
+</style>
+<script>
+(function(){
+  "use strict";
+  function standalone(){ return window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true; }
+  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  var dismissed=false;
+  try{ dismissed = localStorage.getItem("medinote:installhide")==="1"; }catch(e){}
+
+  function buildBar(){
+    if(document.getElementById("mnin-bar")) return;
+    var bar=document.createElement("div"); bar.id="mnin-bar";
+    bar.innerHTML=
+      '<div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></div>'+
+      '<div class="tx"><div class="a">MediNote 앱 설치</div><div class="b">홈 화면에 추가해 앱처럼 바로 여세요</div></div>'+
+      '<button class="go" id="mnin-go">설치</button>'+
+      '<button class="cl" id="mnin-x" aria-label="닫기">×</button>';
+    document.body.appendChild(bar);
+    document.getElementById("mnin-go").onclick=doInstall;
+    document.getElementById("mnin-x").onclick=function(){ hide(); try{ localStorage.setItem("medinote:installhide","1"); }catch(e){} };
+    var ios=document.createElement("div"); ios.id="mnin-ios";
+    ios.innerHTML='<div class="sh"><h4>홈 화면에 추가</h4><p>사파리 아래 <b>공유</b> 버튼을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택하세요.</p><button id="mnin-iosok">확인</button></div>';
+    document.body.appendChild(ios);
+    ios.onclick=function(e){ if(e.target===ios||e.target.id==="mnin-iosok") ios.classList.remove("on"); };
+  }
+  function show(){ if(standalone()) return; buildBar(); document.getElementById("mnin-bar").classList.add("on"); }
+  function hide(){ var b=document.getElementById("mnin-bar"); if(b) b.classList.remove("on"); }
+  function doInstall(){
+    var e=window.__mnInstall;
+    if(e && e.prompt){ e.prompt(); if(e.userChoice){ e.userChoice.then(function(){ window.__mnInstall=null; hide(); }); } else hide(); return; }
+    if(isIOS()){ document.getElementById("mnin-ios").classList.add("on"); return; }
+    hide();
+  }
+
+  // 설치 가능 신호가 오면 배너 표시
+  window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); window.__mnInstall=e; if(!dismissed) show(); });
+  window.addEventListener("appinstalled", function(){ hide(); window.__mnInstall=null; });
+
+  // 이미 잡혀 있으면(부트 스크립트) 바로 표시 / iOS는 안내형으로 표시
+  setTimeout(function(){ if(standalone()||dismissed) return; if(window.__mnInstall || isIOS()) show(); }, 1200);
+
+  window.MediNoteInstall={ show:show, hide:hide, install:doInstall };
+})();
+</script>
+<!-- ===== /앱 설치(다운로드) 레이어 ===== -->
+
+<!-- ===== 로그인 레이어 (개인 아이디 + Google · 계정별 기록) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#mnlg-pill{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:99990;display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid #E1F1EE;border-radius:22px;padding:6px 12px 6px 8px;
+  box-shadow:0 6px 16px rgba(6,65,62,.14);cursor:pointer;font-family:'Pretendard',-apple-system,sans-serif;}
+#mnlg-pill .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#12BDB0,#0A7168);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;}
+#mnlg-pill .nm{font-size:12.5px;font-weight:800;color:#0A7168;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#mnlg-back{position:fixed;inset:0;background:rgba(6,65,62,.34);z-index:100070;opacity:0;pointer-events:none;transition:opacity .22s;}
+#mnlg-back.on{opacity:1;pointer-events:auto;}
+#mnlg-sheet{position:fixed;left:0;right:0;bottom:0;z-index:100071;max-width:460px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;
+  box-shadow:0 -18px 50px rgba(6,65,62,.22);padding:8px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);
+  transition:transform .26s cubic-bezier(.22,1,.36,1);font-family:'Pretendard',-apple-system,sans-serif;letter-spacing:-.01em;}
+#mnlg-sheet.on{transform:translateY(0);}
+#mnlg-sheet .gp{width:42px;height:5px;border-radius:5px;background:#D8E9E6;margin:8px auto 14px;}
+#mnlg-sheet .hd{font-family:'Gaegu',cursive;font-weight:700;font-size:21px;color:#0A7168;margin-bottom:3px;}
+#mnlg-sheet .sub{font-size:12.5px;color:#5A716D;margin-bottom:16px;line-height:1.55;}
+#mnlg-cur{background:#F1FAF9;border:1px solid #E1F1EE;border-radius:13px;padding:11px 13px;font-size:13px;color:#0A7168;font-weight:700;margin-bottom:14px;display:none;}
+#mnlg-cur.on{display:block;}
+.mnlg-g{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;font-family:inherit;font-weight:800;font-size:14.5px;color:#3c4043;
+  background:#fff;border:1.5px solid #dadce0;border-radius:13px;padding:12px 0;cursor:pointer;}
+.mnlg-g svg{width:19px;height:19px;}
+.mnlg-or{display:flex;align-items:center;gap:10px;color:#9AAAA7;font-size:12px;font-weight:700;margin:14px 0;}
+.mnlg-or::before,.mnlg-or::after{content:"";flex:1;height:1px;background:#EAF3F1;}
+#mnlg-id{width:100%;font-family:inherit;font-size:14.5px;color:#122423;border:1.5px solid #E1F1EE;border-radius:13px;padding:12px 13px;background:#F7FCFB;}
+#mnlg-id:focus{outline:none;border-color:#12BDB0;background:#fff;}
+#mnlg-start{width:100%;margin-top:9px;font-family:inherit;font-weight:800;font-size:14.5px;color:#fff;border:none;border-radius:13px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,#12BDB0,#0A7168);box-shadow:0 8px 18px rgba(18,189,176,.28);}
+#mnlg-out{width:100%;margin-top:12px;font-family:inherit;font-weight:800;font-size:13.5px;color:#B23A28;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:13px;padding:11px 0;cursor:pointer;display:none;}
+#mnlg-out.on{display:block;}
+#mnlg-note{font-size:11px;color:#9AAAA7;margin-top:12px;line-height:1.5;text-align:center;}
+#mnlg-gerr{display:none;font-size:11.5px;color:#B23A28;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:11px;padding:9px 11px;margin-top:9px;line-height:1.55;}
+#mnlg-gerr.on{display:block;}
+</style>
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var sb=null, user=null, built=false;
+  function uid(){ try{ return localStorage.getItem("medinote:uid")||"guest"; }catch(e){ return "guest"; } }
+  function setUid(v){ v=(v&&String(v).trim())||"guest"; try{ localStorage.setItem("medinote:uid",v); }catch(e){}
+    try{ window.dispatchEvent(new CustomEvent("medinote:uid",{detail:v})); }catch(e){} paint(); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];}); }
+
+  function build(){
+    if(built) return; built=true;
+    var pill=document.createElement("div"); pill.id="mnlg-pill";
+    pill.innerHTML='<span class="av" id="mnlg-av">?</span><span class="nm" id="mnlg-nm">로그인</span>';
+    pill.onclick=open; document.body.appendChild(pill);
+    var back=document.createElement("div"); back.id="mnlg-back";
+    var sheet=document.createElement("div"); sheet.id="mnlg-sheet";
+    sheet.innerHTML=
+      '<div class="gp"></div>'+
+      '<div class="hd">로그인</div>'+
+      '<div class="sub">Google 계정으로 로그인하면 여러 기기에서 이어지고, 본인 아이디로도 로그인할 수 있어요.</div>'+
+      '<div id="mnlg-cur"></div>'+
+      '<button class="mnlg-g" id="mnlg-google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Google로 로그인</button>'+
+      '<div id="mnlg-gerr"></div>'+
+      '<div class="mnlg-or">또는 본인 아이디</div>'+
+      '<input id="mnlg-id" placeholder="아이디 또는 이메일 (예: hjshin)" autocomplete="off">'+
+      '<button id="mnlg-start">이 아이디로 로그인</button>'+
+      '<button id="mnlg-out">로그아웃</button>'+
+      '<div id="mnlg-note">Google 로그인이 안 되면, 관리자가 Supabase에서 Google 공급자를 한 번 켜야 합니다(가이드 참고). 그 전에는 본인 아이디로 테스트하세요.</div>';
+    document.body.appendChild(back); document.body.appendChild(sheet);
+    back.onclick=close;
+    document.getElementById("mnlg-google").onclick=googleLogin;
+    document.getElementById("mnlg-start").onclick=function(){ var v=(document.getElementById("mnlg-id").value||"").trim().replace(/\s+/g,""); if(!v){ document.getElementById("mnlg-id").focus(); return; } setUid(v); close(); };
+    document.getElementById("mnlg-id").addEventListener("keydown",function(e){ if(e.key==="Enter") document.getElementById("mnlg-start").click(); });
+    document.getElementById("mnlg-out").onclick=logout;
+  }
+  function open(){ build(); paint(); document.getElementById("mnlg-back").classList.add("on"); requestAnimationFrame(function(){ document.getElementById("mnlg-sheet").classList.add("on"); }); }
+  function close(){ var s=document.getElementById("mnlg-sheet"),b=document.getElementById("mnlg-back"); if(s)s.classList.remove("on"); if(b)b.classList.remove("on"); }
+
+  function paint(){
+    if(!built) return;
+    var u=uid(), loggedin=(u!=="guest");
+    var name = user ? ((user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email||u) : u;
+    document.getElementById("mnlg-nm").textContent = loggedin ? name : "로그인";
+    document.getElementById("mnlg-av").textContent = loggedin ? String(name).slice(0,1).toUpperCase() : "?";
+    var cur=document.getElementById("mnlg-cur");
+    if(loggedin){ cur.classList.add("on"); cur.innerHTML="현재 로그인 · <b>"+esc(name)+"</b>"; document.getElementById("mnlg-out").classList.add("on"); }
+    else { cur.classList.remove("on"); document.getElementById("mnlg-out").classList.remove("on"); }
+  }
+
+  function gerr(msg){ var e=document.getElementById("mnlg-gerr"); if(e){ e.classList.add("on"); e.innerHTML=msg; } }
+  function googleLogin(){
+    var e=document.getElementById("mnlg-gerr"); if(e) e.classList.remove("on");
+    if(location.protocol==="file:"){ gerr("파일을 직접 연 상태(file://)에서는 Google 로그인이 안 됩니다. <b>배포한 https 주소</b>에서 열어 주세요."); return; }
+    if(location.protocol!=="https:" && location.hostname!=="localhost"){ gerr("Google 로그인은 <b>https</b> 주소에서만 됩니다."); return; }
+    if(!sb){ gerr("로그인 모듈을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."); return; }
+    try{
+      sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.href.split("#")[0]}})
+        .then(function(r){ if(r&&r.error){ gerr("Google 공급자 설정이 필요합니다 (관리자 1회): <b>"+esc(r.error.message||"provider not enabled")+"</b><br>Supabase → Authentication → Providers → <b>Google 켜기</b> + Redirect URL 등록이 필요합니다."); } })
+        .catch(function(){ gerr("로그인을 시작할 수 없습니다. 잠시 후 다시 시도하거나 본인 아이디로 로그인하세요."); });
+    }catch(err){ gerr("로그인을 시작할 수 없습니다. 본인 아이디로 로그인해 주세요."); }
+  }
+  function logout(){ if(sb&&user){ sb.auth.signOut().then(function(){ user=null; setUid("guest"); close(); }); } else { user=null; setUid("guest"); close(); } }
+
+  function initSb(){
+    try{ if(window.supabase&&window.supabase.createClient){
+      sb=window.supabase.createClient(SB_URL,SB_KEY);
+      sb.auth.getSession().then(function(r){ var s=r&&r.data&&r.data.session; if(s&&s.user){ user=s.user; setUid(user.email||user.id); } paint(); }).catch(function(){ paint(); });
+      sb.auth.onAuthStateChange(function(_e,ss){ if(ss&&ss.user){ user=ss.user; setUid(user.email||user.id); } paint(); });
+    } }catch(e){}
+  }
+
+  build(); initSb(); paint();
+  window.MediNoteLogin={ open:open, close:close, setUid:setUid, uid:uid };
+})();
+</script>
+<!-- ===== /로그인 레이어 ===== -->
+</body></html>
