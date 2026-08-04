@@ -1265,13 +1265,25 @@
 #mnlg-note{font-size:11px;color:#9AAAA7;margin-top:12px;line-height:1.5;text-align:center;}
 #mnlg-gerr{display:none;font-size:11.5px;color:#B23A28;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:11px;padding:9px 11px;margin-top:9px;line-height:1.55;}
 #mnlg-gerr.on{display:block;}
+.mnlg-tabs{display:flex;gap:8px;margin-bottom:12px;}
+.mnlg-tabs button{flex:1;font-family:inherit;font-weight:800;font-size:13.5px;padding:9px 0;border-radius:11px;border:1.5px solid #E1F1EE;background:#F7FCFB;color:#5A716D;cursor:pointer;}
+.mnlg-tabs button.on{background:linear-gradient(135deg,#12BDB0,#0A7168);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(18,189,176,.24);}
+#mnlg-forms input{width:100%;font-family:inherit;font-size:14.5px;color:#122423;border:1.5px solid #E1F1EE;border-radius:13px;padding:12px 13px;background:#F7FCFB;margin-bottom:9px;}
+#mnlg-forms input:focus{outline:none;border-color:#12BDB0;background:#fff;}
+#mnlg-submit{width:100%;font-family:inherit;font-weight:800;font-size:14.5px;color:#fff;border:none;border-radius:13px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,#12BDB0,#0A7168);box-shadow:0 8px 18px rgba(18,189,176,.28);}
+#mnlg-submit:disabled{opacity:.6;cursor:default;}
+#mnlg-status{font-size:12px;font-weight:700;margin-top:9px;min-height:16px;line-height:1.5;}
+#mnlg-status.err{color:#B23A28;} #mnlg-status.ok{color:#0A7168;}
+.mnlg-link{display:block;width:100%;margin-top:10px;background:none;border:none;color:#0A7168;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;text-decoration:underline;}
+.mnlg-2nd{width:100%;margin-top:8px;font-family:inherit;font-weight:800;font-size:13.5px;color:#0A7168!important;background:#fff!important;border:1.5px solid #E1F1EE!important;border-radius:12px;padding:11px 0;cursor:pointer;box-shadow:none!important;}
 </style>
 <script>
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
   var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
-  var sb=null, user=null, built=false;
+  var sb=null, user=null, built=false, authMode="login";
+  function el(id){ return document.getElementById(id); }
   function uid(){ try{ return localStorage.getItem("medinote:uid")||"guest"; }catch(e){ return "guest"; } }
   function setUid(v){ v=(v&&String(v).trim())||"guest"; try{ localStorage.setItem("medinote:uid",v); }catch(e){}
     try{ window.dispatchEvent(new CustomEvent("medinote:uid",{detail:v})); }catch(e){} paint(); }
@@ -1286,22 +1298,34 @@
     var sheet=document.createElement("div"); sheet.id="mnlg-sheet";
     sheet.innerHTML=
       '<div class="gp"></div>'+
-      '<div class="hd">로그인</div>'+
-      '<div class="sub">Google 계정으로 로그인하면 여러 기기에서 이어지고, 본인 아이디로도 로그인할 수 있어요.</div>'+
+      '<div class="hd" id="mnlg-hd">로그인</div>'+
+      '<div class="sub" id="mnlg-sub">이메일로 로그인하거나 회원가입하세요. 기록이 계정에 안전하게 저장됩니다.</div>'+
       '<div id="mnlg-cur"></div>'+
-      '<button class="mnlg-g" id="mnlg-google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Google로 로그인</button>'+
-      '<div id="mnlg-gerr"></div>'+
-      '<div class="mnlg-or">또는 본인 아이디</div>'+
-      '<input id="mnlg-id" placeholder="아이디 또는 이메일 (예: hjshin)" autocomplete="off">'+
-      '<button id="mnlg-start">이 아이디로 로그인</button>'+
+      '<div id="mnlg-forms">'+
+        '<div class="mnlg-tabs"><button id="mnlg-tab-login" class="on">로그인</button><button id="mnlg-tab-signup">회원가입</button></div>'+
+        '<input id="mnlg-name" placeholder="이름" autocomplete="name" style="display:none">'+
+        '<input id="mnlg-email" type="email" placeholder="이메일" autocomplete="email">'+
+        '<input id="mnlg-pw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">'+
+        '<button id="mnlg-submit">로그인</button>'+
+        '<div id="mnlg-status"></div>'+
+        '<div class="mnlg-or">간편 로그인</div>'+
+        '<button class="mnlg-g" id="mnlg-google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Google로 계속</button>'+
+        '<button id="mnlg-quicktoggle" class="mnlg-link">이메일 없이 아이디로 빠른 체험</button>'+
+        '<div id="mnlg-quick" style="display:none"><input id="mnlg-id" placeholder="아이디 (예: hjshin)" autocomplete="off"><button id="mnlg-start" class="mnlg-2nd">이 아이디로 시작</button></div>'+
+      '</div>'+
       '<button id="mnlg-out">로그아웃</button>'+
-      '<div id="mnlg-note">Google 로그인이 안 되면, 관리자가 Supabase에서 Google 공급자를 한 번 켜야 합니다(가이드 참고). 그 전에는 본인 아이디로 테스트하세요.</div>';
+      '<div id="mnlg-gerr"></div>'+
+      '<div id="mnlg-note">가입 시 이메일 인증이 켜져 있으면, 메일의 인증 링크를 누른 뒤 로그인하세요.</div>';
     document.body.appendChild(back); document.body.appendChild(sheet);
     back.onclick=close;
-    document.getElementById("mnlg-google").onclick=googleLogin;
-    document.getElementById("mnlg-start").onclick=function(){ var v=(document.getElementById("mnlg-id").value||"").trim().replace(/\s+/g,""); if(!v){ document.getElementById("mnlg-id").focus(); return; } setUid(v); close(); };
-    document.getElementById("mnlg-id").addEventListener("keydown",function(e){ if(e.key==="Enter") document.getElementById("mnlg-start").click(); });
-    document.getElementById("mnlg-out").onclick=logout;
+    el("mnlg-tab-login").onclick=function(){ setMode("login"); };
+    el("mnlg-tab-signup").onclick=function(){ setMode("signup"); };
+    el("mnlg-submit").onclick=submitAuth;
+    el("mnlg-pw").addEventListener("keydown",function(e){ if(e.key==="Enter") submitAuth(); });
+    el("mnlg-google").onclick=googleLogin;
+    el("mnlg-quicktoggle").onclick=function(){ var q=el("mnlg-quick"); q.style.display=(q.style.display==="none")?"block":"none"; };
+    el("mnlg-start").onclick=function(){ var v=(el("mnlg-id").value||"").trim().replace(/\s+/g,""); if(!v){ el("mnlg-id").focus(); return; } setUid(v); close(); };
+    el("mnlg-out").onclick=logout;
   }
   function open(){ build(); paint(); document.getElementById("mnlg-back").classList.add("on"); requestAnimationFrame(function(){ document.getElementById("mnlg-sheet").classList.add("on"); }); }
   function close(){ var s=document.getElementById("mnlg-sheet"),b=document.getElementById("mnlg-back"); if(s)s.classList.remove("on"); if(b)b.classList.remove("on"); }
@@ -1309,12 +1333,49 @@
   function paint(){
     if(!built) return;
     var u=uid(), loggedin=(u!=="guest");
-    var name = user ? ((user.user_metadata&&(user.user_metadata.full_name||user.user_metadata.name))||user.email||u) : u;
-    document.getElementById("mnlg-nm").textContent = loggedin ? name : "로그인";
-    document.getElementById("mnlg-av").textContent = loggedin ? String(name).slice(0,1).toUpperCase() : "?";
-    var cur=document.getElementById("mnlg-cur");
-    if(loggedin){ cur.classList.add("on"); cur.innerHTML="현재 로그인 · <b>"+esc(name)+"</b>"; document.getElementById("mnlg-out").classList.add("on"); }
-    else { cur.classList.remove("on"); document.getElementById("mnlg-out").classList.remove("on"); }
+    var name = user ? ((user.user_metadata&&(user.user_metadata.name||user.user_metadata.full_name))||user.email||u) : u;
+    el("mnlg-nm").textContent = loggedin ? name : "로그인";
+    el("mnlg-av").textContent = loggedin ? String(name).slice(0,1).toUpperCase() : "?";
+    var cur=el("mnlg-cur"), forms=el("mnlg-forms"), out=el("mnlg-out");
+    if(loggedin){ cur.classList.add("on"); cur.innerHTML="현재 로그인 · <b>"+esc(name)+"</b>"; if(forms) forms.style.display="none"; if(out) out.classList.add("on");
+      if(el("mnlg-hd")) el("mnlg-hd").textContent="내 계정"; if(el("mnlg-sub")) el("mnlg-sub").textContent="로그인 상태입니다. 기록이 이 계정에 저장됩니다."; }
+    else { cur.classList.remove("on"); if(forms) forms.style.display="block"; if(out) out.classList.remove("on"); }
+  }
+
+  function status(msg,isErr){ var s=el("mnlg-status"); if(!s) return; if(!msg){ s.className=""; s.textContent=""; return; } s.className=isErr?"err":"ok"; s.textContent=msg; }
+  function setMode(m){ authMode=m;
+    if(el("mnlg-tab-login")) el("mnlg-tab-login").classList.toggle("on",m==="login");
+    if(el("mnlg-tab-signup")) el("mnlg-tab-signup").classList.toggle("on",m==="signup");
+    if(el("mnlg-name")) el("mnlg-name").style.display=(m==="signup")?"block":"none";
+    if(el("mnlg-submit")) el("mnlg-submit").textContent=(m==="signup")?"회원가입":"로그인";
+    if(el("mnlg-hd")) el("mnlg-hd").textContent=(m==="signup")?"회원가입":"로그인";
+    status("");
+  }
+  function mapErr(m){ m=String(m||"");
+    if(/already registered|already exists|User already/i.test(m)) return "이미 가입된 이메일입니다. 로그인해 주세요.";
+    if(/Invalid login|invalid credentials|Invalid email or password/i.test(m)) return "이메일 또는 비밀번호가 올바르지 않습니다.";
+    if(/Email not confirmed/i.test(m)) return "이메일 인증이 필요합니다. 메일의 인증 링크를 눌러 주세요.";
+    if(/at least/i.test(m)) return "비밀번호는 6자 이상이어야 합니다.";
+    return m; }
+  function submitAuth(){
+    if(!sb){ status("로그인 모듈 로딩 중입니다. 잠시 후 다시 시도하세요.", true); return; }
+    var email=(el("mnlg-email").value||"").trim(), pw=(el("mnlg-pw").value||"");
+    if(email.indexOf("@")<1){ status("이메일을 정확히 입력하세요.", true); el("mnlg-email").focus(); return; }
+    if(pw.length<6){ status("비밀번호는 6자 이상이어야 합니다.", true); el("mnlg-pw").focus(); return; }
+    var btn=el("mnlg-submit"); btn.disabled=true; var old=btn.textContent; btn.textContent="처리 중…";
+    var done=function(){ btn.disabled=false; btn.textContent=old; };
+    if(authMode==="signup"){
+      var name=(el("mnlg-name").value||"").trim();
+      sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}})
+        .then(function(r){ if(r.error){ status(mapErr(r.error.message),true); }
+          else if(r.data&&r.data.session){ status("가입 완료! 자동 로그인되었습니다.",false); setTimeout(close,800); }
+          else { status("가입 완료! 이메일로 보낸 인증 링크를 누른 뒤 로그인하세요.",false); setMode("login"); } })
+        .catch(function(){ status("가입 중 오류가 발생했습니다.",true); }).then(done);
+    } else {
+      sb.auth.signInWithPassword({email:email,password:pw})
+        .then(function(r){ if(r.error){ status(mapErr(r.error.message),true); } else { status("로그인되었습니다.",false); setTimeout(close,500); } })
+        .catch(function(){ status("로그인 중 오류가 발생했습니다.",true); }).then(done);
+    }
   }
 
   function gerr(msg){ var e=document.getElementById("mnlg-gerr"); if(e){ e.classList.add("on"); e.innerHTML=msg; } }
