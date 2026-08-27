@@ -7,14 +7,29 @@
 (function () {
   // 허브와 동일한 Supabase (로그인·저장 공유)
   var SUPABASE_URL = "https://xaclqvveppvccdpebzsz.supabase.co";
-  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SUPABASE_KEY = "sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
 
   function sbHeaders() {
-    return { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY };
+    // 로그인했으면 앱의 공용 계층이 들고 있는 세션 토큰으로, 아니면 publishable 키로.
+    var kv = window.MediNoteKV;
+    if (kv && kv.token && kv.token()) return kv.headers();
+    return { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
+  }
+
+  // prescriptions · hub_state 직접 조회는 익명 목록 열거를 막느라 닫혔다.
+  // 키/ID 를 정확히 아는 1건씩만 응답하는 SECURITY DEFINER 함수로 나간다.
+  async function rpc(fn, body) {
+    var r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: Object.assign(sbHeaders(), { "Content-Type": "application/json" }),
+      body: JSON.stringify(body || {})
+    });
+    if (!r.ok) throw new Error("RPC " + fn + " HTTP " + r.status);
+    return r.json();
   }
 
   // 처방 데이터를 DB에서 불러온다.
-  // 우선순위: URL ?rx=처방ID → prescriptions 테이블 / 없으면 hub_state 의 'medit:rx' / 실패 시 앱 내장 데모 데이터 유지
+  // 우선순위: URL ?rx=처방ID → get_prescription(id) / 없으면 kv_get('medit:rx') / 실패 시 앱 내장 데모 데이터 유지
   async function loadRx() {
     try {
       var params = new URLSearchParams(location.search);
@@ -23,12 +38,10 @@
 
       if (rxId) {
         localStorage.setItem("medit:rxid", rxId);
-        var r1 = await fetch(SUPABASE_URL + "/rest/v1/prescriptions?id=eq." + encodeURIComponent(rxId) + "&select=*", { headers: sbHeaders() });
-        if (r1.ok) { var rows1 = await r1.json(); if (rows1 && rows1[0]) data = rows1[0].data || rows1[0]; }
+        try { data = await rpc("get_prescription", { p_id: rxId }); } catch (e) { data = null; }
       }
       if (!data) {
-        var r2 = await fetch(SUPABASE_URL + "/rest/v1/hub_state?key=eq.medit:rx&select=value", { headers: sbHeaders() });
-        if (r2.ok) { var rows2 = await r2.json(); if (rows2 && rows2[0]) data = rows2[0].value; }
+        try { data = await rpc("kv_get", { p_key: "medit:rx" }); } catch (e) { data = null; }
       }
 
       if (data && window.RX && typeof data === "object") {
@@ -55,11 +68,14 @@
   window.MediNoteRefreshRx = refreshRxCard;
 
   // 처방을 DB에 저장(약국/병원 시스템이 QR 발급 시 호출하는 용도)
+  // 익명 쓰기는 닫혀 있다 — medit:rx 는 로그인한 계정이 본인 행으로만 저장한다.
   window.MediNoteSaveRx = async function (rx) {
-    var body = [{ key: "medit:rx", value: rx, updated_at: new Date().toISOString() }];
+    var kv = window.MediNoteKV, uid = kv && kv.userId && kv.userId();
+    if (!uid) { console.warn("[MediNote] 처방 저장은 로그인 후에만 가능합니다."); return false; }
+    var body = [{ key: "medit:rx", value: rx, user_id: uid, is_public: false, updated_at: new Date().toISOString() }];
     var r = await fetch(SUPABASE_URL + "/rest/v1/hub_state", {
       method: "POST",
-      headers: Object.assign(sbHeaders(), { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }),
+      headers: Object.assign(kv.headers(), { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }),
       body: JSON.stringify(body)
     });
     return r.ok;

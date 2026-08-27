@@ -23,12 +23,31 @@ h1{font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.03em;}
 .card .kw{font-size:11.5px;color:#8FA6A2;margin-top:7px;}
 .note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:12.5px;color:var(--d3);line-height:1.6;margin-top:14px;}
 .note b{color:var(--g6);}
+.auth{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;}
+.auth .who{font-size:12.5px;color:var(--d3);line-height:1.55;margin-bottom:9px;}
+.auth .who b{color:var(--g6);}
+.auth .row{display:flex;gap:7px;flex-wrap:wrap;}
+.auth input{flex:1 1 120px;min-width:0;font-family:inherit;font-size:13.5px;padding:10px 12px;
+  border:1.5px solid var(--line);border-radius:10px;color:var(--ink);background:#fff;}
+.auth .btn{font-size:13.5px;padding:10px 15px;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>MediNote 예시 카드 · DB 채우기</h1>
   <div class="sub">AI가 만든 예시 안내 카드 세트를 Supabase(<code>hub_state · medinote:cards</code>)에 저장합니다. 저장 후 앱의 도우미에서 관련 질문을 하면 <b>AI 호출 없이 이 카드가 즉시</b> 뜹니다.</div>
+
+  <div class="auth">
+    <div class="who" id="who">확인 중…</div>
+    <div class="row" id="authform">
+      <input id="em" type="email" placeholder="이메일" autocomplete="username">
+      <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password">
+      <button class="btn ghost" id="loginBtn" type="button">로그인</button>
+    </div>
+    <div class="row" id="authout" style="display:none">
+      <button class="btn ghost" id="logoutBtn" type="button">로그아웃</button>
+    </div>
+  </div>
 
   <div class="bar">
     <button class="btn" id="seedBtn">Supabase에 카드 채우기</button>
@@ -40,13 +59,15 @@ h1{font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.03em;}
 
   <div class="note">
     <b>동작 원리</b> · 앱은 시작할 때 이 <code>medinote:cards</code>를 읽어둡니다. 사용자가 도우미에 질문하면, 질문에 카드 키워드가 들어있으면 그 카드를 바로 보여주고(비용 0·즉시), 없으면 실시간 AI가 같은 형식의 카드로 답합니다.<br>
-    ※ 저장에는 <code>hub_state</code> 테이블이 필요합니다(가이드의 SQL). 이 페이지는 앱과 같은 폴더에 두고 한 번만 열어 실행하면 됩니다.
+    ※ <b>읽기는 공개</b>입니다 — 앱은 로그인 없이 <code>kv_get</code> 으로 카드를 가져옵니다.
+    <b>갱신은 로그인이 필요</b>합니다(<code>kv_put_cards</code>). 앱과 같은 계정으로 로그인한 뒤 채우기를 눌러 주세요.
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+const SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
 
 // ===== AI가 미리 채운 예시 카드 세트 (방준석 연구실 감수 톤) =====
 const CARDS=[
@@ -92,26 +113,71 @@ const CARDS=[
 ];
 
 const $=id=>document.getElementById(id);
+
+/* ── 로그인 · RPC ──
+   안내카드 읽기는 kv_get 으로 공개, 갱신은 kv_put_cards 로 로그인한 계정만.
+   hub_state 직접 접근은 익명 목록 열거를 막느라 닫혀 있다. */
+let sb=null, session=null;
+try{ if(window.supabase&&window.supabase.createClient) sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){}
+
+async function rpc(fn,body){
+  const tok=(session&&session.access_token)||SB_KEY;
+  const r=await fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+    headers:{apikey:SB_KEY,Authorization:"Bearer "+tok,"Content-Type":"application/json"},
+    body:JSON.stringify(body||{})});
+  if(!r.ok) throw new Error("HTTP "+r.status+" — "+fn);
+  return r.json();
+}
+
+function paintAuth(){
+  const who=$("who"), inForm=$("authform"), outForm=$("authout"), seed=$("seedBtn");
+  const email=session&&session.user&&session.user.email;
+  if(email){
+    who.innerHTML="<b>"+email+"</b> 으로 로그인했습니다. 카드를 갱신할 수 있습니다.";
+    inForm.style.display="none"; outForm.style.display="flex";
+    seed.disabled=false; seed.style.opacity="";
+  }else{
+    who.textContent="카드 갱신에는 로그인이 필요합니다. 읽기는 로그인 없이도 공개됩니다.";
+    inForm.style.display="flex"; outForm.style.display="none";
+    seed.disabled=true; seed.style.opacity=".5";
+  }
+}
+if(sb){
+  sb.auth.getSession().then(r=>{ session=(r&&r.data&&r.data.session)||null; paintAuth(); }).catch(()=>paintAuth());
+  sb.auth.onAuthStateChange((_e,ss)=>{ session=ss||null; paintAuth(); });
+}else{ paintAuth(); }
+
+$("loginBtn").onclick=async()=>{
+  if(!sb){ $("st").textContent="supabase-js 를 불러오지 못했습니다. 네트워크를 확인해 주세요."; return; }
+  const email=$("em").value.trim(), password=$("pw").value;
+  if(!email||!password){ $("st").textContent="이메일과 비밀번호를 입력해 주세요."; return; }
+  $("st").textContent="로그인 중…";
+  const { error }=await sb.auth.signInWithPassword({ email, password });
+  $("st").textContent=error?("로그인 실패: "+error.message):"로그인했습니다.";
+  $("pw").value="";
+};
+$("logoutBtn").onclick=async()=>{ if(sb) await sb.auth.signOut(); $("st").textContent="로그아웃했습니다."; };
+
 function render(){
   $("list").innerHTML=CARDS.map(c=>`<div class="card"><div class="tp">${c.topic}</div><div class="tt">${c.card.title}</div><div class="sm">${c.card.summary}</div><div class="kw">키워드: ${(c.keywords||[]).join(", ")}</div></div>`).join("");
 }
 render();
 
 $("seedBtn").onclick=async()=>{
+  if(!session){ $("st").textContent="먼저 로그인해 주세요."; return; }
   $("st").textContent="저장 중…";
   try{
-    const r=await fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",
-      headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},
-      body:JSON.stringify([{key:"medinote:cards",value:{cards:CARDS},updated_at:new Date().toISOString()}])});
-    if(!r.ok) throw new Error("HTTP "+r.status+" — hub_state 테이블/정책을 확인하세요");
-    $("st").textContent="완료 · "+CARDS.length+"개 카드를 DB에 저장했습니다. 앱을 새로고침하면 반영됩니다.";
+    const ok=await rpc("kv_put_cards",{p_value:{cards:CARDS}});
+    $("st").textContent = ok===true
+      ? ("완료 · "+CARDS.length+"개 카드를 DB에 저장했습니다. 앱을 새로고침하면 반영됩니다.")
+      : "저장이 거부됐습니다. 로그인 상태와 카드 크기(256KB 상한)를 확인해 주세요.";
   }catch(e){ $("st").textContent="실패: "+e.message; }
 };
 $("checkBtn").onclick=async()=>{
   $("st").textContent="확인 중…";
   try{
-    const r=await fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent("medinote:cards")+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});
-    const rows=await r.json(); const n=(rows[0]&&rows[0].value&&rows[0].value.cards||[]).length;
+    const v=await rpc("kv_get",{p_key:"medinote:cards"});
+    const n=((v&&v.cards)||[]).length;
     $("st").textContent=n?("DB에 카드 "+n+"개가 저장돼 있습니다."):"DB에 아직 카드가 없습니다. [Supabase에 카드 채우기]를 눌러 주세요.";
   }catch(e){ $("st").textContent="확인 실패: "+e.message; }
 };
