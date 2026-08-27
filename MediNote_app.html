@@ -199,10 +199,10 @@
       google: "Google\uB85C \uACC4\uC18D\uD558\uAE30",
       kakao: "\uCE74\uCE74\uC624\uB85C \uACC4\uC18D\uD558\uAE30",
       naver: "\uB124\uC774\uBC84\uB85C \uACC4\uC18D\uD558\uAE30",
-      consentNote: "Google \uB85C\uADF8\uC778 \uC2DC \uC0DD\uB144\uC6D4\uC77C\uB85C \uC5F0\uB839\uB300\uB97C \uC790\uB3D9 \uC124\uC815\uD569\uB2C8\uB2E4 (\uB3D9\uC758 \uC2DC).\n\uC81C\uACF5\uB418\uC9C0 \uC54A\uC73C\uBA74 \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4.",
-      dobMissTitle: "\uC0DD\uB144\uC6D4\uC77C\uC774 \uACF5\uC720\uB418\uC9C0 \uC54A\uC558\uC5B4\uC694",
+      consentNote: "\uC0DD\uB144\uC6D4\uC77C\uC740 \uCC98\uC74C \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4. \uC5F0\uB839\uB300\uC5D0 \uB530\uB77C \uC811\uC885 \uC548\uB0B4\uAC00 \uB2EC\uB77C\uC11C\uC608\uC694.",
+      dobMissTitle: "\uC0DD\uB144\uC6D4\uC77C\uB9CC \uC54C\uB824\uC8FC\uC138\uC694",
       oneThing: "\uD55C \uAC00\uC9C0\uB9CC\uC694",
-      dobMissBody: "Google\uC5D0\uC11C \uC0DD\uB144\uC6D4\uC77C\uC744 \uBC1B\uC9C0 \uBABB\uD588\uC5B4\uC694. \uC5F0\uB839\uB300 \uB9DE\uCDA4 \uC548\uB0B4\uB97C \uC704\uD574 \uD55C \uBC88\uB9CC \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
+      dobMissBody: "\uC811\uC885 \uC548\uB0B4\uAC00 \uC5F0\uB839\uB300\uC5D0 \uB530\uB77C \uB2EC\uB77C\uC11C \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4. \uD55C \uBC88 \uC785\uB825\uD558\uC2DC\uBA74 \uB2E4\uC74C\uBD80\uD130\uB294 \uBB3B\uC9C0 \uC54A\uC544\uC694.",
       ageGroup: "\uC5F0\uB839\uB300",
       start: "\uC2DC\uC791\uD558\uAE30",
       nav: { home: "\uCC98\uC74C", vaccine: "\uC608\uBC29\uC811\uC885", assist: "\uB3C4\uC6B0\uBBF8", report: "\uB9AC\uD3EC\uD2B8", my: "\uB098\uC758\uC815\uBCF4" },
@@ -298,10 +298,10 @@
       google: "Continue with Google",
       kakao: "Continue with Kakao",
       naver: "Continue with Naver",
-      consentNote: "With Google, we read your date of birth to set your age group automatically (with consent). If it isn't shared, we'll ask once.",
-      dobMissTitle: "Your date of birth wasn't shared",
+      consentNote: "We ask for your date of birth once \u2014 vaccination guidance differs by age group.",
+      dobMissTitle: "Just your date of birth",
       oneThing: "One quick thing",
-      dobMissBody: "Google didn't return a birth date, so please add it once. We use it only to tailor guidance to your age group.",
+      dobMissBody: "Vaccination guidance differs by age group, so we ask once. We won't ask again after this.",
       ageGroup: "Age group",
       start: "Get started",
       nav: { home: "Home", vaccine: "Vaccines", assist: "Assistant", report: "After-care", my: "Record" },
@@ -427,7 +427,9 @@
     const [lang] = (0, import_react.useState)(detectLang());
     const [phase, setPhase] = (0, import_react.useState)("splash");
     const [pct, setPct] = (0, import_react.useState)(0);
-    const [profile, setProfile] = (0, import_react.useState)(null);
+    const [profile, setProfile] = (0, import_react.useState)(
+      (function(){ try{ return (window.MediNoteProfile && window.MediNoteProfile.cached()) || null; }catch(e){ return null; } })()
+    );
     const [tab, setTab] = (0, import_react.useState)("home");
     const t = STR[lang];
     (0, import_react.useEffect)(() => {
@@ -446,6 +448,7 @@
     }, [phase]);
     if (phase === "splash") return /* @__PURE__ */ import_react.default.createElement(Splash, { t, pct });
     if (phase === "onboard" || !profile) return /* @__PURE__ */ import_react.default.createElement(Onboard, { t, lang, onDone: (p) => {
+      try{ if(window.MediNoteProfile) window.MediNoteProfile.save(p); }catch(e){}
       setProfile(p);
       setPhase("app");
     } });
@@ -508,8 +511,16 @@
         const v = (e && e.detail) || null;
         if (v && v !== "guest") setStep(1);
       }
+      function onProfile(e) {
+        const p = (e && e.detail) || null;
+        if (p && p.birth) onDone(p);   // 다른 기기에서 이미 입력해 둔 값이 도착했다
+      }
       window.addEventListener("medinote:uid", onUid);
-      return () => window.removeEventListener("medinote:uid", onUid);
+      window.addEventListener("medinote:profile", onProfile);
+      return () => {
+        window.removeEventListener("medinote:uid", onUid);
+        window.removeEventListener("medinote:profile", onProfile);
+      };
     }, []);
 
     function signIn(provider) {
@@ -733,6 +744,85 @@
     headers:function(){ var tok=(session&&session.access_token)||SB_KEY;
       return {apikey:SB_KEY,Authorization:"Bearer "+tok}; }
   };
+})();
+</script>
+<!-- ===== MediNote 프로필 보관 (생년월일을 매번 다시 묻지 않도록) ===== -->
+<script>
+(function(){
+  "use strict";
+  // 온보딩에서 받은 생년월일이 React 상태에만 있어서 앱을 다시 열 때마다 또 물었다.
+  // 기기에는 localStorage 에, 로그인한 사용자는 health_profiles(본인 행)에 남긴다.
+  var LOCAL = "medinote:profile";
+
+  function cached(){
+    try{
+      var v = JSON.parse(localStorage.getItem(LOCAL) || "null");
+      if(v && v.birth) return v;
+    }catch(e){}
+    return null;
+  }
+
+  function saveLocal(p){
+    try{ localStorage.setItem(LOCAL, JSON.stringify(p)); }catch(e){}
+  }
+
+  async function saveRemote(p){
+    var kv = window.MediNoteKV, uid = kv && kv.userId && kv.userId();
+    if(!uid || !p || !p.birth) return false;
+    try{
+      var r = await fetch(kv.url + "/rest/v1/health_profiles", {
+        method: "POST",
+        headers: Object.assign(kv.headers(), {
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=minimal"
+        }),
+        body: JSON.stringify([{
+          id: uid,
+          name: p.name || null,
+          birth: p.birth,
+          conditions: (p.conditions && p.conditions.length) ? p.conditions.join(", ") : null,
+          updated_at: new Date().toISOString()
+        }])
+      });
+      return r.ok;
+    }catch(e){ return false; }
+  }
+
+  function save(p){
+    if(!p || !p.birth) return;
+    saveLocal(p);
+    saveRemote(p);
+  }
+
+  // 로그인한 사용자의 저장된 프로필을 가져와, 없으면 온보딩을 건너뛰게 알린다.
+  async function pull(){
+    var kv = window.MediNoteKV, uid = kv && kv.userId && kv.userId();
+    if(!uid) return null;
+    try{
+      var r = await fetch(kv.url + "/rest/v1/health_profiles?id=eq." + uid + "&select=name,birth,conditions",
+        { headers: kv.headers() });
+      if(!r.ok) return null;
+      var rows = await r.json();
+      var row = rows && rows[0];
+      if(!row || !row.birth) return null;
+      var p = {
+        name: row.name || "",
+        birth: String(row.birth).slice(0,10),
+        conditions: row.conditions ? String(row.conditions).split(/\s*,\s*/).filter(Boolean) : []
+      };
+      saveLocal(p);
+      try{ window.dispatchEvent(new CustomEvent("medinote:profile", { detail: p })); }catch(e){}
+      return p;
+    }catch(e){ return null; }
+  }
+
+  window.MediNoteProfile = { cached: cached, save: save, pull: pull, key: LOCAL };
+
+  // 로그인이 잡히면 저장된 프로필을 가져온다.
+  window.addEventListener("medinote:uid", function(e){
+    var v = (e && e.detail) || null;
+    if(v && v !== "guest") setTimeout(pull, 300);
+  });
 })();
 </script>
 <!-- ===== MediNote HW read 레이어 (기존 UI 변경 없음 · Web Bluetooth 실제 기기 읽기) ===== -->
