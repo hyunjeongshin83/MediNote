@@ -263,8 +263,23 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 
   var sb=null, user=null;
   var uid=(function(){ try{ return localStorage.getItem("medinote:uid")||""; }catch(e){ return ""; } })()||"guest";
-  function reportKey(){ return "medinote:report:"+uid; }
-  function sentKey(){ return "medinote:reports_sent:"+uid; }
+  /* 리포트 키는 그 자체가 열쇠다 — 이메일이나 "guest" 는 남이 맞힐 수 있어서 열쇠가 못 된다.
+     앱에서 로그인하면 medinote:authscope(u_<uuid>)를 같은 오리진에 심어 두고, 아니면 기기 난수 토큰을 쓴다. */
+  function mnScope(){
+    var a=null; try{ a=localStorage.getItem("medinote:authscope"); }catch(e){}
+    if(/^u_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(a||"")) return a;
+    var k="medinote:devtoken", v=null;
+    try{ v=localStorage.getItem(k); }catch(e){}
+    if(/^g_[0-9a-f]{32}$/.test(v||"")) return v;
+    var b=new Uint8Array(16), c=window.crypto||window.msCrypto;
+    if(c&&c.getRandomValues) c.getRandomValues(b);
+    else for(var i=0;i<16;i++) b[i]=Math.floor(Math.random()*256);
+    v="g_"+Array.prototype.map.call(b,function(x){ return ("0"+x.toString(16)).slice(-2); }).join("");
+    try{ localStorage.setItem(k,v); }catch(e){}
+    return v;
+  }
+  function reportKey(){ return "medinote:report:"+mnScope(); }
+  function sentKey(){ return "medinote:reports_sent:"+mnScope(); }
   var SEV=[{k:"약함",bg:"#EAF7EC",c:"#3E8E4E"},{k:"보통",bg:"#FBF3E4",c:"#C9832B"},{k:"심함",bg:"#FDEDE9",c:"#E4573E"}];
 
   var records=[], picked={}, meds=[], sentLog=[], aiReport=null;
