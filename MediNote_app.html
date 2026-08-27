@@ -17,33 +17,78 @@
   if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("MediNote.sw.js").catch(function(){}); }); }
   window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); window.__mnInstall=e; });
 
-  // (2) AI 도우미 실제 연결 — 앱의 기존 Anthropic 호출에 인증을 주입(비침습).
-  //     허브와 같은 저장키(medit:apikey) 사용. 프록시 세션이 없으므로 개인 키 방식.
-  var KEY="medit:apikey";
+  // (2) AI 도우미 — 브라우저에서 Anthropic 을 직접 부르지 않는다.
+  //     예전에는 사용자 각자에게 sk-ant-… 키를 물어봤는데, 어르신 사용자가 그 키를
+  //     가지고 있을 리 없어 도우미가 사실상 아무에게도 작동하지 않았다. 키는 이제
+  //     엣지함수(ai-helper)에만 있고, 앱은 로그인 세션으로 그 함수를 부른다.
+  //     앱 곳곳의 기존 Anthropic 호출을 그대로 두고 여기서 함수 호출로 갈아끼운다.
   var _fetch = window.fetch ? window.fetch.bind(window) : null;
+
+  function reply(text, extra){
+    // 기존 코드가 Anthropic 응답 모양을 기대하므로 같은 모양으로 돌려준다.
+    var body = Object.assign({ content: [{ type: "text", text: String(text || "") }] }, extra || {});
+    return new Response(JSON.stringify(body), {
+      status: 200, headers: { "Content-Type": "application/json; charset=utf-8" }
+    });
+  }
+
+  async function viaHelper(opts){
+    var cfg = window.MEDINOTE_CONFIG, kv = window.MediNoteKV;
+    var token = kv && kv.token && kv.token();
+    if(!token){
+      try{ if(window.MediNoteLogin) window.MediNoteLogin.open(); }catch(e){}
+      return reply("도우미는 로그인 후 이용하실 수 있어요. 로그인하시면 기록에 맞춰 안내해 드립니다.");
+    }
+    var sent = {};
+    try{ sent = (typeof opts.body === "string") ? JSON.parse(opts.body) : (opts.body || {}); }catch(e){}
+
+    // [[NOCARD]] 는 앱 내부 자동채움용 — 웹검색 없이 원래 지시문을 그대로 쓴다.
+    var sys = (typeof sent.system === "string") ? sent.system : "";
+    var internal = sys.indexOf("[[NOCARD]]") > -1;
+
+    var payload = {
+      messages: (sent.messages || []).map(function(m){
+        var c = m && m.content;
+        if(Array.isArray(c)) c = c.map(function(b){ return (b && b.text) || ""; }).join("\n");
+        return { role: m && m.role, content: String(c == null ? "" : c) };
+      }),
+      max_tokens: sent.max_tokens,
+      web_search: !internal
+    };
+    if(internal || sys) payload.system = sys;
+    if(!internal && window.MediNoteHelperContext){
+      try{ payload.context = window.MediNoteHelperContext(); }catch(e){}
+    }
+
+    try{
+      var r = await _fetch(cfg.functionsUrl + "/ai-helper", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token, apikey: cfg.key, "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      var d = null; try{ d = await r.json(); }catch(e){}
+      if(d && d.ok) return reply(d.text, { model: d.model, sources: d.sources || [] });
+      return reply((d && d.message) || ("도우미에 연결하지 못했습니다 (" + r.status + ")."));
+    }catch(e){
+      return reply("도우미에 연결하지 못했습니다. 네트워크를 확인해 주세요.");
+    }
+  }
+
   if(_fetch){
     window.fetch = function(url, opts){
       try{
         var u = (typeof url==="string") ? url : (url && url.url) || "";
-        if(u.indexOf("api.anthropic.com")>-1){
-          opts = opts || {};
-          opts.headers = Object.assign({}, opts.headers || {});
-          var k = null; try{ k = localStorage.getItem(KEY); }catch(e){}
-          if(!k){
-            try{ k = prompt("AI 도우미를 실제로 사용하려면 Anthropic API 키(sk-ant-…)가 필요합니다.\n콘솔(console.anthropic.com)에서 발급 · 이 브라우저에만 저장됩니다."); }catch(e){}
-            if(k){ try{ localStorage.setItem(KEY, k.trim()); }catch(e){} }
-          }
-          if(k){
-            opts.headers["x-api-key"] = k.trim();
-            opts.headers["anthropic-version"] = "2023-06-01";
-            opts.headers["anthropic-dangerous-direct-browser-access"] = "true";
-          }
-        }
+        if(u.indexOf("api.anthropic.com")>-1) return viaHelper(opts || {});
       }catch(e){}
       return _fetch(url, opts);
     };
   }
-  window.MediNoteSetKey = function(k){ try{ k?localStorage.setItem(KEY,String(k).trim()):localStorage.removeItem(KEY); }catch(e){} };
+
+  // 개인 키를 받던 통로는 없앤다. 예전 키가 남아 있으면 지운다.
+  try{ localStorage.removeItem("medit:apikey"); }catch(e){}
+  window.MediNoteSetKey = function(){
+    console.warn("[MediNote] 개인 API 키는 더 쓰지 않습니다. 도우미는 서버(ai-helper)를 통해 동작합니다.");
+  };
 })();
 </script>
 <!-- ===== /실제연결 레이어 ===== -->
@@ -556,7 +601,7 @@
 5. For side effects, separate common from rare-serious; for serious reactions advise contacting 1339 or a medical facility.`;
       const history = [...msgs, { role: "user", text: question }].map((m) => ({ role: m.role, content: m.text }));
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1e3, system, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }) });
+        const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-fable-5", max_tokens: 1e3, system, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }) });
         const data = await res.json();
         const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
         const used = (data.content || []).some((b) => b.type === "server_tool_use" || b.type === "web_search_tool_result");
@@ -1132,7 +1177,7 @@
       "판정·처방 표현은 쓰지 않는다. 반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). "+
       '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
     var usr="오늘 증상: "+(sym||"(미입력)")+"\n복용 중인 약(복약정보 히스토리): "+(meds.length?meds.join(", "):"(기록 없음)");
-    var body={model:"claude-3-5-haiku-20241022",max_tokens:400,system:sysP,messages:[{role:"user",content:usr}]};
+    var body={model:"claude-fable-5",max_tokens:400,system:sysP,messages:[{role:"user",content:usr}]};
     fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
       .then(function(r){ return r.json(); })
       .then(function(d){
@@ -1215,6 +1260,21 @@
   },true);
 
   window.MediNoteSymptom={ open:open, close:close, records:function(){return records;}, meds:function(){return meds;} };
+
+  // 도우미가 "Nick님 정보에 맞춰" 답하려면 앱에 남은 기록을 함께 보내야 한다.
+  // 프록시(ai-helper)가 이 값을 근거 블록으로 만들어 시스템 프롬프트에 붙인다.
+  window.MediNoteHelperContext = function(){
+    var out = {};
+    try{
+      var rs = (records || []).slice(0, 8).map(function(r){
+        return [r.date, r.symptom, r.severity && ("정도 " + r.severity), r.memo].filter(Boolean).join(" · ");
+      });
+      if(rs.length) out.symptoms = rs;
+      if(meds && meds.length) out.meds = meds.slice(0, 20);
+    }catch(e){}
+    try{ var u = localStorage.getItem("medinote:uid"); if(u && u !== "guest") out.profile = "계정 " + u; }catch(e){}
+    return out;
+  };
 })();
 </script>
 <!-- ===== /오늘 증상기록 레이어 ===== -->
