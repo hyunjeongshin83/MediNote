@@ -7,23 +7,142 @@
 <meta name="theme-color" content="#06413E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta http-equiv="refresh" content="0; url=MediNote_app.html">
 <link rel="canonical" href="MediNote_app.html">
 <style>
-html,body{height:100%;margin:0;background:#06413E;color:#EEFBF8;font-family:'Pretendard',-apple-system,sans-serif;}
-.c{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-.d{width:40px;height:40px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:#12BDB0;animation:s 1s linear infinite;}
-@keyframes s{to{transform:rotate(360deg)}}
-a{color:#12BDB0;font-weight:800;text-decoration:none;}
-.t{font-size:15px;opacity:.9;}
+:root{--bg:#06413E;--ink:#EEFBF8;--brand:#12BDB0;--line:rgba(238,251,248,.14);--dim:rgba(238,251,248,.62);}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;}
+
+/* ── 로딩(모바일: 앱으로 바로 넘어가는 동안) ── */
+#load{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#load .d{width:40px;height:40px;border-radius:50%;border:4px solid rgba(255,255,255,.2);
+  border-top-color:var(--brand);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#load .t{font-size:15px;opacity:.9;}
+#load a{color:var(--brand);font-weight:800;text-decoration:none;}
+
+/* ── 분할 화면(데스크톱) ── */
+#split{display:none;height:100%;flex-direction:column;}
+#split.on{display:flex;}
+header{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);flex:0 0 auto;}
+header img{width:26px;height:26px;border-radius:7px;}
+header .nm{font-size:16px;font-weight:800;letter-spacing:-.01em;}
+header .sub{font-size:12.5px;color:var(--dim);margin-left:2px;}
+header .sp{flex:1;}
+header a.open{font-size:12.5px;font-weight:700;color:#06413E;background:var(--brand);
+  border-radius:8px;padding:8px 14px;text-decoration:none;}
+.panes{flex:1;display:grid;grid-template-columns:1fr 440px;min-height:0;}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.pane+.pane{border-left:1px solid var(--line);}
+.pane .hd{display:flex;align-items:baseline;gap:9px;padding:12px 20px;flex:0 0 auto;}
+.pane .hd b{font-size:13px;font-weight:800;}
+.pane .hd span{font-size:11.5px;color:var(--dim);}
+.pane .bd{flex:1;min-height:0;padding:0 20px 20px;display:flex;flex-direction:column;}
+.web{flex:1;width:100%;border:0;border-radius:12px;background:#fff;min-height:0;}
+.phone{width:340px;max-width:100%;margin:0 auto;flex:1;min-height:0;
+  border:9px solid #0C2B2A;border-radius:34px;background:#fff;overflow:hidden;
+  box-shadow:0 18px 44px rgba(0,0,0,.34);display:flex;}
+.phone iframe{flex:1;width:100%;border:0;}
+.side{flex:0 0 auto;padding:16px 20px 20px;border-top:1px solid var(--line);}
+.side h3{margin:0 0 8px;font-size:12.5px;font-weight:800;}
+.side p{margin:0 0 10px;font-size:12.5px;color:var(--dim);line-height:1.65;}
+.urlrow{display:flex;gap:8px;}
+.urlrow input{flex:1;min-width:0;font:inherit;font-size:12px;padding:9px 11px;border-radius:8px;
+  border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--ink);}
+.urlrow button,.side button.inst{font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+  border-radius:8px;padding:9px 13px;border:1px solid var(--brand);background:transparent;color:var(--brand);}
+.side button.inst{width:100%;margin-top:9px;background:var(--brand);color:#06413E;border-color:var(--brand);}
+.side .st{font-size:11.5px;color:var(--brand);min-height:15px;margin-top:7px;}
+@media (max-width:1100px){ .panes{grid-template-columns:1fr;grid-template-rows:1fr auto;} .pane+.pane{border-left:0;border-top:1px solid var(--line);} .phone{display:none;} }
 </style>
 </head>
 <body>
-<div class="c">
+
+<div id="load">
   <div class="d"></div>
   <div class="t">MediNote 앱을 여는 중…</div>
   <a href="MediNote_app.html">열리지 않으면 여기를 누르세요</a>
 </div>
-<script>location.replace("MediNote_app.html");</script>
+
+<div id="split">
+  <header>
+    <img src="icon-192.png" alt="">
+    <span class="nm">MediNote</span>
+    <span class="sub">데스크톱에서는 웹앱과 모바일 앱을 나란히 보여드립니다</span>
+    <span class="sp"></span>
+    <a class="open" href="MediNote_app.html">단독 탭으로 열기</a>
+  </header>
+  <div class="panes">
+    <div class="pane">
+      <div class="hd"><b>웹앱</b><span>브라우저에서 그대로 사용합니다</span></div>
+      <div class="bd"><iframe class="web" id="fweb" title="MediNote 웹앱"
+        allow="geolocation; camera; microphone; clipboard-write; bluetooth"></iframe></div>
+    </div>
+    <div class="pane">
+      <div class="hd"><b>모바일 앱</b><span>휴대폰에서 보이는 화면</span></div>
+      <div class="bd">
+        <div class="phone"><iframe id="fmob" title="MediNote 모바일 앱 미리보기"
+          allow="geolocation; camera; microphone; clipboard-write; bluetooth"></iframe></div>
+      </div>
+      <div class="side">
+        <h3>휴대폰에서 열기</h3>
+        <p>아래 주소를 휴대폰 브라우저에 입력한 뒤 <b>홈 화면에 추가</b>하면 앱처럼 쓸 수 있습니다.
+           블루투스 건강기기 읽기는 미리보기(iframe)에서 차단되므로 휴대폰 단독 탭에서 사용해 주세요.</p>
+        <div class="urlrow">
+          <input id="url" readonly>
+          <button id="copy" type="button">복사</button>
+        </div>
+        <button class="inst" id="install" type="button" style="display:none">이 컴퓨터에 설치</button>
+        <div class="st" id="st"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var APP="MediNote_app.html";
+  var q=new URLSearchParams(location.search);
+
+  function isMobile(){
+    if(q.get("view")==="split") return false;   // 데스크톱 분할 화면 강제
+    if(q.get("view")==="app")   return true;    // 앱으로 바로 강제
+    if(/Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)) return true;
+    var coarse=window.matchMedia && matchMedia("(pointer:coarse)").matches;
+    return !!coarse && Math.min(screen.width,screen.height)<820;
+  }
+
+  if(isMobile()){ location.replace(APP); return; }
+
+  // ── 데스크톱: 분할 화면 ──
+  document.getElementById("load").style.display="none";
+  document.getElementById("split").classList.add("on");
+  document.getElementById("fweb").src=APP;
+  document.getElementById("fmob").src=APP;
+
+  var appUrl=new URL(APP,location.href).href;
+  document.getElementById("url").value=appUrl;
+  document.getElementById("copy").onclick=function(){
+    var st=document.getElementById("st");
+    function done(){ st.textContent="주소를 복사했습니다."; setTimeout(function(){ st.textContent=""; },2400); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(appUrl).then(done,fallback);
+    } else fallback();
+    function fallback(){
+      var i=document.getElementById("url"); i.select();
+      try{ document.execCommand("copy"); done(); }
+      catch(e){ st.textContent="복사가 안 됩니다. 주소를 직접 선택해 복사해 주세요."; }
+    }
+  };
+
+  var deferred=null, btn=document.getElementById("install");
+  window.addEventListener("beforeinstallprompt",function(e){
+    e.preventDefault(); deferred=e; btn.style.display="block";
+  });
+  btn.onclick=function(){ if(deferred){ deferred.prompt(); deferred=null; btn.style.display="none"; } };
+})();
+</script>
 </body>
 </html>
