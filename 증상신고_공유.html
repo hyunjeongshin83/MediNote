@@ -136,6 +136,7 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 .src{font-size:10.5px;color:#A9BCB8;text-align:center;margin-top:8px;line-height:1.7;}
 .src a{color:#8FA6A2;}
 </style>
+<script src="medinote.config.js"></script>
 <script src="vendor/supabase-js-2.umd.js"></script>
 <script src="vendor/qrcodejs-1.0.0.min.js"></script>
 </head>
@@ -237,11 +238,11 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 /* ===== MediNote 증상 신고·공유 · 검색채움 + QR + GPS 보건소 + 클라우드상태 ===== */
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   var KDCA_URL="https://nip.kdca.go.kr/irhp/infm/goVcntInfo.do?menuLv=1&menuCd=166";
   var KAERS_URL="https://kaers.drugsafe.or.kr/";
-  var PROXY="https://xaclqvveppvccdpebzsz.functions.supabase.co/gov-data"; // 보건기관 이메일 자동조회(선택·serviceKey 설정 시)
+  var PROXY=window.MEDINOTE_CONFIG.functionsUrl+"/gov-data"; // 보건기관 이메일 자동조회(선택·serviceKey 설정 시)
   var RX_KEYS=["medinote:rx","medit:rx"];
 
   /* ── Supabase RPC 게이트웨이 ──

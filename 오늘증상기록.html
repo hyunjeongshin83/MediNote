@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="medinote.config.js"></script>
 <script src="vendor/supabase-js-2.umd.js"></script>
 <style>
 :root{--g0:#EEFBF8;--g1:#D8F5EF;--g2:#AEEAE2;--g4:#12BDB0;--g5:#0DA298;--g6:#0A7168;--g7:#06413E;
@@ -80,8 +81,8 @@ td .del:hover{color:var(--coral);}
 <div class="toast" id="toast"></div>
 
 <script>
-const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-const SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+const SB_URL=window.MEDINOTE_CONFIG.url;
+const SB_KEY=window.MEDINOTE_CONFIG.key;
 /* 리포트 키는 그 자체가 열쇠다 — "guest" 는 모든 사람이 같은 값이라 열쇠가 못 된다.
    앱에서 로그인하면 medinote:authscope(u_<uuid>), 아니면 기기마다 다른 난수 토큰을 쓴다. */
 function mnScope(){

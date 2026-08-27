@@ -51,6 +51,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#06413E;font-family:Pretendard,-apple-system,sans-serif}#root{height:100%}</style>
+<script src="medinote.config.js"></script>
 <script src="vendor/react-18.production.min.js"></script>
 <script src="vendor/react-dom-18.production.min.js"></script>
 </head><body><div id="root"></div>
@@ -600,8 +601,8 @@
 <script>
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   var session=null;
 
   // hub_state 직접 호출은 익명 목록 열거를 막느라 닫혔다. 게스트가 쓰는 읽기·쓰기는
@@ -673,8 +674,8 @@
 <script>
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   var readings={};
   var devName=null;
 
@@ -806,8 +807,8 @@
 <script>
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   // ↓↓↓ 웹푸시 VAPID '공개키'를 발급받아 여기에 붙여넣으세요(가이드 참고). 비어 있으면 브라우저 알림 권한만 요청합니다.
   var VAPID_PUBLIC="";
   function b64ToU8(s){ var pad="=".repeat((4-s.length%4)%4); var b=(s+pad).replace(/-/g,"+").replace(/_/g,"/"); var raw=atob(b); var a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
@@ -888,8 +889,8 @@
   window.MediNoteCard={ show:showCard };
 
   // === DB에 미리 채운 예시 카드 세트 (AI가 만들어 저장 → 앱이 가져와 채움) ===
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   // 내장 예시 카드(seed_cards 반영) — DB 없이도 바로 작동. DB에 medinote:cards가 있으면 그것으로 교체됨.
   var DBCARDS=[
     { id:"flu_shot", keywords:["독감 접종","인플루엔자 접종","독감 예방","독감 맞","인플루엔자 예방","독감 백신"],
@@ -1021,8 +1022,8 @@
 <script>
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   function REPORT_KEY(){ return window.MediNoteKV.reportKey(); }
   var RX_KEYS=["medinote:rx","medit:rx"];   // QR 약봉투(복약정보) 히스토리 저장 키 후보
   var SEV=[{k:"약함",bg:"#EAF7EC",c:"#3E8E4E"},{k:"보통",bg:"#FBF3E4",c:"#C9832B"},{k:"심함",bg:"#FDEDE9",c:"#E4573E"}];
@@ -1391,8 +1392,8 @@
 <script>
 (function(){
   "use strict";
-  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var SB_URL=window.MEDINOTE_CONFIG.url;
+  var SB_KEY=window.MEDINOTE_CONFIG.key;
   var sb=null, user=null, built=false, authMode="login";
   // 세션을 공용 계층과 나눠 쓴다 — RPC·measurements 쓰기가 익명 대신 본인으로 나간다
   function share(s){

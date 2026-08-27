@@ -64,10 +64,11 @@ h1{font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.03em;}
   </div>
 </div>
 
+<script src="medinote.config.js"></script>
 <script src="vendor/supabase-js-2.umd.js"></script>
 <script>
-const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-const SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+const SB_URL=window.MEDINOTE_CONFIG.url;
+const SB_KEY=window.MEDINOTE_CONFIG.key;
 
 // ===== AI가 미리 채운 예시 카드 세트 (방준석 연구실 감수 톤) =====
 const CARDS=[
