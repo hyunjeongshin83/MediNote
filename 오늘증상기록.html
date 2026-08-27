@@ -81,8 +81,17 @@ td .del:hover{color:var(--coral);}
 
 <script>
 const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+const SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
 const KEY="medinote:report:guest";
+
+/* hub_state 직접 접근은 익명 목록 열거를 막느라 닫혔다 — 키 1건씩만 응답하는 RPC로 나간다 */
+async function rpc(fn,body){
+  const r=await fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+    headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify(body||{})});
+  if(!r.ok) throw new Error("RPC "+fn+" HTTP "+r.status);
+  return r.json();
+}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}
@@ -94,10 +103,10 @@ const SEVS=["약함","보통","심함"];
 function renderSev(){ $("f_sev").innerHTML=SEVS.map(s=>`<button type="button" class="tchip ${s===sev?'on':''}" data-sev="${s}">${s}</button>`).join(""); $("f_sev").querySelectorAll("[data-sev]").forEach(b=>b.onclick=()=>{sev=b.dataset.sev;renderSev();}); }
 
 function loadLocal(){ try{ const v=JSON.parse(localStorage.getItem(KEY)||"null"); if(v&&Array.isArray(v.symptoms)) DB=v; }catch(e){} if(!Array.isArray(DB.symptoms))DB.symptoms=[]; }
-async function loadCloud(){ try{ const r=await fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(KEY)+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}}); if(r.ok){cloudOK=true; const rows=await r.json(); if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.symptoms)) DB=rows[0].value;} }catch(e){cloudOK=false;} renderStatus(); render(); }
+async function loadCloud(){ try{ const v=await rpc("kv_get",{p_key:KEY}); cloudOK=true; if(v&&Array.isArray(v.symptoms)) DB=v; }catch(e){cloudOK=false;} renderStatus(); render(); }
 let t=null;
 function save(){ try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){} clearTimeout(t); t=setTimeout(push,600); }
-async function push(){ try{ await fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{key:KEY,value:DB,updated_at:new Date().toISOString()}])}); cloudOK=true; }catch(e){cloudOK=false;} renderStatus(); }
+async function push(){ try{ cloudOK = (await rpc("kv_put",{p_key:KEY,p_value:DB})) === true; }catch(e){ cloudOK=false; } renderStatus(); }
 function renderStatus(){ $("dotc").className="dotc"+(cloudOK?"":" local"); $("stx").textContent=cloudOK?"클라우드 동기화됨":"이 기기에 저장 · 연결 시 동기화"; }
 
 function render(){

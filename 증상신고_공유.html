@@ -238,11 +238,26 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   var KDCA_URL="https://nip.kdca.go.kr/irhp/infm/goVcntInfo.do?menuLv=1&menuCd=166";
   var KAERS_URL="https://kaers.drugsafe.or.kr/";
   var PROXY="https://xaclqvveppvccdpebzsz.functions.supabase.co/gov-data"; // 보건기관 이메일 자동조회(선택·serviceKey 설정 시)
   var RX_KEYS=["medinote:rx","medit:rx"];
+
+  /* ── Supabase RPC 게이트웨이 ──
+     hub_state 직접 접근은 익명 목록 열거를 막느라 닫혔다. 키를 정확히 아는
+     1건씩만 응답하는 SECURITY DEFINER 함수로 나간다.
+     읽기: medinote:cards · medinote:rx · medit:rx · medinote:report:* · medinote:reports_sent:*
+     쓰기: medinote:report:* · medinote:reports_sent:* (256KB 상한) */
+  function rpc(fn,body){
+    return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+      headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify(body||{})})
+      .then(function(r){ if(!r.ok) throw new Error("RPC "+fn+" HTTP "+r.status); return r.json(); });
+  }
+  function kvGet(k){ return rpc("kv_get",{p_key:k}); }
+  function kvGetMany(ks){ return rpc("kv_get_many",{p_keys:ks}); }
+  function kvPut(k,v){ return rpc("kv_put",{p_key:k,p_value:v}).then(function(ok){ return ok===true; }); }
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
 
@@ -264,14 +279,11 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
   var cloudState=null;
   function checkCloud(){
     var c=$("cloud"), t=$("cloudt");
-    fetch(SB_URL+"/rest/v1/hub_state?select=key&limit=1",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-      .then(function(r){
-        if(r.ok){ cloudState=true; c.className="cloud on"; t.textContent="클라우드 ON · Supabase 연결됨(hub_state)"; }
-        else if(r.status===404||r.status===400){ cloudState=false; c.className="cloud off"; t.textContent="클라우드 대기 · hub_state 테이블 생성 필요(로컬 저장은 작동)"; }
-        else { cloudState=false; c.className="cloud off"; t.textContent="클라우드 응답 오류("+r.status+") · 로컬 저장은 작동"; }
-        renderSettings();
-      })
-      .catch(function(){ cloudState=false; c.className="cloud off"; t.textContent="클라우드 OFF · 네트워크/미리보기 차단(로컬 저장은 작동)"; renderSettings(); });
+    // 공개 안내카드를 RPC로 한 번 읽어 게이트웨이가 살아 있는지만 확인한다
+    kvGet("medinote:cards")
+      .then(function(){ cloudState=true; c.className="cloud on"; t.textContent="클라우드 ON · Supabase 연결됨(RPC)"; renderSettings(); })
+      .catch(function(e){ cloudState=false; c.className="cloud off";
+        t.textContent="클라우드 OFF · "+((e&&e.message)||"연결 실패")+" (로컬 저장은 작동)"; renderSettings(); });
   }
 
   /* ── 설정 · 연결 상태 (연결 안 된 기능은 자동 비활성화) ── */
@@ -303,9 +315,8 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
     try{ var s=localStorage.getItem(reportKey()); if(s) records=normRecs(JSON.parse(s)); }catch(e){}
     renderChips(); refreshReport();
     try{
-      fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(reportKey())+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-        .then(function(r){ return r.ok?r.json():[]; })
-        .then(function(rows){ if(rows[0]&&rows[0].value){ var rr=normRecs(rows[0].value); if(rr.length){ records=rr; try{ localStorage.setItem(reportKey(),JSON.stringify(records)); }catch(e){} } } updateMini(); })
+      kvGet(reportKey())
+        .then(function(v){ if(v){ var rr=normRecs(v); if(rr.length){ records=rr; try{ localStorage.setItem(reportKey(),JSON.stringify(records)); }catch(e){} } } updateMini(); })
         .catch(function(){ updateMini(); });
     }catch(e){ updateMini(); }
     loadMeds();
@@ -324,10 +335,9 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
     try{ RX_KEYS.forEach(function(k){ var s=localStorage.getItem(k); if(s){ try{ meds=meds.concat(extractMeds(JSON.parse(s))); }catch(e){} } }); }catch(e){}
     updateMini();
     try{
-      var q=RX_KEYS.map(function(k){return "key.eq."+encodeURIComponent(k);}).join(",");
-      fetch(SB_URL+"/rest/v1/hub_state?or=("+q+")&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-        .then(function(r){ return r.ok?r.json():[]; })
-        .then(function(rows){ (rows||[]).forEach(function(row){ extractMeds(row.value).forEach(function(m){ if(meds.indexOf(m)===-1) meds.push(m); }); }); updateMini(); })
+      kvGetMany(RX_KEYS)
+        .then(function(map){ RX_KEYS.forEach(function(k){ var v=map&&map[k]; if(!v) return;
+          extractMeds(v).forEach(function(m){ if(meds.indexOf(m)===-1) meds.push(m); }); }); updateMini(); })
         .catch(function(){});
     }catch(e){}
   }
@@ -428,17 +438,18 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
   function loadSent(){
     sentLog=[]; try{ var s=localStorage.getItem(sentKey()); if(s){ var v=JSON.parse(s); sentLog=Array.isArray(v)?v:(v.log||[]); } }catch(e){}
     renderLog();
-    try{ fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(sentKey())+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-      .then(function(r){ return r.ok?r.json():[]; })
-      .then(function(rows){ if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.log)){ sentLog=rows[0].value.log; try{ localStorage.setItem(sentKey(),JSON.stringify(sentLog)); }catch(e){} renderLog(); } })
+    try{ kvGet(sentKey())
+      .then(function(v){ if(v&&Array.isArray(v.log)){ sentLog=v.log; try{ localStorage.setItem(sentKey(),JSON.stringify(sentLog)); }catch(e){} renderLog(); } })
       .catch(function(){}); }catch(e){}
   }
   function logSend(channel,target,count){
     sentLog.unshift({channel:channel,target:target||"",count:count,ts:new Date().toISOString()});
     try{ localStorage.setItem(sentKey(),JSON.stringify(sentLog)); }catch(e){}
     renderLog();
-    try{ fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},
-      body:JSON.stringify([{key:sentKey(),value:{log:sentLog},updated_at:new Date().toISOString()}])}).catch(function(){}); }catch(e){}
+    try{ kvPut(sentKey(),{log:sentLog})
+      .then(function(ok){ if(!ok){ cloudState=false; var c=$("cloud"), t=$("cloudt");
+        if(c) c.className="cloud off"; if(t) t.textContent="클라우드 저장 거부됨 · 발송 이력은 기기에만 남았습니다"; } })
+      .catch(function(){}); }catch(e){}
   }
   function renderLog(){
     var box=$("log"); if(!sentLog.length){ box.innerHTML='<div class="empty">아직 보낸 이력이 없습니다.</div>'; return; }
