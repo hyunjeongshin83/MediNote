@@ -82,7 +82,22 @@ td .del:hover{color:var(--coral);}
 <script>
 const SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
 const SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
-const KEY="medinote:report:guest";
+/* 리포트 키는 그 자체가 열쇠다 — "guest" 는 모든 사람이 같은 값이라 열쇠가 못 된다.
+   앱에서 로그인하면 medinote:authscope(u_<uuid>), 아니면 기기마다 다른 난수 토큰을 쓴다. */
+function mnScope(){
+  let a=null; try{ a=localStorage.getItem("medinote:authscope"); }catch(e){}
+  if(/^u_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(a||"")) return a;
+  const k="medinote:devtoken"; let v=null;
+  try{ v=localStorage.getItem(k); }catch(e){}
+  if(/^g_[0-9a-f]{32}$/.test(v||"")) return v;
+  const b=new Uint8Array(16), c=window.crypto||window.msCrypto;
+  if(c&&c.getRandomValues) c.getRandomValues(b);
+  else for(let i=0;i<16;i++) b[i]=Math.floor(Math.random()*256);
+  v="g_"+Array.from(b,x=>x.toString(16).padStart(2,"0")).join("");
+  try{ localStorage.setItem(k,v); }catch(e){}
+  return v;
+}
+const KEY="medinote:report:"+mnScope();
 
 /* hub_state 직접 접근은 익명 목록 열거를 막느라 닫혔다 — 키 1건씩만 응답하는 RPC로 나간다 */
 async function rpc(fn,body){
