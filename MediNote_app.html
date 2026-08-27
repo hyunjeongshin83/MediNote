@@ -51,9 +51,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#06413E;font-family:Pretendard,-apple-system,sans-serif}#root{height:100%}</style>
-<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="vendor/react-18.production.min.js"></script>
+<script src="vendor/react-dom-18.production.min.js"></script>
 </head><body><div id="root"></div>
+<script>
+/* 앱 본문은 전부 React 로 그린다 — 스크립트 하나만 못 받아도 사용자는 아무 안내 없이
+   빈 화면만 보게 된다. 끝내 아무것도 안 그려지면 안내와 새로고침 버튼을 띄운다. */
+(function(){
+  function bail(){
+    var r=document.getElementById("root");
+    if(!r || r.childElementCount>0) return;
+    r.innerHTML='<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;color:#EEFBF8;font-family:-apple-system,BlinkMacSystemFont,sans-serif">'
+      +'<div style="font-size:38px">\uD83D\uDCE1</div>'
+      +'<div style="font-size:17px;font-weight:800">화면을 불러오지 못했습니다</div>'
+      +'<div style="font-size:13.5px;line-height:1.75;opacity:.85;max-width:19em">네트워크 연결을 확인한 뒤 새로고침해 주세요. 병원·학교 와이파이에서는 일부 자료가 막힐 수 있습니다.</div>'
+      +'<button id="mn-reload" style="margin-top:6px;font:inherit;font-size:14px;font-weight:800;color:#06413E;background:#12BDB0;border:0;border-radius:11px;padding:12px 26px;cursor:pointer">새로고침</button>'
+      +'</div>';
+    var b=document.getElementById("mn-reload"); if(b) b.onclick=function(){ location.reload(); };
+  }
+  window.addEventListener("load", function(){ setTimeout(bail, 1500); });
+})();
+</script>
 <script>window.require=function(m){if(m==="react")return window.React;if(m==="react-dom"||m==="react-dom/client")return window.ReactDOM;};</script>
 <script>(() => {
   var __create = Object.create;
@@ -1327,7 +1345,7 @@
 <!-- ===== /앱 설치(다운로드) 레이어 ===== -->
 
 <!-- ===== 로그인 레이어 (개인 아이디 + Google · 계정별 기록) ===== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-js-2.umd.js"></script>
 <style>
 #mnlg-pill{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:99990;display:flex;align-items:center;gap:7px;
   background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid #E1F1EE;border-radius:22px;padding:6px 12px 6px 8px;
