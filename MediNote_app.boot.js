@@ -6,8 +6,14 @@
    ============================================================ */
 (function () {
   // 허브와 동일한 Supabase (로그인·저장 공유)
-  var SUPABASE_URL = "https://xaclqvveppvccdpebzsz.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  // 주소·키는 medinote.config.js 한 곳에서 온다. 이 스크립트를 단독으로 쓰는
+  // 경우를 위해 값을 그대로 적어 둔 대비책을 남긴다.
+  var CFG = window.MEDINOTE_CONFIG || {
+    url: "https://xaclqvveppvccdpebzsz.supabase.co",
+    key: "sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b"
+  };
+  var SUPABASE_URL = CFG.url;
+  var SUPABASE_KEY = CFG.key;
 
   function sbHeaders() {
     // 로그인했으면 앱의 공용 계층이 들고 있는 세션 토큰으로, 아니면 publishable 키로.

@@ -103,7 +103,8 @@ supabase secrets set DATA_GO_KR_KEY="여기에_Decoding_키_붙여넣기"
 
 ### 프론트(앱/페이지)에서 호출 — 키 없이 프록시만
 ```js
-const PROXY = "https://xaclqvveppvccdpebzsz.functions.supabase.co/gov-data";
+const PROXY = window.MEDINOTE_CONFIG.functionsUrl + "/gov-data";
+// 프로젝트 주소는 medinote.config.js 한 곳에 있습니다.
 async function loadVaccineStatus() {
   const base = "https://apis.data.go.kr/1790387/vaccineStatus/getVaccineStatus"; // 실제 요청주소
   const url = PROXY + "?base=" + encodeURIComponent(base) + "&numOfRows=10&pageNo=1&baseDate=20260101";

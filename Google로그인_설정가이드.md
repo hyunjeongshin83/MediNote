@@ -16,6 +16,7 @@ Google 로그인이 안 되는 이유는 앱 문제가 아니라, **Supabase에 
    - **승인된 리디렉션 URI**에 아래를 그대로 추가:
      ```
      https://xaclqvveppvccdpebzsz.supabase.co/auth/v1/callback
+     (프로젝트를 옮기면 medinote.config.js 의 REF 를 바꾸고, 이 주소도 새 ref 로 다시 등록하세요)
      ```
    - 만들기 → **클라이언트 ID**와 **클라이언트 보안 비밀(Secret)** 복사
 
