@@ -578,6 +578,40 @@
   __root.render(import_react.default.createElement(App));
 })();
 </script>
+<!-- ===== MediNote Supabase 공용 계층 (RPC 게이트웨이 · 세션 공유) ===== -->
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
+  var session=null;
+
+  // hub_state 직접 호출은 익명 목록 열거를 막느라 닫혔다. 게스트가 쓰는 읽기·쓰기는
+  // 전부 SECURITY DEFINER RPC 로 나가고, 키를 정확히 아는 1건씩만 응답한다.
+  function rpc(fn,body){
+    var tok=(session&&session.access_token)||SB_KEY;
+    return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+      headers:{apikey:SB_KEY,Authorization:"Bearer "+tok,"Content-Type":"application/json"},
+      body:JSON.stringify(body||{})})
+      .then(function(r){ if(!r.ok) throw new Error("RPC "+fn+" HTTP "+r.status); return r.json(); });
+  }
+
+  window.MediNoteKV={
+    url:SB_URL, key:SB_KEY, rpc:rpc,
+    // 읽기 허용 키: medinote:cards · medinote:rx · medit:rx · medinote:report:* · medinote:reports_sent:*
+    get:function(k){ return rpc("kv_get",{p_key:k}); },
+    getMany:function(keys){ return rpc("kv_get_many",{p_keys:keys}); },
+    // 쓰기 허용 키: medinote:report:* · medinote:reports_sent:* (256KB 상한)
+    put:function(k,v){ return rpc("kv_put",{p_key:k,p_value:v}).then(function(ok){ return ok===true; }); },
+    setSession:function(x){ session=x||null; },
+    session:function(){ return session; },
+    token:function(){ return (session&&session.access_token)||null; },
+    userId:function(){ return (session&&session.user&&session.user.id)||null; },
+    headers:function(){ var tok=(session&&session.access_token)||SB_KEY;
+      return {apikey:SB_KEY,Authorization:"Bearer "+tok}; }
+  };
+})();
+</script>
 <!-- ===== MediNote HW read 레이어 (기존 UI 변경 없음 · Web Bluetooth 실제 기기 읽기) ===== -->
 <style>
 .mnhw-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(6,65,62,.45);display:none;align-items:flex-end;justify-content:center;font-family:'Pretendard',-apple-system,sans-serif;}
@@ -600,8 +634,9 @@
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   var readings={};
+  var devName=null;
 
   // (1) 기존 "Google 건강기기 연결 / Health Connect" 항목 클릭을 감지 → 실제 기기 읽기 실행 (새 UI 요소 없음)
   document.addEventListener("click",function(e){
@@ -636,8 +671,9 @@
     ov.classList.add("on");
   }
   function st(m){ var e=document.getElementById("mnhwSt"); if(e) e.textContent=m; }
-  function addRead(icon,label,val){
-    readings[label]={value:val,ts:Date.now()};
+  function addRead(icon,label,val,metrics){
+    // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
+    readings[label]={value:val,ts:Date.now(),metrics:metrics||[]};
     var out=document.getElementById("mnhwOut"); if(!out) return;
     var id="mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"");
     var html='<div class="mnhw-read" id="'+id+'"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>';
@@ -649,16 +685,21 @@
     try{
       st("기기를 선택하세요…");
       var dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:["heart_rate","health_thermometer","blood_pressure","battery_service"]});
+      devName=dev.name||null;
       st((dev.name||"기기")+" 연결 중…");
       var server=await dev.gatt.connect();
       st((dev.name||"기기")+" 연결됨 · 값 읽는 중…");
-      try{ var bs=await server.getPrimaryService("battery_service"); var bc=await bs.getCharacteristic("battery_level"); var bv=await bc.readValue(); addRead("🔋","기기 배터리",bv.getUint8(0)+"%"); }catch(_){}
+      try{ var bs=await server.getPrimaryService("battery_service"); var bc=await bs.getCharacteristic("battery_level"); var bv=await bc.readValue(); var bl=bv.getUint8(0);
+        addRead("🔋","기기 배터리",bl+"%",[{metric:"device_battery",value_num:bl,unit:"%"}]); }catch(_){}
       try{ var hs=await server.getPrimaryService("heart_rate"); var hc=await hs.getCharacteristic("heart_rate_measurement"); await hc.startNotifications();
-        hc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var hr=(f&1)?d.getUint16(1,true):d.getUint8(1); addRead("❤️","심박수",hr+" bpm"); }); }catch(_){}
+        hc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var hr=(f&1)?d.getUint16(1,true):d.getUint8(1);
+          addRead("❤️","심박수",hr+" bpm",[{metric:"heart_rate",value_num:hr,unit:"/min"}]); }); }catch(_){}
       try{ var ts=await server.getPrimaryService("health_thermometer"); var tc=await ts.getCharacteristic("temperature_measurement"); await tc.startNotifications();
-        tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); var exp=d.getInt8(4); var t=mant*Math.pow(10,exp); addRead("🌡️","체온",t.toFixed(1)+" ℃"); }); }catch(_){}
+        tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); var exp=d.getInt8(4); var t=mant*Math.pow(10,exp);
+          addRead("🌡️","체온",t.toFixed(1)+" ℃",[{metric:"body_temperature",value_num:Math.round(t*10)/10,unit:"Cel"}]); }); }catch(_){}
       try{ var ps=await server.getPrimaryService("blood_pressure"); var pc=await ps.getCharacteristic("blood_pressure_measurement"); await pc.startNotifications();
-        pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); } addRead("🩸","혈압",Math.round(sf(1))+"/"+Math.round(sf(3))+" mmHg"); }); }catch(_){}
+        pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); } var sy=Math.round(sf(1)), di=Math.round(sf(3));
+          addRead("🩸","혈압",sy+"/"+di+" mmHg",[{metric:"sbp",value_num:sy,unit:"mm[Hg]"},{metric:"dbp",value_num:di,unit:"mm[Hg]"}]); }); }catch(_){}
       st("값을 읽었습니다. 안 나오는 항목은 그 기기가 지원하지 않는 것입니다.");
     }catch(e){
       var m=(e&&e.message)||String(e);
@@ -671,16 +712,51 @@
       }
     }
   }
+  var LOCAL_KEY="medinote:hw:local";
+  function keepLocal(rows){
+    try{
+      var prev=JSON.parse(localStorage.getItem(LOCAL_KEY)||"null"); if(!prev||!Array.isArray(prev.logs)) prev={logs:[]};
+      prev.logs.push({at:new Date().toISOString(),device:devName,rows:rows});
+      localStorage.setItem(LOCAL_KEY,JSON.stringify(prev));
+    }catch(e){}
+  }
+  // 판독값은 hub_state 가 아니라 프로필 DB(measurements 원장)에 본인 것으로 들어간다.
+  // 익명으로는 쓸 수 없으므로 로그인 전에는 기기에만 남기고 그렇다고 말한다.
+  function toRows(uid){
+    var now=new Date().toISOString(), out=[];
+    Object.keys(readings).forEach(function(label){
+      var r=readings[label];
+      (r.metrics||[]).forEach(function(m){
+        if(m.value_num==null||isNaN(m.value_num)) return;
+        out.push({user_id:uid,metric:m.metric,value_num:m.value_num,unit:m.unit,
+          effective_time:now,client_ts:now,
+          channel:"device_ble",grade:"wellness",modality:"sensed",
+          status:"final",performer_type:"patient",
+          device_name:devName||null,note:label+" "+r.value});
+      });
+    });
+    return out;
+  }
   async function saveCloud(){
+    var kv=window.MediNoteKV, uid=kv&&kv.userId();
+    if(!uid){
+      keepLocal(toRows(null));
+      st("로그인하시면 이 값이 나의 건강기록에 함께 담깁니다. 지금은 기기에만 저장했어요.");
+      try{ if(window.MediNoteLogin) window.MediNoteLogin.open(); }catch(e){}
+      return;
+    }
+    var rows=toRows(uid);
+    if(!rows.length){ st("저장할 값이 없습니다. 기기에서 값을 먼저 읽어 주세요."); return; }
     st("저장 중…");
     try{
-      var key="medinote:hw:guest";
-      var g=await fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(key)+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});
-      var rows=g.ok?await g.json():[]; var val=(rows[0]&&rows[0].value)||{logs:[]}; if(!Array.isArray(val.logs)) val.logs=[];
-      val.logs.push({at:new Date().toISOString(),readings:readings});
-      await fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify([{key:key,value:val,updated_at:new Date().toISOString()}])});
-      st("클라우드에 저장했습니다.");
-    }catch(e){ st("저장 실패: "+(e.message||e)); }
+      var r=await fetch(kv.url+"/rest/v1/measurements",{method:"POST",
+        headers:Object.assign(kv.headers(),{"Content-Type":"application/json",Prefer:"return=minimal"}),
+        body:JSON.stringify(rows)});
+      if(!r.ok){ var msg=""; try{ msg=(await r.json()).message||""; }catch(_){}
+        keepLocal(rows);
+        st("클라우드 저장 실패("+r.status+(msg?" · "+msg:"")+") · 기기에는 저장했어요."); return; }
+      st("나의 건강기록에 "+rows.length+"건을 저장했습니다.");
+    }catch(e){ keepLocal(rows); st("저장 실패: "+(e.message||e)+" · 기기에는 저장했어요."); }
   }
   window.MediNoteHW={ connect:function(){ openSheet(); return connect(); }, open:openSheet, readings:function(){ return readings; } };
 })();
@@ -691,7 +767,7 @@
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   // ↓↓↓ 웹푸시 VAPID '공개키'를 발급받아 여기에 붙여넣으세요(가이드 참고). 비어 있으면 브라우저 알림 권한만 요청합니다.
   var VAPID_PUBLIC="";
   function b64ToU8(s){ var pad="=".repeat((4-s.length%4)%4); var b=(s+pad).replace(/-/g,"+").replace(/_/g,"/"); var raw=atob(b); var a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
@@ -772,7 +848,7 @@
 
   // === DB에 미리 채운 예시 카드 세트 (AI가 만들어 저장 → 앱이 가져와 채움) ===
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   // 내장 예시 카드(seed_cards 반영) — DB 없이도 바로 작동. DB에 medinote:cards가 있으면 그것으로 교체됨.
   var DBCARDS=[
     { id:"flu_shot", keywords:["독감 접종","인플루엔자 접종","독감 예방","독감 맞","인플루엔자 예방","독감 백신"],
@@ -803,9 +879,8 @@
   ];
   function loadDbCards(){
     try{
-      fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent("medinote:cards")+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-        .then(function(r){ return r.ok?r.json():[]; })
-        .then(function(rows){ if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.cards)) DBCARDS=rows[0].value.cards; })
+      window.MediNoteKV.get("medinote:cards")
+        .then(function(v){ if(v&&Array.isArray(v.cards)) DBCARDS=v.cards; })
         .catch(function(){});
     }catch(e){}
   }
@@ -906,7 +981,7 @@
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   function _uid(){ try{ return localStorage.getItem("medinote:uid")||"guest"; }catch(e){ return "guest"; } }
   function REPORT_KEY(){ return "medinote:report:"+_uid(); }
   var RX_KEYS=["medinote:rx","medit:rx"];   // QR 약봉투(복약정보) 히스토리 저장 키 후보
@@ -991,10 +1066,9 @@
     fillRx();
     // 2) Supabase에서 히스토리 가져와 보강
     try{
-      var q=RX_KEYS.map(function(k){return "key.eq."+encodeURIComponent(k);}).join(",");
-      fetch(SB_URL+"/rest/v1/hub_state?or=("+q+")&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-        .then(function(r){ return r.ok?r.json():[]; })
-        .then(function(rows){ (rows||[]).forEach(function(row){ extractMeds(row.value).forEach(function(m){ if(meds.indexOf(m)===-1) meds.push(m); }); }); fillRx(); })
+      window.MediNoteKV.getMany(RX_KEYS)
+        .then(function(map){ RX_KEYS.forEach(function(k){ var v=map&&map[k]; if(!v) return;
+          extractMeds(v).forEach(function(m){ if(meds.indexOf(m)===-1) meds.push(m); }); }); fillRx(); })
         .catch(function(){});
     }catch(e){}
   }
@@ -1055,10 +1129,8 @@
     // 입력 초기화(정도·날짜는 유지)
     el("mnsy-sym").value=""; el("mnsy-memo").value="";
     try{
-      fetch(SB_URL+"/rest/v1/hub_state",{method:"POST",
-        headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},
-        body:JSON.stringify([{key:REPORT_KEY(),value:{records:records},updated_at:new Date().toISOString()}])})
-        .then(function(r){ el("mnsy-st").textContent=r.ok?"저장 완료 · 기기와 클라우드에 안전하게 담겼어요.":"기기에 저장했어요(클라우드는 다음에 동기화)."; })
+      window.MediNoteKV.put(REPORT_KEY(),{records:records})
+        .then(function(ok){ el("mnsy-st").textContent=ok?"저장 완료 · 기기와 클라우드에 안전하게 담겼어요.":"기기에 저장했어요(클라우드는 다음에 동기화)."; })
         .catch(function(){ el("mnsy-st").textContent="기기에 저장했어요(오프라인)."; });
     }catch(e){ el("mnsy-st").textContent="기기에 저장했어요."; }
   }
@@ -1068,9 +1140,8 @@
     try{ var s=localStorage.getItem(REPORT_KEY()); if(s){ var v=JSON.parse(s); records=Array.isArray(v)?v:(v.records||[]); } }catch(e){}
     renderList();
     try{
-      fetch(SB_URL+"/rest/v1/hub_state?key=eq."+encodeURIComponent(REPORT_KEY())+"&select=value",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
-        .then(function(r){ return r.ok?r.json():[]; })
-        .then(function(rows){ if(rows[0]&&rows[0].value&&Array.isArray(rows[0].value.records)){ records=rows[0].value.records; try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){} renderList(); } })
+      window.MediNoteKV.get(REPORT_KEY())
+        .then(function(v){ if(v&&Array.isArray(v.records)){ records=v.records; try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){} renderList(); } })
         .catch(function(){});
     }catch(e){}
   }
@@ -1281,8 +1352,10 @@
 (function(){
   "use strict";
   var SB_URL="https://xaclqvveppvccdpebzsz.supabase.co";
-  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhY2xxdnZlcHB2Y2NkcGVienN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NTkzNzEsImV4cCI6MjA5OTMzNTM3MX0.qZ9qWV3kVmJW4hUwjP8N_PGddO37sJvLCHx-XaYLJ9U";
+  var SB_KEY="sb_publishable_i0msp00o_4-JOBp9JjZLww_VExbio2b";
   var sb=null, user=null, built=false, authMode="login";
+  // 세션을 공용 계층과 나눠 쓴다 — RPC·measurements 쓰기가 익명 대신 본인으로 나간다
+  function share(s){ try{ if(window.MediNoteKV) window.MediNoteKV.setSession(s||null); }catch(e){} }
   function el(id){ return document.getElementById(id); }
   function uid(){ try{ return localStorage.getItem("medinote:uid")||"guest"; }catch(e){ return "guest"; } }
   function setUid(v){ v=(v&&String(v).trim())||"guest"; try{ localStorage.setItem("medinote:uid",v); }catch(e){}
@@ -1395,13 +1468,14 @@
   function initSb(){
     try{ if(window.supabase&&window.supabase.createClient){
       sb=window.supabase.createClient(SB_URL,SB_KEY);
-      sb.auth.getSession().then(function(r){ var s=r&&r.data&&r.data.session; if(s&&s.user){ user=s.user; setUid(user.email||user.id); } paint(); }).catch(function(){ paint(); });
-      sb.auth.onAuthStateChange(function(_e,ss){ if(ss&&ss.user){ user=ss.user; setUid(user.email||user.id); } paint(); });
+      sb.auth.getSession().then(function(r){ var s=r&&r.data&&r.data.session; share(s); if(s&&s.user){ user=s.user; setUid(user.email||user.id); } paint(); }).catch(function(){ paint(); });
+      sb.auth.onAuthStateChange(function(_e,ss){ share(ss); if(ss&&ss.user){ user=ss.user; setUid(user.email||user.id); } paint(); });
     } }catch(e){}
   }
 
   build(); initSb(); paint();
-  window.MediNoteLogin={ open:open, close:close, setUid:setUid, uid:uid };
+  window.MediNoteLogin={ open:open, close:close, setUid:setUid, uid:uid,
+    user:function(){ return user; }, client:function(){ return sb; } };
 })();
 </script>
 <!-- ===== /로그인 레이어 ===== -->
