@@ -36,8 +36,8 @@
     var cfg = window.MEDINOTE_CONFIG, kv = window.MediNoteKV;
     var token = kv && kv.token && kv.token();
     if(!token){
-      try{ if(window.MediNoteLogin) window.MediNoteLogin.open(); }catch(e){}
-      return reply("도우미는 로그인 후 이용하실 수 있어요. 로그인하시면 기록에 맞춰 안내해 드립니다.");
+      return reply("도우미는 로그인 후 이용하실 수 있어요. 화면 오른쪽 위 \u201C로그인\u201D 을 눌러 주세요. "
+        + "로그인하시면 남기신 기록에 맞춰 안내해 드립니다.");
     }
     var sent = {};
     try{ sent = (typeof opts.body === "string") ? JSON.parse(opts.body) : (opts.body || {}); }catch(e){}
@@ -954,8 +954,7 @@
     var kv=window.MediNoteKV, uid=kv&&kv.userId();
     if(!uid){
       keepLocal(toRows(null));
-      st("로그인하시면 이 값이 나의 건강기록에 함께 담깁니다. 지금은 기기에만 저장했어요.");
-      try{ if(window.MediNoteLogin) window.MediNoteLogin.open(); }catch(e){}
+      st("기기에 저장했어요. 오른쪽 위 \u201C로그인\u201D 후 다시 누르시면 나의 건강기록에도 함께 담깁니다.");
       return;
     }
     var rows=toRows(uid);
@@ -1548,6 +1547,8 @@
 #mnlg-sheet.on{transform:translateY(0);}
 #mnlg-sheet .gp{width:42px;height:5px;border-radius:5px;background:#D8E9E6;margin:8px auto 14px;}
 #mnlg-sheet .hd{font-family:'Gaegu',cursive;font-weight:700;font-size:21px;color:#0A7168;margin-bottom:3px;}
+#mnlg-x{position:absolute;top:12px;right:14px;width:38px;height:38px;border:none;background:#F0F7F5;border-radius:50%;font-size:22px;line-height:1;color:#5A716D;cursor:pointer;display:grid;place-items:center;}
+#mnlg-x:hover{background:#E1F1EE;color:#0A7168;}
 #mnlg-sheet .sub{font-size:12.5px;color:#5A716D;margin-bottom:16px;line-height:1.55;}
 #mnlg-cur{background:#F1FAF9;border:1px solid #E1F1EE;border-radius:13px;padding:11px 13px;font-size:13px;color:#0A7168;font-weight:700;margin-bottom:14px;display:none;}
 #mnlg-cur.on{display:block;}
@@ -1607,6 +1608,7 @@
     var sheet=document.createElement("div"); sheet.id="mnlg-sheet";
     sheet.innerHTML=
       '<div class="gp"></div>'+
+      '<button id="mnlg-x" type="button" aria-label="\uB2EB\uAE30">\u00D7</button>'+
       '<div class="hd" id="mnlg-hd">로그인</div>'+
       '<div class="sub" id="mnlg-sub">이메일로 로그인하거나 회원가입하세요. 기록이 계정에 안전하게 저장됩니다.</div>'+
       '<div id="mnlg-cur"></div>'+
@@ -1635,6 +1637,7 @@
     el("mnlg-quicktoggle").onclick=function(){ var q=el("mnlg-quick"); q.style.display=(q.style.display==="none")?"block":"none"; };
     el("mnlg-start").onclick=function(){ var v=(el("mnlg-id").value||"").trim().replace(/\s+/g,""); if(!v){ el("mnlg-id").focus(); return; } setUid(v); close(); };
     el("mnlg-out").onclick=logout;
+    el("mnlg-x").onclick=close;
   }
   function open(){ build(); paint(); document.getElementById("mnlg-back").classList.add("on"); requestAnimationFrame(function(){ document.getElementById("mnlg-sheet").classList.add("on"); }); }
   function close(){ var s=document.getElementById("mnlg-sheet"),b=document.getElementById("mnlg-back"); if(s)s.classList.remove("on"); if(b)b.classList.remove("on"); }
