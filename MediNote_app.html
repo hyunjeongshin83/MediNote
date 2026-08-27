@@ -199,10 +199,10 @@
       google: "Google\uB85C \uACC4\uC18D\uD558\uAE30",
       kakao: "\uCE74\uCE74\uC624\uB85C \uACC4\uC18D\uD558\uAE30",
       naver: "\uB124\uC774\uBC84\uB85C \uACC4\uC18D\uD558\uAE30",
-      consentNote: "\uC0DD\uB144\uC6D4\uC77C\uC740 \uCC98\uC74C \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4. \uC5F0\uB839\uB300\uC5D0 \uB530\uB77C \uC811\uC885 \uC548\uB0B4\uAC00 \uB2EC\uB77C\uC11C\uC608\uC694.",
+      consentNote: "Google\uB85C \uB85C\uADF8\uC778\uD558\uC2DC\uBA74 \uC0DD\uB144\uC6D4\uC77C\uC744 \uBC1B\uC544 \uC5F0\uB839\uB300\uB97C \uC790\uB3D9\uC73C\uB85C \uB9DE\uCDA5\uB2C8\uB2E4(\uB3D9\uC758\uD558\uC2E0 \uACBD\uC6B0). \uBC1B\uC9C0 \uBABB\uD558\uBA74 \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4.",
       dobMissTitle: "\uC0DD\uB144\uC6D4\uC77C\uB9CC \uC54C\uB824\uC8FC\uC138\uC694",
       oneThing: "\uD55C \uAC00\uC9C0\uB9CC\uC694",
-      dobMissBody: "\uC811\uC885 \uC548\uB0B4\uAC00 \uC5F0\uB839\uB300\uC5D0 \uB530\uB77C \uB2EC\uB77C\uC11C \uD55C \uBC88\uB9CC \uC5EC\uCB64\uBD05\uB2C8\uB2E4. \uD55C \uBC88 \uC785\uB825\uD558\uC2DC\uBA74 \uB2E4\uC74C\uBD80\uD130\uB294 \uBB3B\uC9C0 \uC54A\uC544\uC694.",
+      dobMissBody: "Google \uACC4\uC815\uC5D0\uC11C \uC0DD\uB144\uC6D4\uC77C\uC744 \uBC1B\uC9C0 \uBABB\uD588\uC5B4\uC694(\uC5F0\uB3C4\uB97C \uBE44\uACF5\uAC1C\uB85C \uB450\uC168\uAC70\uB098 \uB4F1\uB85D\uB418\uC9C0 \uC54A\uC740 \uACBD\uC6B0). \uC5F0\uB839\uB300 \uC548\uB0B4\uB97C \uC704\uD574 \uD55C \uBC88\uB9CC \uC785\uB825\uD574 \uC8FC\uC138\uC694.",
       ageGroup: "\uC5F0\uB839\uB300",
       start: "\uC2DC\uC791\uD558\uAE30",
       nav: { home: "\uCC98\uC74C", vaccine: "\uC608\uBC29\uC811\uC885", assist: "\uB3C4\uC6B0\uBBF8", report: "\uB9AC\uD3EC\uD2B8", my: "\uB098\uC758\uC815\uBCF4" },
@@ -298,10 +298,10 @@
       google: "Continue with Google",
       kakao: "Continue with Kakao",
       naver: "Continue with Naver",
-      consentNote: "We ask for your date of birth once \u2014 vaccination guidance differs by age group.",
+      consentNote: "Sign in with Google and we'll read your date of birth to set your age group (with your consent). If we can't, we'll ask once.",
       dobMissTitle: "Just your date of birth",
       oneThing: "One quick thing",
-      dobMissBody: "Vaccination guidance differs by age group, so we ask once. We won't ask again after this.",
+      dobMissBody: "Google didn't return a usable birth date (the year is often kept private). Please add it once so guidance matches your age group.",
       ageGroup: "Age group",
       start: "Get started",
       nav: { home: "Home", vaccine: "Vaccines", assist: "Assistant", report: "After-care", my: "Record" },
@@ -1584,8 +1584,52 @@
   var SB_KEY=window.MEDINOTE_CONFIG.key;
   var sb=null, user=null, built=false, authMode="login";
   // 세션을 공용 계층과 나눠 쓴다 — RPC·measurements 쓰기가 익명 대신 본인으로 나간다
+  /* 구글이 내준 생년월일을 읽는다. 연도가 없으면(비공개로 둔 계정이 많다) 쓸 수 없으므로
+     null 을 돌려주고, 그러면 앱이 평소처럼 한 번 여쭙는다. */
+  async function googleBirthday(providerToken){
+    if(!providerToken) return null;
+    try{
+      var r = await fetch("https://people.googleapis.com/v1/people/me?personFields=birthdays",
+        { headers: { Authorization: "Bearer " + providerToken } });
+      if(!r.ok) return null;
+      var d = await r.json();
+      var list = (d && d.birthdays) || [];
+      var best = null;
+      for(var i=0;i<list.length;i++){
+        var b = list[i], dt = b && b.date;
+        if(!dt || !dt.year || !dt.month || !dt.day) continue;   // 연도 없으면 못 쓴다
+        var src = b.metadata && b.metadata.source && b.metadata.source.type;
+        if(src === "ACCOUNT"){ best = dt; break; }              // 계정에 등록된 값 우선
+        if(!best) best = dt;
+      }
+      if(!best) return null;
+      function p2(n){ return (n<10?"0":"")+n; }
+      return best.year + "-" + p2(best.month) + "-" + p2(best.day);
+    }catch(e){ return null; }
+  }
+
+  function adoptGoogleBirthday(s){
+    try{
+      var pt = s && s.provider_token;
+      if(!pt || !window.MediNoteProfile) return;
+      if(window.MediNoteProfile.cached()) return;   // 이미 있으면 덮어쓰지 않는다
+      googleBirthday(pt).then(function(birth){
+        if(!birth) return;
+        var u = s.user || {}, meta = u.user_metadata || {};
+        var prof = {
+          name: meta.name || meta.full_name || (u.email ? String(u.email).split("@")[0] : ""),
+          birth: birth,
+          conditions: []
+        };
+        window.MediNoteProfile.save(prof);
+        try{ window.dispatchEvent(new CustomEvent("medinote:profile",{ detail: prof })); }catch(e){}
+      });
+    }catch(e){}
+  }
+
   function share(s){
     try{ if(window.MediNoteKV) window.MediNoteKV.setSession(s||null); }catch(e){}
+    adoptGoogleBirthday(s);
     // 리포트 스코프를 같은 오리진의 다른 페이지(증상신고·오늘기록)와 공유한다
     try{
       var id=s&&s.user&&s.user.id;
@@ -1697,7 +1741,13 @@
     if(location.protocol!=="https:" && location.hostname!=="localhost"){ gerr("Google 로그인은 <b>https</b> 주소에서만 됩니다."); return; }
     if(!sb){ gerr("로그인 모듈을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."); return; }
     try{
-      sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.href.split("#")[0]}})
+      sb.auth.signInWithOAuth({provider:"google",options:{
+        redirectTo:location.href.split("#")[0],
+        // 연령대 안내에 쓸 생년월일을 함께 요청한다. 민감 스코프라 구글 콘솔에서
+        // People API 사용 설정과 동의 화면 스코프 추가가 되어 있어야 한다.
+        scopes:"https://www.googleapis.com/auth/user.birthday.read",
+        queryParams:{ access_type:"offline", prompt:"consent" }
+      }})
         .then(function(r){ if(r&&r.error){ gerr("Google 공급자 설정이 필요합니다 (관리자 1회): <b>"+esc(r.error.message||"provider not enabled")+"</b><br>Supabase → Authentication → Providers → <b>Google 켜기</b> + Redirect URL 등록이 필요합니다."); } })
         .catch(function(){ gerr("로그인을 시작할 수 없습니다. 잠시 후 다시 시도하거나 본인 아이디로 로그인하세요."); });
     }catch(err){ gerr("로그인을 시작할 수 없습니다. 본인 아이디로 로그인해 주세요."); }
