@@ -481,10 +481,37 @@
     const [step, setStep] = (0, import_react.useState)(0);
     const [birth, setBirth] = (0, import_react.useState)("");
     const grp = ageGroupFromBirth(birth);
+    function signedInName() {
+      try {
+        const u = localStorage.getItem("medinote:uid");
+        if (u && u !== "guest") return String(u).split("@")[0];
+      } catch (e) {}
+      return "";
+    }
     function profileFor(b) {
       const g = ageGroupFromBirth(b);
-      return { name: g === "child" ? lang === "ko" ? "\uC900" : "Jun" : "Nick", birth: b, ageGroup: g, conditions: g === "senior" ? lang === "ko" ? ["\uACE0\uD608\uC555", "\uB2F9\uB1E8"] : ["hypertension", "diabetes"] : [] };
+      // 이름은 로그인한 계정에서 가져온다. 기저질환은 본인이 나의정보에서 입력하는 것이지
+      // 나이대로 지어낼 수 있는 값이 아니다 — 예전에는 어르신이면 고혈압·당뇨를 붙였다.
+      const fallback = g === "child" ? (lang === "ko" ? "\uC900" : "Jun") : (lang === "ko" ? "\uD68C\uC6D0" : "Member");
+      return { name: signedInName() || fallback, birth: b, ageGroup: g, conditions: [] };
     }
+    // 로그인이 끝나면(또는 이미 돼 있으면) 생년월일 단계로 넘어간다. 이게 없으면
+    // 로그인에 성공해도 profile 이 비어 있어 이 온보딩 화면이 계속 다시 뜬다.
+    (0, import_react.useEffect)(() => {
+      function authed() {
+        let u = null;
+        try { u = localStorage.getItem("medinote:uid"); } catch (e) {}
+        return !!u && u !== "guest";
+      }
+      if (authed()) setStep(1);
+      function onUid(e) {
+        const v = (e && e.detail) || null;
+        if (v && v !== "guest") setStep(1);
+      }
+      window.addEventListener("medinote:uid", onUid);
+      return () => window.removeEventListener("medinote:uid", onUid);
+    }, []);
+
     function signIn(provider) {
       // 예전에는 provider === "google" 이면 생년월일 "1958-04-10" 을 지어내 가짜
       // 프로필(Nick)을 만들었다. 건강 앱에서 접종 안내가 지어낸 생년월일로 계산되면
