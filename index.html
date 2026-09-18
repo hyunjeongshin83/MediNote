@@ -55,6 +55,11 @@ header a.open{font-size:12.5px;font-weight:700;color:#06413E;background:var(--br
 .side button.inst{width:100%;margin-top:9px;background:var(--brand);color:#06413E;border-color:var(--brand);}
 .side .st{font-size:11.5px;color:var(--brand);min-height:15px;margin-top:7px;}
 @media (max-width:1100px){ .panes{grid-template-columns:1fr;grid-template-rows:1fr auto;} .pane+.pane{border-left:0;border-top:1px solid var(--line);} .phone{display:none;} }
+
+/* 어지럼증을 호소하는 분이 있어, 운영체제에서 「동작 줄이기」를 켜 두었으면 움직임을 멈춥니다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+}
 </style>
 </head>
 <body>
