@@ -35,6 +35,9 @@ h1{font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.03em;}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
 }
+
+/* 한글은 낱말 단위로 끊습니다 — 글자를 키우면 좁은 칸에서 "신 / 고" 처럼 낱말이 갈립니다 */
+.sub,.who,.note,.sm,.st,.kw,.btn{word-break:keep-all;}
 </style>
 </head>
 <body>

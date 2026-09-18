@@ -143,6 +143,9 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
 }
+
+/* 한글은 낱말 단위로 끊습니다 — 글자를 키우면 좁은 칸에서 "신 / 고" 처럼 낱말이 갈립니다 */
+.lead,.ds,.foot,.hint,.cap,.mini,.prev,.ad,.empty,.at,small,.btn{word-break:keep-all;}
 </style>
 <script src="medinote.config.js"></script>
 <script src="vendor/supabase-js-2.umd.js"></script>
