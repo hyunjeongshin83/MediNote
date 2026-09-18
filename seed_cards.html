@@ -11,25 +11,30 @@
 body{font-family:'Pretendard','Inter',sans-serif;color:#324744;background:#06413E;letter-spacing:-.01em;display:flex;justify-content:center;min-height:100vh;}
 .wrap{width:100%;max-width:430px;min-height:100vh;background:linear-gradient(180deg,#EEFBF8 0%,#FAFDFC 30%,#EEFBF8 100%);box-shadow:0 0 60px rgba(0,0,0,.28);padding:24px 18px 60px;}
 h1{font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.03em;}
-.sub{font-size:13.5px;color:var(--d3);margin:6px 0 18px;line-height:1.6;}
+.sub{font-size:15px;color:var(--d3);margin:6px 0 18px;line-height:1.6;}
 .bar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;}
-.btn{font-family:inherit;font-weight:800;font-size:14.5px;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--g4),var(--g6));box-shadow:0 6px 16px rgba(18,189,176,.3);}
+.btn{font-family:inherit;font-weight:800;font-size:16px;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--g4),var(--g6));box-shadow:0 6px 16px rgba(18,189,176,.3);}
 .btn.ghost{background:#fff;color:var(--g6);border:1.5px solid var(--line);box-shadow:none;}
-.st{font-size:13px;font-weight:700;color:var(--g6);margin-bottom:14px;min-height:18px;}
+.st{font-size:15px;font-weight:700;color:var(--g6);margin-bottom:14px;min-height:18px;}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px;}
 .card .tp{font-size:12px;font-weight:800;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;}
 .card .tt{font-size:16px;font-weight:800;color:var(--ink);margin:3px 0;}
-.card .sm{font-size:13px;color:var(--d3);line-height:1.55;}
-.card .kw{font-size:11.5px;color:#8FA6A2;margin-top:7px;}
-.note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:12.5px;color:var(--d3);line-height:1.6;margin-top:14px;}
+.card .sm{font-size:15px;color:var(--d3);line-height:1.55;}
+.card .kw{font-size:15px;color:#8FA6A2;margin-top:7px;}
+.note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:15px;color:var(--d3);line-height:1.6;margin-top:14px;}
 .note b{color:var(--g6);}
 .auth{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;}
-.auth .who{font-size:12.5px;color:var(--d3);line-height:1.55;margin-bottom:9px;}
+.auth .who{font-size:15px;color:var(--d3);line-height:1.55;margin-bottom:9px;}
 .auth .who b{color:var(--g6);}
 .auth .row{display:flex;gap:7px;flex-wrap:wrap;}
 .auth input{flex:1 1 120px;min-width:0;font-family:inherit;font-size:13.5px;padding:10px 12px;
   border:1.5px solid var(--line);border-radius:10px;color:var(--ink);background:#fff;}
 .auth .btn{font-size:13.5px;padding:10px 15px;}
+
+/* 어지럼증을 호소하는 분이 있어, 운영체제에서 「동작 줄이기」를 켜 두었으면 움직임을 멈춥니다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+}
 </style>
 </head>
 <body>

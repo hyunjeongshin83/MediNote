@@ -24,13 +24,13 @@ body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);l
   padding:26px 18px calc(50px + env(safe-area-inset-bottom));}
 .eyebrow{display:flex;align-items:center;gap:8px;margin:0 4px 12px;}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--g4);box-shadow:0 0 0 4px rgba(18,189,176,.14);}
-.eyebrow span{font-size:12.5px;font-weight:800;letter-spacing:.4px;color:var(--g6);}
+.eyebrow span{font-size:14px;font-weight:800;letter-spacing:.4px;color:var(--g6);}
 .eyebrow .cute{font-family:'Gaegu',cursive;font-weight:700;font-size:16px;color:var(--g5);margin-left:auto;opacity:.9;}
 .h1{font-family:'Gaegu',cursive;font-weight:700;font-size:27px;color:var(--ink);letter-spacing:-.02em;margin:2px 2px;}
-.lead{font-size:13.5px;color:var(--d3);margin:4px 2px 18px;line-height:1.62;}
+.lead{font-size:16px;color:var(--d3);margin:4px 2px 18px;line-height:1.62;}
 .lead b{color:var(--g6);}
 
-.sec-h{font-size:12px;font-weight:800;color:var(--g6);letter-spacing:.4px;margin:22px 4px 10px;display:flex;align-items:center;gap:8px;}
+.sec-h{font-size:16px;font-weight:800;color:var(--g6);letter-spacing:.4px;margin:22px 4px 10px;display:flex;align-items:center;gap:8px;}
 .sec-h::before{content:"";width:16px;height:2px;border-radius:2px;background:var(--g4);}
 
 .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;box-shadow:0 12px 34px rgba(6,65,62,.07);margin-bottom:12px;}
@@ -38,10 +38,10 @@ body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);l
 .card .tp .badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;}
 .badge.free{background:var(--g0);color:var(--g6);} .badge.key{background:var(--amberbg);color:var(--amber);} .badge.std{background:var(--bluebg);color:var(--blue);}
 .card .tt{font-size:15px;font-weight:800;color:var(--ink);}
-.card .ds{font-size:12.5px;color:var(--d3);line-height:1.6;margin-top:3px;}
-.card code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:var(--mist);color:var(--g7);padding:1px 6px;border-radius:6px;word-break:break-all;}
+.card .ds{font-size:15px;color:var(--d3);line-height:1.6;margin-top:3px;}
+.card code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--mist);color:var(--g7);padding:1px 6px;border-radius:6px;word-break:break-all;}
 .card .ep{margin-top:8px;font-size:11.5px;}
-.card .lk{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:12.5px;font-weight:800;color:var(--g5);text-decoration:none;}
+.card .lk{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:15px;font-weight:800;color:var(--g5);text-decoration:none;}
 .card .lk svg{width:13px;height:13px;}
 
 /* live demo */
@@ -49,11 +49,11 @@ body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);l
 .live .lt{font-size:15.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px;}
 .live .lt .pulse{width:9px;height:9px;border-radius:50%;background:#2FBF71;box-shadow:0 0 0 0 rgba(47,191,113,.6);animation:pl 1.8s infinite;}
 @keyframes pl{0%{box-shadow:0 0 0 0 rgba(47,191,113,.5);}70%{box-shadow:0 0 0 9px rgba(47,191,113,0);}100%{box-shadow:0 0 0 0 rgba(47,191,113,0);}}
-.live .ls{font-size:12px;color:var(--d3);margin:5px 2px 12px;}
+.live .ls{font-size:15px;color:var(--d3);margin:5px 2px 12px;}
 .ctrl{display:flex;gap:8px;flex-wrap:wrap;}
 .fld{flex:1;min-width:140px;}
 label{display:block;font-size:11px;font-weight:800;color:var(--g6);margin:0 2px 5px;}
-select,input{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);border:1.5px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;}
+select,input{width:100%;font-family:inherit;font-size:15px;color:var(--ink);border:1.5px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;}
 select:focus,input:focus{outline:none;border-color:var(--g4);}
 .btn{width:100%;margin-top:11px;font-family:inherit;font-weight:800;font-size:14px;color:#fff;border:none;border-radius:12px;padding:12px 0;cursor:pointer;
   background:linear-gradient(135deg,var(--g4),var(--g6));box-shadow:0 8px 18px rgba(18,189,176,.28);}
@@ -68,15 +68,20 @@ select:focus,input:focus{outline:none;border-color:var(--g4);}
 .bars .b{flex:1;background:linear-gradient(180deg,var(--g4),var(--g6));border-radius:4px 4px 0 0;min-height:3px;position:relative;}
 .bars .b span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);}
 .bars .b em{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);font-style:normal;}
-.st{font-size:12px;font-weight:700;color:var(--g6);margin-top:10px;min-height:16px;}
+.st{font-size:15px;font-weight:700;color:var(--g6);margin-top:10px;min-height:16px;}
 .raw{margin-top:12px;font-size:11px;background:#06302e;color:#8fe9df;border-radius:11px;padding:11px 12px;max-height:150px;overflow:auto;white-space:pre;font-family:ui-monospace,Menlo,monospace;line-height:1.5;}
 
-.note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:12px;color:var(--d3);line-height:1.62;margin-top:8px;}
+.note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:15px;color:var(--d3);line-height:1.62;margin-top:8px;}
 .note b{color:var(--g6);}
-.foot{font-size:11px;color:var(--d4);text-align:center;margin-top:16px;line-height:1.6;}
+.foot{font-size:15px;color:var(--d4);text-align:center;margin-top:16px;line-height:1.6;}
 .foot b{color:var(--g6);}
-.src{font-size:10.5px;color:#A9BCB8;text-align:center;margin-top:8px;line-height:1.7;}
+.src{font-size:13px;color:#A9BCB8;text-align:center;margin-top:8px;line-height:1.7;}
 .src a{color:#8FA6A2;}
+
+/* 어지럼증을 호소하는 분이 있어, 운영체제에서 「동작 줄이기」를 켜 두었으면 움직임을 멈춥니다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+}
 </style>
 </head>
 <body>
