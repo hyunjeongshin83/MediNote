@@ -28,7 +28,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
 header{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);flex:0 0 auto;}
 header img{width:26px;height:26px;border-radius:7px;}
 header .nm{font-size:16px;font-weight:800;letter-spacing:-.01em;}
-header .sub{font-size:12.5px;color:var(--dim);margin-left:2px;}
+header .sub{font-size:15px;color:var(--dim);margin-left:2px;}
 header .sp{flex:1;}
 header a.open{font-size:12.5px;font-weight:700;color:#06413E;background:var(--brand);
   border-radius:8px;padding:8px 14px;text-decoration:none;}
@@ -37,7 +37,7 @@ header a.open{font-size:12.5px;font-weight:700;color:#06413E;background:var(--br
 .pane+.pane{border-left:1px solid var(--line);}
 .pane .hd{display:flex;align-items:baseline;gap:9px;padding:12px 20px;flex:0 0 auto;}
 .pane .hd b{font-size:13px;font-weight:800;}
-.pane .hd span{font-size:11.5px;color:var(--dim);}
+.pane .hd span{font-size:15px;color:var(--dim);}
 .pane .bd{flex:1;min-height:0;padding:0 20px 20px;display:flex;flex-direction:column;}
 .web{flex:1;width:100%;border:0;border-radius:12px;background:#fff;min-height:0;}
 .phone{width:340px;max-width:100%;margin:0 auto;flex:1;min-height:0;
@@ -45,16 +45,24 @@ header a.open{font-size:12.5px;font-weight:700;color:#06413E;background:var(--br
   box-shadow:0 18px 44px rgba(0,0,0,.34);display:flex;}
 .phone iframe{flex:1;width:100%;border:0;}
 .side{flex:0 0 auto;padding:16px 20px 20px;border-top:1px solid var(--line);}
-.side h3{margin:0 0 8px;font-size:12.5px;font-weight:800;}
-.side p{margin:0 0 10px;font-size:12.5px;color:var(--dim);line-height:1.65;}
+.side h3{margin:0 0 8px;font-size:15px;font-weight:800;}
+.side p{margin:0 0 10px;font-size:15px;color:var(--dim);line-height:1.65;}
 .urlrow{display:flex;gap:8px;}
 .urlrow input{flex:1;min-width:0;font:inherit;font-size:12px;padding:9px 11px;border-radius:8px;
   border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--ink);}
 .urlrow button,.side button.inst{font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
   border-radius:8px;padding:9px 13px;border:1px solid var(--brand);background:transparent;color:var(--brand);}
 .side button.inst{width:100%;margin-top:9px;background:var(--brand);color:#06413E;border-color:var(--brand);}
-.side .st{font-size:11.5px;color:var(--brand);min-height:15px;margin-top:7px;}
+.side .st{font-size:14px;color:var(--brand);min-height:15px;margin-top:7px;}
 @media (max-width:1100px){ .panes{grid-template-columns:1fr;grid-template-rows:1fr auto;} .pane+.pane{border-left:0;border-top:1px solid var(--line);} .phone{display:none;} }
+
+/* 어지럼증을 호소하는 분이 있어, 운영체제에서 「동작 줄이기」를 켜 두었으면 움직임을 멈춥니다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+}
+
+/* 한글은 낱말 단위로 끊습니다 — 글자를 키우면 좁은 칸에서 "신 / 고" 처럼 낱말이 갈립니다 */
+.sub,.side p,.side h3,.pane .hd span{word-break:keep-all;}
 </style>
 </head>
 <body>
