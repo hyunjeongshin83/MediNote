@@ -7,8 +7,22 @@
 ## 추천 방식으로 만든 이유
 
 - 이미 완성된 웹앱(HTML) 하나를 두 앱이 함께 사용합니다.
-  → 화면을 고칠 때 **웹앱 한 곳만 고치면** 안드로이드·iOS·웹페이지가 모두 바뀝니다.
+  → 화면을 고칠 곳은 저장소 맨 위의 **`MediNote_app.html` 한 곳**입니다.
 - 같은 `shared/index.html`은 **웹페이지로도 그대로** 열 수 있습니다.
+
+### 화면을 고친 뒤에는 반드시
+
+```
+python3 tools/build-packaged-app.py
+```
+
+앱 안의 `index.html` 세 벌은 이 명령으로 **다시 만들어집니다.** 손으로 복사하지 마세요.
+
+> 2026-07 부터 2026-09 까지 이 세 벌이 웹앱과 따로 놀았습니다.
+> 앱 화면에는 로그인도 Supabase 연결도 없었고, React 를 인터넷에서 받고 있어
+> **비행기 모드에서는 빈 화면**이었습니다. 지금은 React·Supabase·설정이
+> 파일 안에 들어가 있어 인터넷 없이도 로그인 화면까지 열립니다.
+> 갈라졌는지만 보려면 `python3 tools/build-packaged-app.py --check`.
 
 ## 폴더 구성
 
@@ -37,21 +51,24 @@ MediNote_apps_0706/
 │  ├─ ContentView.swift       ← WebView 화면
 │  └─ HealthKitManager.swift  ← 건강 데이터 로컬 연동
 ├─ shared/index.html          ← 웹앱 (웹페이지로도 사용)
-├─ APK_빌드안내.md            ← APK 자동 빌드 사용법
+├─ APK_빌드안내.md            ← APK 빌드 현황
 └─ README.md                  ← 이 문서
 ```
 
-> APK 자동 빌드 설정(`android-build.yml`)은 저장소 **최상위**의
-> `.github/workflows/` 폴더에 있습니다. (이 폴더 안이 아니라 저장소 맨 위)
-> 워크플로는 `working-directory: MediNote_apps_0706/android` 로 이 폴더의 코드를 빌드합니다.
+`index.html` 세 곳과 그 옆의 아이콘·manifest 는 **만들어지는 파일**입니다.
+직접 고치지 마세요 — `tools/build-packaged-app.py` 를 다시 돌리면 지워집니다.
+
+> **APK 자동 빌드는 아직 설정돼 있지 않습니다.** 저장소에 `.github/` 폴더가 없습니다.
+> 무엇이 더 필요한지는 `APK_빌드안내.md` 에 적어 두었습니다.
 
 ## 열어보는 방법
 
-- **APK 자동 빌드:** 코드를 저장소에 올리면 GitHub가 APK를 자동으로 만듭니다.
-  자세한 방법은 `APK_빌드안내.md` 참고. (저장소 상단 Actions 탭 → 결과 APK 내려받기)
-- **안드로이드:** Android Studio로 `android/` 폴더를 열어 실행할 수도 있습니다.
-- **iOS(애플):** Xcode로 `ios/MediNote/` 파일들을 넣어 빌드합니다. (Mac + Xcode 필요)
-- **웹페이지:** `shared/index.html`을 인터넷 브라우저에서 바로 엽니다.
+- **웹페이지:** `shared/index.html` 을 브라우저에서 바로 엽니다. **지금 바로 됩니다.**
+- **안드로이드:** Android Studio 로 `android/` 폴더를 엽니다.
+  다만 지금 이대로는 빌드가 **실패합니다** — 빠진 것이 `APK_빌드안내.md` 에 적혀 있습니다.
+- **iOS(애플):** Xcode 로 `ios/MediNote/` 파일들을 넣어 빌드합니다. (Mac + Xcode 필요)
+  `index.html` 과 그 옆의 아이콘·manifest 를 **모두** Bundle 에 넣으세요.
+  하위 폴더가 없으므로 Xcode 에서 폴더 구조를 신경 쓸 일은 없습니다.
 
 ## 건강 데이터 연동 (합법적 설계)
 
