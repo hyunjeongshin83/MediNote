@@ -15,6 +15,9 @@
 #   여기서는 setup-gradle 이 판본을 박아 설치하므로 래퍼가 필요 없습니다.
 #   판본은 gradle/wrapper/gradle-wrapper.properties 와 같은 8.9 로 맞춰 둡니다.
 #
+# 첫 실행 결과 (2026-09-20 05:26 UTC) — **성공**했습니다.
+#   빌드 1분 43초 · APK 10.2MB · 판본은 그대로 받아졌습니다.
+#
 # 나오는 것은 **디버그 빌드**입니다. 지인에게 파일로 건네는 용도입니다.
 # 플레이스토어 등록에는 본인 개발자 키로 서명한 릴리스 빌드가 따로 필요합니다.
 
@@ -22,6 +25,7 @@ name: 안드로이드 APK
 
 on:
   push:
+    branches: [main]          # PR 가지에서는 pull_request 쪽만 돌게 합니다
     paths:
       - 'MediNote_apps_0706/android/**'
       - 'MediNote_app.html'
