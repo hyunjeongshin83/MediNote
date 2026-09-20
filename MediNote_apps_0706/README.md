@@ -73,8 +73,12 @@ MediNote_apps_0706/
 ## 건강 데이터 연동 (합법적 설계)
 
 - 건강 센서 데이터(걸음·심박)는 개인정보보호법상 **민감정보**입니다.
-- 앱은 데이터를 **서버로 보내지 않고**, 기기 안(Health Connect / HealthKit)에서 읽어
-  **로컬에서만 계산**합니다. 사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
+- `HealthConnectManager` · `HealthKitManager` 는 데이터를 **서버로 보내지 않고**,
+  기기 안(Health Connect / HealthKit)에서 읽어 **로컬에서만 계산**하도록 짰습니다.
+  사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
+- **다만 이 두 매니저는 아직 화면에 연결돼 있지 않습니다.** 지금 실제로 도는 건강
+  기능은 웹 화면의 블루투스 읽기이고, 거기에는 클라우드 저장 단추가 있습니다.
+  자세한 것은 `android/.../HEALTH_SETUP.md` 를 보세요.
 - 로그인(Google·카카오·네이버)과 건강 데이터는 **완전히 분리**되어 있습니다.
 - 남은 설정과 연동 원리는 `android/app/src/main/java/kr/medit/medinote/HEALTH_SETUP.md` 참고.
 - ※ Apple Watch 데이터는 아이폰 네이티브 앱의 HealthKit로만 접근 가능합니다.
