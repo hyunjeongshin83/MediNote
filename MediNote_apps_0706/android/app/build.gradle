@@ -34,4 +34,10 @@ dependencies {
     implementation 'androidx.activity:activity-compose:1.9.2'
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.compose.ui:ui'
+
+    /* HealthConnectManager.kt 가 androidx.health.connect.client 를 import 합니다.
+       이 줄이 없으면 컴파일 단계에서 멈춥니다.
+       판본은 HEALTH_SETUP.md 가 적어 둔 것을 그대로 씁니다 — 이 작업 환경에서는
+       dl.google.com 이 막혀 있어 확인할 수 없었고, Actions 가 처음 돌 때 확인됩니다. */
+    implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
 }
