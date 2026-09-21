@@ -85,6 +85,26 @@ def build() -> str:
         body = body.replace("</script", "<\\/script")
         html = html.replace(tag, f"<script>/* {rel} */\n{body}\n</script>", 1)
 
+    # 서비스워커는 패키징본에서 뺍니다.
+    #
+    # 안드로이드 WebView·iOS WKWebView 는 이 파일을 file:// 로 엽니다. 그 origin 은
+    # 'null' 이라 브라우저가 서비스워커 등록을 거부합니다(실측 확인, #16). 게다가
+    # MediNote.sw.js 자체가 패키징 폴더에 없습니다. 남겨 두면 콘솔 오류만 납니다.
+    #
+    # 웹앱(https)에서는 그대로 돕니다 — 원본은 건드리지 않습니다.
+    sw_line = ('  if("serviceWorker" in navigator){ window.addEventListener("load", '
+               'function(){ navigator.serviceWorker.register("MediNote.sw.js").catch(function(){}); }); }')
+    if sw_line not in html:
+        raise SystemExit(
+            "MediNote_app.html 에서 서비스워커 등록 줄을 찾지 못했습니다.\n"
+            "원본이 바뀌었습니다. 이 스크립트의 sw_line 을 맞춰 주세요."
+        )
+    html = html.replace(
+        sw_line,
+        "  /* 서비스워커는 패키징본에서 뺐습니다 — file:// 에서는 등록이 거부됩니다 (#16) */",
+        1,
+    )
+
     # <!DOCTYPE html> 바로 뒤에 안내를 붙입니다.
     first_newline = html.index("\n") + 1
     return html[:first_newline] + BANNER + html[first_newline:]

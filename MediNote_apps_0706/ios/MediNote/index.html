@@ -19,7 +19,7 @@
 <script>
 (function(){
   // (1) PWA — 설치형/오프라인 (Play스토어 TWA용). UI에 영향 없음.
-  if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("MediNote.sw.js").catch(function(){}); }); }
+  /* 서비스워커는 패키징본에서 뺐습니다 — file:// 에서는 등록이 거부됩니다 (#16) */
   window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); window.__mnInstall=e; });
 
   // (2) AI 도우미 — 브라우저에서 Anthropic 을 직접 부르지 않는다.
@@ -1327,11 +1327,20 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function b64ToU8(s){ var pad="=".repeat((4-s.length%4)%4); var b=(s+pad).replace(/-/g,"+").replace(/_/g,"/"); var raw=atob(b); var a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
   async function subscribe(){
     try{
-      if(!("serviceWorker" in navigator)||!("PushManager" in window)){ alert("이 브라우저는 푸시 알림을 지원하지 않습니다 (Android Chrome 권장)."); return; }
+      // API 가 있는지만 보면 부족합니다. 패키징한 앱은 file:// 로 열리는데, 거기서는
+      // serviceWorker·PushManager 가 둘 다 있다고 나오면서 등록만 거부됩니다(origin 'null').
+      var secure = (location.protocol==="https:") || location.hostname==="localhost" || location.hostname==="127.0.0.1";
+      if(!("serviceWorker" in navigator)||!("PushManager" in window)||!secure){ alert("이 브라우저는 푸시 알림을 지원하지 않습니다 (Android Chrome 권장)."); return; }
       var perm=await Notification.requestPermission();
       if(perm!=="granted"){ alert("알림을 받으려면 알림 권한을 허용해 주세요."); return; }
       if(!VAPID_PUBLIC){ alert("알림 권한을 켰습니다. 실제 접종 알림 발송은 서버 설정(VAPID 키)을 넣으면 동작합니다."); return; }
-      var reg=await navigator.serviceWorker.ready;
+      // ready 는 활성 워커가 생길 때까지 기다리는 약속입니다. 등록이 불가능한 곳에서는
+      // 거부되지 않고 영원히 멈춥니다 — try/catch 에도 안 걸립니다. 그래서 시한을 둡니다.
+      var reg=await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function(r){ setTimeout(function(){ r(null); }, 5000); })
+      ]);
+      if(!reg){ alert("이 브라우저는 푸시 알림을 지원하지 않습니다 (Android Chrome 권장)."); return; }
       var sub=await reg.pushManager.getSubscription();
       if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC)});
       var ok=await window.MediNoteKV.rpc("push_subscribe",{p_endpoint:sub.endpoint, p_sub:sub.toJSON()});
