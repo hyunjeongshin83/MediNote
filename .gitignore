@@ -1,0 +1,4 @@
+
+# 파이썬 캐시 — SessionStart 훅이 tools/fixes.py 를 import 하며 생깁니다
+__pycache__/
+*.pyc
