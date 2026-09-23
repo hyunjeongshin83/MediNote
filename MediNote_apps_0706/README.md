@@ -70,6 +70,25 @@ MediNote_apps_0706/
   `index.html` 과 그 옆의 아이콘·manifest 를 **모두** Bundle 에 넣으세요.
   하위 폴더가 없으므로 Xcode 에서 폴더 구조를 신경 쓸 일은 없습니다.
 
+## 설치형 앱(APK · iOS)에서 지금 안 되는 것 (2026-09-24 확인 · #19)
+
+두 앱은 `index.html` 을 **`file://` 로 WebView 에 띄웁니다.** 화면은 웹앱과 같지만(빌드가 매번 맞춥니다),
+아래 세 기능은 웹앱(https · Android Chrome)에서만 되고 **설치형 앱에서는 안내문만 뜹니다.**
+
+| 기능 | 웹앱 (https, Android Chrome) | Android APK (WebView) | iOS (WKWebView) | 안 되는 까닭 |
+|---|---|---|---|---|
+| 블루투스 건강기기 읽기 | 됨 | 안 됨 | 안 됨 | `navigator.bluetooth` 가 WebView·WKWebView 에 없음 |
+| Google 로그인 | 됨 | 안 됨 | 안 됨 | 화면이 `file://` 이라 OAuth 가 돌아올 주소가 없음 (코드가 미리 막아 둠) |
+| 푸시 알림 | Chrome 에서 됨 | 안 됨 | 안 됨 | `file://` 에서는 서비스워커 등록 불가 (#16) |
+| 아이디·비밀번호 로그인 · 클라우드 저장 | 됨 | 됨 | 됨 | fetch 는 `file://` 에서도 나감 |
+
+그래서 설치형 앱에서 「블루투스 기기 연결」을 누르면 **「Android Chrome 에서 열어 주세요」** 가 뜹니다.
+연구 참여자에게 APK 를 나눠 줄 때 이 점을 먼저 알려야 합니다.
+
+길은 두 가지이고, 어느 쪽인지는 결정이 필요합니다 (#19).
+- **Android** — WebView 대신 **TWA(Trusted Web Activity)** 로 감싸면 Chrome 이 실행하므로 세 기능이 웹앱과 같아집니다.
+- **iOS** — 같은 방법이 없습니다. CoreBluetooth · HealthKit · 네이티브 로그인 브리지를 따로 만들어야 합니다.
+
 ## 건강 데이터 연동 (합법적 설계)
 
 - 건강 센서 데이터(걸음·심박)는 개인정보보호법상 **민감정보**입니다.
