@@ -1,0 +1,236 @@
+{
+  "source": "Q-omics (CBiS Inc.) — MCP 연동 실시간 조회 스냅샷",
+  "sourceNote": "TCGA/CPTAC 기반 세포주(cell) 약물반응성 스크리닝 데이터. MediNote 개인 PK/PGx 프로파일과 직접 연결되지 않는 연구참고자료입니다.",
+  "snapshotDate": "2026-09-24",
+  "refreshInstruction": "최신화가 필요하면 Claude 대화에서 Q-omics 커넥터로 재조회를 요청하세요. 이 파일은 실시간 호출이 아니라 저장된 스냅샷입니다.",
+  "disclaimer": "연구 참고용이며 실제 처방·복약 판단에 사용되지 않습니다.",
+  "analyses": [
+    {
+      "title": "CYP2D6 발현과 약물 반응성 연관 (범암종, cell line)",
+      "analysis": "association_pan",
+      "anchor": "CYP2D6",
+      "yType": "Drug response (cell)",
+      "criteria": "p < 0.05, 20개 암종 통합, S_Cscore+L_Cscore 상위 500쌍 중 랭킹",
+      "matchedPairs": 321,
+      "columns": [
+        "partner_drug",
+        "n_cancers_significant",
+        "S_Cscore",
+        "log2FC_strongest",
+        "p_strongest",
+        "strongest_cancer"
+      ],
+      "rows": [
+        [
+          "GSK343",
+          6,
+          3,
+          -0.404,
+          "0.001",
+          "LUNG_SCLC"
+        ],
+        [
+          "BMS-345541",
+          6,
+          2,
+          -0.604,
+          "0.021",
+          "SKIN"
+        ],
+        [
+          "AICA Ribonucleotide",
+          5,
+          3,
+          -0.442,
+          "0.001",
+          "PANCREAS"
+        ],
+        [
+          "CUDC-101",
+          5,
+          3,
+          -1.316,
+          "0.001",
+          "OESOPHAGUS"
+        ],
+        [
+          "GSK1904529A",
+          5,
+          3,
+          0.85,
+          "0.001",
+          "SOFT_TISSUE"
+        ],
+        [
+          "Kobe2602",
+          5,
+          3,
+          0.472,
+          "0.002",
+          "SOFT_TISSUE"
+        ],
+        [
+          "765771",
+          5,
+          3,
+          -0.549,
+          "0.003",
+          "SKIN"
+        ],
+        [
+          "N25720-51-A1",
+          5,
+          3,
+          -0.735,
+          "0.007",
+          "UPPER_AERODIGESTIVE_TRACT"
+        ],
+        [
+          "CCT245232",
+          5,
+          3,
+          -0.652,
+          "0.01",
+          "SOFT_TISSUE"
+        ],
+        [
+          "I-BET-151",
+          5,
+          3,
+          -0.506,
+          "0.011",
+          "BREAST"
+        ],
+        [
+          "XMD15-27",
+          5,
+          3,
+          -0.3,
+          "0.012",
+          "OESOPHAGUS"
+        ],
+        [
+          "Podophyllotoxin bromide",
+          5,
+          3,
+          -1.319,
+          "0.018",
+          "KIDNEY"
+        ],
+        [
+          "MCT4_1422",
+          5,
+          3,
+          -0.306,
+          "0.019",
+          "SKIN"
+        ],
+        [
+          "Vincristine",
+          5,
+          3,
+          -1.069,
+          "0.025",
+          "KIDNEY"
+        ],
+        [
+          "Obatoclax Mesylate",
+          5,
+          3,
+          -0.55,
+          "0.047",
+          "STOMACH"
+        ]
+      ],
+      "lineageSummary": {
+        "note": "이 anchor(CYP2D6)의 연관이 실제로 어느 암종에 많은지 — 개별 행의 'strongest_cancer'가 아니라 이 표를 봐야 함",
+        "columns": [
+          "cancer",
+          "n_significant_partners"
+        ],
+        "rows": [
+          [
+            "SOFT_TISSUE",
+            55
+          ],
+          [
+            "LUNG_SCLC",
+            53
+          ],
+          [
+            "BLOOD_Leukemia",
+            41
+          ],
+          [
+            "URINARY_TRACT",
+            32
+          ],
+          [
+            "STOMACH",
+            26
+          ],
+          [
+            "KIDNEY",
+            23
+          ],
+          [
+            "BONE",
+            23
+          ],
+          [
+            "BREAST",
+            22
+          ],
+          [
+            "OESOPHAGUS",
+            22
+          ],
+          [
+            "BLOOD_Lymphoma",
+            19
+          ],
+          [
+            "LUNG_NSCLC_LUAD",
+            18
+          ],
+          [
+            "SKIN",
+            15
+          ],
+          [
+            "CNS",
+            13
+          ],
+          [
+            "LARGE_INTESTINE",
+            13
+          ],
+          [
+            "UPPER_AERODIGESTIVE_TRACT",
+            13
+          ],
+          [
+            "PANCREAS",
+            11
+          ],
+          [
+            "LUNG_NSCLC_LUSC",
+            9
+          ],
+          [
+            "LIVER",
+            7
+          ],
+          [
+            "BLOOD_Myeloma",
+            7
+          ],
+          [
+            "OVARY",
+            7
+          ]
+        ]
+      }
+    }
+  ]
+}
