@@ -73,10 +73,18 @@ QA-tool 에는 무엇을 알아냈는지만 적습니다.
 ```
 블루투스(BLE) 측정값   사용자가 「읽은 값 클라우드에 저장」을 눌러야 올라갑니다
                        → Supabase measurements (도쿄 리전)
-질환(conditions)        프로필 저장 시 올라갑니다
+질환(conditions)        프로필 저장 시 올라갑니다 (이름·생년·알레르기·약 등도 같은 표)
                        → Supabase health_profiles
+증상 기록               저장 단추를 누르면 올라갑니다 + 기기 localStorage 에도 사본
+                       → Supabase hub_state 키 medinote:report:u_<uid> (비로그인은 g_<난수>)
+AI 도우미 · AI 채움     묻는 순간 나갑니다 — 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
+                       → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 서버에는 토큰 수만 남습니다
+생년월일               Google 로그인 때 Google People API 에서 받아 와 health_profiles 로
 Health Connect·HealthKit  매니저는 있으나 어느 화면에서도 불리지 않습니다
 ```
+
+세 줄(증상 기록 · AI 도우미 · 생년월일)은 2026-09-24 에 확인해 더한 것입니다 (#22).
+**AI 도우미 경로는 개인정보처리방침(PRIVACY.md)에 아직 없습니다** — MN-22-2.
 
 **「서버로 보내지 않습니다」·「기기를 떠나지 않습니다」라고 쓰지 마세요.** 사실이 아닙니다.
 
