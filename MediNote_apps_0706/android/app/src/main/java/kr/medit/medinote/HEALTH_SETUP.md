@@ -23,7 +23,12 @@
 - Apple Watch 데이터는 **아이폰 네이티브 앱의 HealthKit로만** 접근 가능합니다.
   (웹페이지·윈도우/안드로이드 PC에서는 접근 불가)
 
-## Android — 남은 설정 (APK 테스트 직전)
+## Android — 2026-09-25 연결됨 (#14 MN-14-2 · #18 MN-18-4)
+MainActivity 가 `window.Native` 다리로 HealthConnectManager 를 웹 화면에 잇습니다. 기기 연결 시트의
+「앱에서 Health Connect 읽기」 단추 → 권한 화면 → 걸음·심박·수면을 레코드 시각과 함께 돌려줍니다.
+아래 「남은 설정」은 그때의 목록이고 1·2 는 끝났습니다. 실기기 확인은 아직입니다.
+
+## Android — 남은 설정 (그때 목록)
 1. app/build.gradle 의 dependencies 에 추가:
    implementation "androidx.health.connect:connect-client:1.1.0-alpha07"
 2. AndroidManifest.xml 에 권한 추가:

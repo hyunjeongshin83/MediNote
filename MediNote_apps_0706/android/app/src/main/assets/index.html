@@ -464,7 +464,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       +'<div style="font-size:38px">\uD83D\uDCE1</div>'
       +'<div style="font-size:17px;font-weight:700">화면을 불러오지 못했습니다</div>'
       +'<div style="font-size:13.5px;line-height:1.75;opacity:.85;max-width:19em">네트워크 연결을 확인한 뒤 새로고침해 주세요. 병원·학교 와이파이에서는 일부 자료가 막힐 수 있습니다.</div>'
-      +'<button id="mn-reload" style="margin-top:6px;font:inherit;font-size:14px;font-weight:700;color:var(--brand-deep);background:var(--brand-light);border:0;border-radius:11px;padding:12px 26px;cursor:pointer">새로고침</button>'
+      +'<button id="mn-reload" style="margin-top:6px;font:inherit;font-size:14px;font-weight:700;color:var(--brand-deep);background:var(--brand-light);border:0;border-radius:12px;padding:12px 26px;cursor:pointer">새로고침</button>'
       +'</div>';
     var b=document.getElementById("mn-reload"); if(b) b.onclick=function(){ location.reload(); };
   }
@@ -513,10 +513,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     g5: "#0DA298",
     g6: "#0A7168",
     g7: "#06413E",
-    ink: "#122423",
-    d2: "#324744",
-    d3: "#5A716D",
-    d4: "#8FA6A2",
+    ink: "#0F2327",
+    d2: "#274549",
+    d3: "#577377",
+    d4: "#7E9497",
     d5: "#C0D3CF",
     coral: "#F6796B",
     coralD: "#B23A2E",
@@ -531,10 +531,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     violet: "#6B7BF0",
     violetBg: "#EDEFFF",
     violetD: "#3B45B0",
-    paper: "#FAFDFC",
+    paper: "#F2F6F7",
     card: "#FFFFFF",
     line: "#E6F1EE",
-    lineSoft: "#F0F7F5"
+    lineSoft: "#F2F6F7"
   };
   var FONT = "'Pretendard','Inter','Apple SD Gothic Neo',system-ui,sans-serif";
   var HAND = "'Gaegu','Pretendard',cursive";
@@ -620,7 +620,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       linkHealthSub: "\uAC74\uAC15\uAC80\uC9C4\xB7\uC9C4\uB8CC \uC774\uB825 (\uB9C8\uC774\uD5EC\uC2A4\uC6E8\uC774)",
       linkPgx: "\uC57D\uBB3C\uC720\uC804\uD615 \uC815\uBCF4 \uC5F0\uACB0",
       linkPgxSub: "CPIC \uAC00\uC774\uB4DC\uB77C\uC778 \uAE30\uBC18 \uC815\uBCF4 \uC81C\uACF5",
-      sensitive: "\uC720\uC804\xB7\uC758\uB8CC \uC815\uBCF4\uB294 \uBBFC\uAC10\uC815\uBCF4\uC608\uC694. \uBA85\uC2DC\uC801 \uB3D9\uC758 \uD6C4 \uAE30\uAE30 \uC548\uC5D0\uB9CC \uC800\uC7A5\uB418\uBA70, \uC571\uC740 \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0 \uC815\uBCF4 \uC81C\uACF5\uACFC \uC0C1\uB2F4 \uC5F0\uACB0\uB9CC \uD574\uC694.",
+      sensitive: "유전·의료 정보는 민감정보예요. 약물유전형은 명시적 동의 후 이 기기 안에만 저장돼요. 프로필의 질환·복용약·알레르기는 계정에 묶여 서버(Supabase · 도쿄)에 저장되고, AI 도우미에 물으면 그 내용이 답변 생성을 위해 외부 AI 사업자(미국)에 전달돼요. 앱은 약을 판정하지 않고 정보 제공과 상담 연결만 해요.",
       notif: "\uC54C\uB9BC \uBC1B\uAE30",
       kkoInfo: "\uCE74\uCE74\uC624\uD1A1\uC73C\uB85C \uC811\uC885 \uC815\uBCF4 \uBC1B\uAE30",
       kkoInfoSub: "\uCE5C\uAD6C\uCD94\uAC00\uD55C \uCC44\uB110\uB85C \uC815\uBCF4\uC131 \uBA54\uC2DC\uC9C0",
@@ -634,14 +634,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       dateStr: "7\uC6D4 6\uC77C \uC6D4\uC694\uC77C",
       influenzaLatest: "\uC778\uD50C\uB8E8\uC5D4\uC790 (10.14)",
       hwShare: "\uAE30\uAE30\xB7AI \uC5F0\uACB0 (\uB3D9\uC758 \uAE30\uBC18)",
-      hwGoogle: "Google \uAC74\uAC15\uAE30\uAE30 \uC5F0\uACB0",
-      hwGoogleSub: "Health Connect\xB7Wear OS \uC13C\uC11C \uC815\uBCF4 \uACF5\uC720",
+      hwGoogle: "건강 기기 연결",
+      hwGoogleSub: "블루투스 측정기 바로 읽기 · 앱에서는 Health Connect",
       hwAnthropic: "Anthropic \uC5F0\uACB0 \uAE30\uAE30",
       hwAnthropicSub: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC815\uBCF4 \uC81C\uACF5",
       hwChatgpt: "ChatGPT \uC5F0\uACB0 \uAE30\uAE30",
       hwChatgptSub: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC815\uBCF4 \uC81C\uACF5",
       hwNote: "\uC5F0\uACB0\uC740 \uBAA8\uB450 \uB3D9\uC758 \uAE30\uBC18\uC774\uBA70, \uC571\uC740 \uC815\uBCF4 \uC81C\uACF5\xB7\uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4. \uD310\uC815\xB7\uCC98\uBC29\uC740 \uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
-      hwTipGoogle: "Health Connect\xB7Wear OS\uC5D0 \uBAA8\uC778 \uAC78\uC74C\xB7\uC2EC\uBC15\xB7\uC218\uBA74 \uB4F1 \uC13C\uC11C \uC815\uBCF4\uB97C, \uB3D9\uC758\uD558\uC2E0 \uBC94\uC704\uC5D0\uC11C \uC811\uC885\xB7\uBCF5\uC57D \uC548\uB0B4\uC5D0 \uCC38\uACE0\uD569\uB2C8\uB2E4. \uC815\uBCF4\uB294 \uAE30\uAE30 \uC548\uC5D0 \uC800\uC7A5\uB3FC\uC694.",
+      hwTipGoogle: "혈압계·체온계·심박 측정기(블루투스)는 이 화면에서 바로 읽고, 「읽은 값 클라우드에 저장」을 누른 값만 서버(Supabase)에 저장돼요. 안드로이드 앱에서는 Health Connect 의 걸음·심박·수면을 기기 안에서만 읽어요.",
       hwTipAnthropic: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30(\uC608: \uC2A4\uD53C\uCEE4\xB7\uB85C\uBD07)\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC2DC\uAE30\uB97C \uC74C\uC131\uC73C\uB85C \uC548\uB0B4\uD560 \uC218 \uC788\uC5B4\uC694. \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0, \uC548\uB0B4\uC640 \uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4.",
       hwTipChatgpt: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC624\uB298\uC758 \uBCF5\uC57D\xB7\uC811\uC885 \uC77C\uC815\uC744 \uC804\uB2EC\uD574, \uB9D0\uB85C \uC54C\uB824\uC8FC\uB3C4\uB85D \uD560 \uC218 \uC788\uC5B4\uC694. \uCD5C\uC885 \uD310\uB2E8\uC740 \uB298 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694."
     },
@@ -719,7 +719,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       linkHealthSub: "Check-ups \xB7 visits (My Healthway)",
       linkPgx: "Link pharmacogenomic profile",
       linkPgxSub: "CPIC-guideline information only",
-      sensitive: "Genetic and medical data are sensitive. Stored on-device after explicit consent; the app informs and refers, it does not decide.",
+      sensitive: "Genetic and medical data are sensitive. Pharmacogenomic data stays on this device after explicit consent. Conditions, medications and allergies in your profile are saved to the server (Supabase, Tokyo) under your account, and what you ask the AI helper is sent to an external AI provider (US) to generate the answer. The app informs and refers; it does not decide.",
       notif: "Notifications",
       kkoInfo: "Vaccine info via KakaoTalk",
       kkoInfoSub: "Channel messages after you add us",
@@ -733,14 +733,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       dateStr: "Mon, Jul 6",
       influenzaLatest: "Influenza (Oct 14)",
       hwShare: "Connect devices \xB7 AI (with consent)",
-      hwGoogle: "Google health devices",
-      hwGoogleSub: "Share Health Connect \xB7 Wear OS sensor data",
+      hwGoogle: "Connect a health device",
+      hwGoogleSub: "Read Bluetooth monitors directly · Health Connect in the app",
       hwAnthropic: "Anthropic-connected device",
       hwAnthropicSub: "Provide med/vaccine info to a linked care device",
       hwChatgpt: "ChatGPT-connected device",
       hwChatgptSub: "Provide info to a linked voice assistant",
       hwNote: "All connections are consent-based; the app only informs and refers \u2014 it does not decide or prescribe.",
-      hwTipGoogle: "Sensor data gathered in Health Connect / Wear OS (steps, heart rate, sleep) can inform your vaccine and medication guidance, within the scope you consent to. Data stays on your device.",
+      hwTipGoogle: "Bluetooth blood-pressure, thermometer and heart-rate monitors are read right here; only values you save with \"Save to cloud\" go to the server (Supabase). In the Android app, Health Connect steps, heart rate and sleep are read on-device only.",
       hwTipAnthropic: "A linked care device (e.g. a speaker or robot) can voice your medication and vaccine reminders. It never decides on medicines \u2014 it only informs and refers.",
       hwTipChatgpt: "A linked voice assistant can read out today's medication and vaccine schedule. Always confirm final decisions with your doctor or pharmacist."
     }
@@ -891,12 +891,12 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       }
       setStep(1);
     }
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, minHeight: "100vh", display: "flex", justifyContent: "center", background: `linear-gradient(170deg,${C.g0} 0%,${C.g1} 45%,${C.g2} 100%)` } }, /* @__PURE__ */ import_react.default.createElement("style", null, `@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`), /* @__PURE__ */ import_react.default.createElement("div", { style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", padding: "0 24px", animation: "fade .3s ease" } }, step === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement(Logo, { s: 96 }), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 34, fontWeight: 800, color: C.ink, letterSpacing: "-.03em", marginTop: 20 } }, "MediNote"), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontFamily: HAND, fontSize: 19, color: C.d3, lineHeight: 1.5, marginTop: 8, marginBottom: 36 } }, t.taglinePlain), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("google"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 12, width: "100%", padding: 16, borderRadius: 14, background: "#fff", border: `1px solid ${C.line}`, fontSize: 15, fontWeight: 600, color: C.ink, cursor: "pointer", boxShadow: "0 4px 14px -6px rgba(10,110,78,.18)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "26", height: "26", viewBox: "0 0 24 24" }, /* @__PURE__ */ import_react.default.createElement("path", { fill: "#4285F4", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#34A853", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#FBBC05", d: "M5.84 14.1a6.6 6.6 0 010-4.2V7.06H2.18a11 11 0 000 9.88l3.66-2.84z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#EA4335", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" })), t.google), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("kakao"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 14, background: "#FEE500", border: "none", fontSize: 15, fontWeight: 700, color: "#3C1E1E", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(60,30,30,.22)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "#3C1E1E" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 3C6.5 3 2 6.48 2 10.8c0 2.76 1.86 5.18 4.65 6.55-.15.53-.97 3.35-1 3.57 0 0-.02.17.09.23.11.07.24.02.24.02.32-.04 3.7-2.42 4.28-2.83.56.08 1.14.12 1.74.12 5.5 0 10-3.48 10-7.78S17.5 3 12 3z" })), t.kakao), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("naver"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 14, background: "#03C75A", border: "none", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(3,199,90,.35)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "#fff" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M16.27 3v9.1L7.86 3H3v18h4.73v-9.1L16.14 21H21V3z" })), t.naver), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 15, color: C.d4, textAlign: "center", marginTop: 24, lineHeight: 1.6, whiteSpace: "pre-line" } }, t.consentNote)) : /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: C.g5, fontWeight: 700, textTransform: "uppercase" } }, t.oneThing), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 25, fontWeight: 700, color: C.ink, letterSpacing: "-.02em", margin: "6px 0" } }, t.dobMissTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 14, color: C.d3, lineHeight: 1.6, marginBottom: 20 } }, t.dobMissBody), /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: birth, onChange: (e) => setBirth(e.target.value), style: { width: "100%", border: `1px solid ${C.line}`, borderRadius: 14, padding: "14px 16px", fontSize: 16, color: C.ink, outline: "none", background: C.card } }), birth && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 14, padding: 14, background: C.g1, borderRadius: 14, fontSize: 13.5, color: C.g6, fontWeight: 600 } }, t.ageGroup, ": ", TONES[grp].label[lang]), /* @__PURE__ */ import_react.default.createElement("button", { disabled: !birth, onClick: () => onDone(profileFor(birth)), style: { width: "100%", padding: 16, borderRadius: 14, background: birth ? C.g4 : C.d5, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: birth ? "pointer" : "default", marginTop: 24 } }, t.start))));
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, minHeight: "100vh", display: "flex", justifyContent: "center", background: `linear-gradient(170deg,${C.g0} 0%,${C.g1} 45%,${C.g2} 100%)` } }, /* @__PURE__ */ import_react.default.createElement("style", null, `@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`), /* @__PURE__ */ import_react.default.createElement("div", { style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", padding: "0 24px", animation: "fade .3s ease" } }, step === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement(Logo, { s: 96 }), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 34, fontWeight: 800, color: C.ink, letterSpacing: "-.03em", marginTop: 20 } }, "MediNote"), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontFamily: HAND, fontSize: 19, color: C.d3, lineHeight: 1.5, marginTop: 8, marginBottom: 36 } }, t.taglinePlain), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("google"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 12, width: "100%", padding: 16, borderRadius: 16, background: "#fff", border: `1px solid ${C.line}`, fontSize: 15, fontWeight: 600, color: C.ink, cursor: "pointer", boxShadow: "0 4px 14px -6px rgba(10,110,78,.18)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "26", height: "26", viewBox: "0 0 24 24" }, /* @__PURE__ */ import_react.default.createElement("path", { fill: "#4285F4", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#34A853", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#FBBC05", d: "M5.84 14.1a6.6 6.6 0 010-4.2V7.06H2.18a11 11 0 000 9.88l3.66-2.84z" }), /* @__PURE__ */ import_react.default.createElement("path", { fill: "#EA4335", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" })), t.google), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("kakao"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 16, background: "#FEE500", border: "none", fontSize: 15, fontWeight: 700, color: "#3C1E1E", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(60,30,30,.22)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "#3C1E1E" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 3C6.5 3 2 6.48 2 10.8c0 2.76 1.86 5.18 4.65 6.55-.15.53-.97 3.35-1 3.57 0 0-.02.17.09.23.11.07.24.02.24.02.32-.04 3.7-2.42 4.28-2.83.56.08 1.14.12 1.74.12 5.5 0 10-3.48 10-7.78S17.5 3 12 3z" })), t.kakao), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => signIn("naver"), style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", padding: 16, borderRadius: 16, background: "#03C75A", border: "none", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 10, boxShadow: "0 4px 14px -6px rgba(3,199,90,.35)" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "#fff" }, /* @__PURE__ */ import_react.default.createElement("path", { d: "M16.27 3v9.1L7.86 3H3v18h4.73v-9.1L16.14 21H21V3z" })), t.naver), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 15, color: C.d4, textAlign: "center", marginTop: 24, lineHeight: 1.6, whiteSpace: "pre-line" } }, t.consentNote)) : /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: C.g5, fontWeight: 700, textTransform: "uppercase" } }, t.oneThing), /* @__PURE__ */ import_react.default.createElement("h1", { style: { fontSize: 25, fontWeight: 700, color: C.ink, letterSpacing: "-.02em", margin: "6px 0" } }, t.dobMissTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 14, color: C.d3, lineHeight: 1.6, marginBottom: 20 } }, t.dobMissBody), /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: birth, onChange: (e) => setBirth(e.target.value), style: { width: "100%", border: `1px solid ${C.line}`, borderRadius: 16, padding: "14px 16px", fontSize: 16, color: C.ink, outline: "none", background: C.card } }), birth && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 14, padding: 14, background: C.g1, borderRadius: 16, fontSize: 13.5, color: C.g6, fontWeight: 600 } }, t.ageGroup, ": ", TONES[grp].label[lang]), /* @__PURE__ */ import_react.default.createElement("button", { disabled: !birth, onClick: () => onDone(profileFor(birth)), style: { width: "100%", padding: 16, borderRadius: 16, background: birth ? C.g4 : C.d5, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: birth ? "pointer" : "default", marginTop: 24 } }, t.start))));
   }
   function AppBar({ title, onBell, onUser }) {
     return /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, background: "transparent", borderBottom: `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 9 } }, /* @__PURE__ */ import_react.default.createElement(Logo, { s: 30 }), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 18, fontWeight: 700, color: C.ink, letterSpacing: "-.02em" } }, title)), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 2 } }, /* @__PURE__ */ import_react.default.createElement("button", { onClick: onBell, "aria-label": "assistant", className: "mn-ib", style: ib }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chat, c: C.d2 })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: onUser, "aria-label": "record", className: "mn-ib", style: ib }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.user, c: C.d2 }))));
   }
-  var ib = { width: 44, height: 44, borderRadius: 13, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" };
+  var ib = { width: 44, height: 44, borderRadius: 12, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" };
   function Nav({ t, tab, set }) {
     const items = [["home", I.home], ["vaccine", I.vaccine], ["assist", I.chat], ["report", I.report], ["my", I.user]];
     return /* @__PURE__ */ import_react.default.createElement("div", { style: { background: C.card, borderTop: `1px solid ${C.line}`, display: "flex", padding: "9px 6px calc(12px + env(safe-area-inset-bottom,0px))", flexShrink: 0 } }, items.map(([k, d]) => {
@@ -908,7 +908,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var eyebrow = { fontSize: 12, color: C.g5, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" };
   var bigH = { fontFamily: HAND, fontSize: 30, fontWeight: 700, color: C.ink, lineHeight: 1.25, margin: "5px 0", letterSpacing: "0", whiteSpace: "pre-line" };
   var sub = { fontSize: 14, color: C.d3, lineHeight: 1.6 };
-  var card = { background: C.card, borderRadius: 22, padding: 20, marginTop: 14, border: `1px solid ${C.line}`, boxShadow: "0 1px 2px rgba(10,110,78,.04)" };
+  var card = { background: C.card, borderRadius: 20, padding: 20, marginTop: 14, border: `1px solid ${C.line}`, boxShadow: "0 1px 2px rgba(10,110,78,.04)" };
   var LabChip = ({ t }) => /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 700, color: C.g6, background: C.g1, padding: "5px 11px", borderRadius: 999 } }, t.reviewed);
   function Home({ t, go, profile }) {
     const [noti, setNoti] = (0, import_react.useState)(true);
@@ -919,7 +919,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, noti && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => {
       setNoti(false);
       go("assist");
-    }, style: { display: "flex", gap: 11, alignItems: "flex-start", background: "rgba(255,255,255,.98)", border: `1px solid ${C.line}`, borderRadius: 16, padding: 13, marginBottom: 14, cursor: "pointer", boxShadow: "0 10px 28px -10px rgba(10,110,78,.35)", animation: "drop .5s cubic-bezier(.2,.9,.3,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 34, height: 34, borderRadius: 11, background: C.g4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 18, c: "#fff" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 12.5, fontWeight: 700, color: C.ink, display: "block" } }, t.notiTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12, color: C.d3, lineHeight: 1.45, marginTop: 2 } }, notiBody), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.d4, marginTop: 3, display: "block" } }, t.notiNow))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.dateStr), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, greet, "\n", profile.name), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => go("assist"), style: { display: "flex", gap: 14, alignItems: "flex-start", background: `linear-gradient(135deg,${C.g6},${C.g7})`, borderRadius: 22, padding: 19, marginTop: 16, cursor: "pointer", boxShadow: "0 8px 24px -10px rgba(10,110,78,.5)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 22, c: C.g3 })), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 15.5, fontWeight: 700, color: "#fff", display: "block" } }, t.dueTitle), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.g2, lineHeight: 1.55, display: "block", marginTop: 5 } }, dueBody), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, fontWeight: 700, color: C.g3, marginTop: 11, display: "flex", alignItems: "center", gap: 4 } }, t.askAssistant, " ", /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 13, c: C.g3 })))), /* @__PURE__ */ import_react.default.createElement("div", { style: { ...card, background: C.g0, border: `1px solid ${C.g2}`, display: "flex", alignItems: "center", gap: 17 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: 76, height: 76, flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "76", height: "76", style: { transform: "rotate(-90deg)" } }, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g2, strokeWidth: "7" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g4, strokeWidth: "7", strokeLinecap: "round", strokeDasharray: "195", strokeDashoffset: "97" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 18, fontWeight: 700, color: C.g6 } }, "2/4"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.g5 } }, t.doses))), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, t.todayMed), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 5, fontSize: 13.5, whiteSpace: "pre-line" } }, t.medHalf))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.today), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.check, done: true, b: t.morningDone, s: t.bpDm }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.pill, b: t.eveningDose, s: t.eveningWhen, chev: true }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.vaccine, kind: "new", b: t.fluComing, s: t.fluWhen, chev: true, onClick: () => go("vaccine") }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.plane, kind: "warn", b: t.nairobi, s: t.nairobiSub, chev: true, onClick: () => go("assist") }));
+    }, style: { display: "flex", gap: 11, alignItems: "flex-start", background: "rgba(255,255,255,.98)", border: `1px solid ${C.line}`, borderRadius: 16, padding: 13, marginBottom: 14, cursor: "pointer", boxShadow: "0 10px 28px -10px rgba(10,110,78,.35)", animation: "drop .5s cubic-bezier(.2,.9,.3,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 34, height: 34, borderRadius: 12, background: C.g4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 18, c: "#fff" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 12.5, fontWeight: 700, color: C.ink, display: "block" } }, t.notiTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12, color: C.d3, lineHeight: 1.45, marginTop: 2 } }, notiBody), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.d4, marginTop: 3, display: "block" } }, t.notiNow))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.dateStr), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, greet, "\n", profile.name), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => go("assist"), style: { display: "flex", gap: 14, alignItems: "flex-start", background: `linear-gradient(135deg,${C.g6},${C.g7})`, borderRadius: 20, padding: 19, marginTop: 16, cursor: "pointer", boxShadow: "0 8px 24px -10px rgba(10,110,78,.5)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 16, background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.note, s: 22, c: C.g3 })), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 15.5, fontWeight: 700, color: "#fff", display: "block" } }, t.dueTitle), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.g2, lineHeight: 1.55, display: "block", marginTop: 5 } }, dueBody), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, fontWeight: 700, color: C.g3, marginTop: 11, display: "flex", alignItems: "center", gap: 4 } }, t.askAssistant, " ", /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 13, c: C.g3 })))), /* @__PURE__ */ import_react.default.createElement("div", { style: { ...card, background: C.g0, border: `1px solid ${C.g2}`, display: "flex", alignItems: "center", gap: 17 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: 76, height: 76, flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "76", height: "76", style: { transform: "rotate(-90deg)" } }, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g2, strokeWidth: "7" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g4, strokeWidth: "7", strokeLinecap: "round", strokeDasharray: "195", strokeDashoffset: "97" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 18, fontWeight: 700, color: C.g6 } }, "2/4"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: C.g5 } }, t.doses))), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, t.todayMed), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 5, fontSize: 13.5, whiteSpace: "pre-line" } }, t.medHalf))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.today), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.check, done: true, b: t.morningDone, s: t.bpDm }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.pill, b: t.eveningDose, s: t.eveningWhen, chev: true }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.vaccine, kind: "new", b: t.fluComing, s: t.fluWhen, chev: true, onClick: () => go("vaccine") }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.plane, kind: "warn", b: t.nairobi, s: t.nairobiSub, chev: true, onClick: () => go("assist") }));
   }
   function Task({ ic, b, s, done, kind, chev, onClick }) {
     let bg = C.g1, st = C.g5, grad = `linear-gradient(135deg,${C.g0},${C.card})`;
@@ -938,7 +938,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       st = "#fff";
       grad = `linear-gradient(135deg,${C.burgBg},${C.card})`;
     }
-    return /* @__PURE__ */ import_react.default.createElement("div", { onClick, style: { display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: 18, background: grad, border: `1px solid ${C.line}`, marginTop: 10, cursor: onClick ? "pointer" : "default", boxShadow: "0 2px 8px -4px rgba(10,110,78,.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 15, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: ic, s: 21, c: st })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d4 } }, s)), chev && /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d5 }));
+    return /* @__PURE__ */ import_react.default.createElement("div", { onClick, style: { display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: 16, background: grad, border: `1px solid ${C.line}`, marginTop: 10, cursor: onClick ? "pointer" : "default", boxShadow: "0 2px 8px -4px rgba(10,110,78,.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 16, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: ic, s: 21, c: st })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d4 } }, s)), chev && /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d5 }));
   }
   function Warn({ t, children, kind = "warn" }) {
     const isDanger = kind === "danger";
@@ -951,7 +951,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       const isOpen = open === k;
       const list = VAC[lang][k];
       const isTravel = k === "travel";
-      return /* @__PURE__ */ import_react.default.createElement("div", { key: k, style: { marginTop: 10, borderRadius: 18, overflow: "hidden", border: `1px solid ${isOpen ? C.g2 : C.line}`, background: C.card, boxShadow: isOpen ? "0 6px 18px -10px rgba(10,110,78,.28)" : "0 1px 2px rgba(10,110,78,.03)", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setOpen(isOpen ? null : k), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "16px 17px", border: "none", cursor: "pointer", background: isOpen ? `linear-gradient(135deg,${C.g0},${C.g1})` : "transparent" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 38, height: 38, borderRadius: 12, background: isOpen ? C.g4 : C.g1, display: "flex", alignItems: "center", justifyContent: "center", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: GRP_ICON[k], s: 20, c: isOpen ? "#fff" : C.g5 })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, TAB_LABELS[lang][i])), /* @__PURE__ */ import_react.default.createElement("div", { style: { transform: isOpen ? "rotate(90deg)" : "none", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d4 }))), isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "2px 15px 16px" } }, isTravel && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, lang === "ko" ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "\uD574\uC678 \uC811\uC885 \uC815\uBCF4"), "\uB294 \uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uD574\uC678\uAC10\uC5FC\uBCD1NOW \uAE30\uC900\uC73C\uB85C \uC790\uB3D9 \uC5C5\uB370\uC774\uD2B8\uB429\uB2C8\uB2E4. \uBC29\uBB38\uAD6D\xB7\uC77C\uC815\uC5D0 \uB530\uB77C \uD56D\uBAA9\uC774 \uB2EC\uB77C\uC838\uC694.") : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "Travel vaccine info"), " updates automatically from KDCA's overseas-infection guidance. Items vary by destination and dates.")), (k === "senior" || k === "adult") && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, /* @__PURE__ */ import_react.default.createElement("b", null, t.newVac), t.newVacBody), list.map(([n, due, note, badge], j) => /* @__PURE__ */ import_react.default.createElement("div", { key: j, style: { padding: "13px 4px", borderBottom: j === list.length - 1 ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink } }, n), badge === "gov" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.g1, c: C.g6 }, t.gov), badge === "newv" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.amberBg, c: C.amberD }, t.newB), badge === "rec" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.burgBg, c: C.burg }, t.cert)), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, color: C.d2, marginTop: 5 } }, t.when, " \xB7 ", due), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11.5, color: C.d4, marginTop: 2 } }, note)))));
+      return /* @__PURE__ */ import_react.default.createElement("div", { key: k, style: { marginTop: 10, borderRadius: 16, overflow: "hidden", border: `1px solid ${isOpen ? C.g2 : C.line}`, background: C.card, boxShadow: isOpen ? "0 6px 18px -10px rgba(10,110,78,.28)" : "0 1px 2px rgba(10,110,78,.03)", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setOpen(isOpen ? null : k), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "16px 17px", border: "none", cursor: "pointer", background: isOpen ? `linear-gradient(135deg,${C.g0},${C.g1})` : "transparent" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 38, height: 38, borderRadius: 12, background: isOpen ? C.g4 : C.g1, display: "flex", alignItems: "center", justifyContent: "center", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: GRP_ICON[k], s: 20, c: isOpen ? "#fff" : C.g5 })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, TAB_LABELS[lang][i])), /* @__PURE__ */ import_react.default.createElement("div", { style: { transform: isOpen ? "rotate(90deg)" : "none", transition: ".2s" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d4 }))), isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "2px 15px 16px" } }, isTravel && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, lang === "ko" ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "\uD574\uC678 \uC811\uC885 \uC815\uBCF4"), "\uB294 \uC9C8\uBCD1\uAD00\uB9AC\uCCAD \uD574\uC678\uAC10\uC5FC\uBCD1NOW \uAE30\uC900\uC73C\uB85C \uC790\uB3D9 \uC5C5\uB370\uC774\uD2B8\uB429\uB2C8\uB2E4. \uBC29\uBB38\uAD6D\xB7\uC77C\uC815\uC5D0 \uB530\uB77C \uD56D\uBAA9\uC774 \uB2EC\uB77C\uC838\uC694.") : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("b", null, "Travel vaccine info"), " updates automatically from KDCA's overseas-infection guidance. Items vary by destination and dates.")), (k === "senior" || k === "adult") && /* @__PURE__ */ import_react.default.createElement(Warn, { t }, /* @__PURE__ */ import_react.default.createElement("b", null, t.newVac), t.newVacBody), list.map(([n, due, note, badge], j) => /* @__PURE__ */ import_react.default.createElement("div", { key: j, style: { padding: "13px 4px", borderBottom: j === list.length - 1 ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 14.5, fontWeight: 700, color: C.ink } }, n), badge === "gov" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.g1, c: C.g6 }, t.gov), badge === "newv" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.amberBg, c: C.amberD }, t.newB), badge === "rec" && /* @__PURE__ */ import_react.default.createElement(Bdg, { bg: C.burgBg, c: C.burg }, t.cert)), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12.5, color: C.d2, marginTop: 5 } }, t.when, " \xB7 ", due), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11.5, color: C.d4, marginTop: 2 } }, note)))));
     })), /* @__PURE__ */ import_react.default.createElement(Warn, { t, kind: "danger" }, t.sampleWarn));
   }
   var GRP_ICON = {
@@ -961,7 +961,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     hcw: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 3l7 3v5c0 5-3.5 8-7 9.5C8.5 19 5 16 5 11V6z" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v6M9 11h6" })),
     travel: /* @__PURE__ */ import_react.default.createElement("path", { d: "M2 16l20-6L2 4l3 6-3 6z" })
   };
-  var Bdg = ({ children, bg, c }) => /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 8, background: bg, color: c } }, children);
+  var Bdg = ({ children, bg, c }) => /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 12, background: bg, color: c } }, children);
   function Assistant({ t, lang, profile }) {
     const tone = TONES[profile.ageGroup];
     const [msgs, setMsgs] = (0, import_react.useState)([]);
@@ -1013,27 +1013,27 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         setLoading(false);
       }
     }
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "20px 16px" } }, msgs.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.assist), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: { ...bigH, padding: "0 4px" } }, t.askAnything), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, padding: "0 4px", marginBottom: 10 } }, profile.name, t.assistIntro), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, padding: 14, background: C.g0, border: `1px solid ${C.g2}`, borderRadius: 16, margin: "4px 4px 16px" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 18, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.searchNote)), suggestions.map((s) => /* @__PURE__ */ import_react.default.createElement("button", { key: s, onClick: () => ask(s), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: "15px 16px", marginBottom: 9, fontSize: 13.5, fontWeight: 600, color: C.d2, cursor: "pointer", boxShadow: "0 1px 2px rgba(10,110,78,.03)" } }, /* @__PURE__ */ import_react.default.createElement("span", null, s), /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 16, c: C.d5 })))), msgs.map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 12, animation: "fade .3s ease" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { maxWidth: "86%", padding: "13px 15px", borderRadius: 18, fontSize: 13.5, lineHeight: 1.62, whiteSpace: "pre-wrap", background: m.role === "user" ? C.g4 : C.card, color: m.role === "user" ? "#fff" : C.d2, border: m.role === "user" ? "none" : `1px solid ${C.line}`, borderBottomRightRadius: m.role === "user" ? 5 : 18, borderBottomLeftRadius: m.role === "user" ? 18 : 5, boxShadow: m.role === "user" ? "0 4px 12px -4px rgba(18,185,129,.4)" : "0 1px 2px rgba(10,110,78,.03)" } }, m.searched && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.g5, marginBottom: 6, fontWeight: 700 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 13, c: C.g5 }), t.searched), m.text))), loading && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 17px", borderRadius: 18, background: C.card, border: `1px solid ${C.line}`, display: "flex", gap: 5 } }, [0, 1, 2].map((i) => /* @__PURE__ */ import_react.default.createElement("span", { key: i, style: { width: 7, height: 7, borderRadius: "50%", background: C.g4, animation: `bl 1.2s ${i * 0.15}s infinite` } })))), /* @__PURE__ */ import_react.default.createElement("div", { ref: endRef })), /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "10px 14px 14px", background: C.card, borderTop: `1px solid ${C.line}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ import_react.default.createElement("textarea", { value: input, onChange: (e) => setInput(e.target.value), onKeyDown: (e) => {
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "20px 16px" } }, msgs.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.assist), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: { ...bigH, padding: "0 4px" } }, t.askAnything), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, padding: "0 4px", marginBottom: 10 } }, profile.name, t.assistIntro), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, padding: 14, background: C.g0, border: `1px solid ${C.g2}`, borderRadius: 16, margin: "4px 4px 16px" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 18, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.searchNote)), suggestions.map((s) => /* @__PURE__ */ import_react.default.createElement("button", { key: s, onClick: () => ask(s), style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: C.card, border: `1px solid ${C.line}`, borderRadius: 16, padding: "15px 16px", marginBottom: 9, fontSize: 13.5, fontWeight: 600, color: C.d2, cursor: "pointer", boxShadow: "0 1px 2px rgba(10,110,78,.03)" } }, /* @__PURE__ */ import_react.default.createElement("span", null, s), /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 16, c: C.d5 })))), msgs.map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 12, animation: "fade .3s ease" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { maxWidth: "86%", padding: "13px 15px", borderRadius: 16, fontSize: 13.5, lineHeight: 1.62, whiteSpace: "pre-wrap", background: m.role === "user" ? C.g4 : C.card, color: m.role === "user" ? "#fff" : C.d2, border: m.role === "user" ? "none" : `1px solid ${C.line}`, borderBottomRightRadius: m.role === "user" ? 5 : 18, borderBottomLeftRadius: m.role === "user" ? 18 : 5, boxShadow: m.role === "user" ? "0 4px 12px -4px rgba(18,185,129,.4)" : "0 1px 2px rgba(10,110,78,.03)" } }, m.searched && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.g5, marginBottom: 6, fontWeight: 700 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.search, s: 13, c: C.g5 }), t.searched), m.text))), loading && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 17px", borderRadius: 16, background: C.card, border: `1px solid ${C.line}`, display: "flex", gap: 5 } }, [0, 1, 2].map((i) => /* @__PURE__ */ import_react.default.createElement("span", { key: i, style: { width: 7, height: 7, borderRadius: "50%", background: C.g4, animation: `bl 1.2s ${i * 0.15}s infinite` } })))), /* @__PURE__ */ import_react.default.createElement("div", { ref: endRef })), /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "10px 14px 14px", background: C.card, borderTop: `1px solid ${C.line}` } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ import_react.default.createElement("textarea", { value: input, onChange: (e) => setInput(e.target.value), onKeyDown: (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         ask();
       }
-    }, placeholder: t.placeholder, rows: 1, style: { flex: 1, resize: "none", border: `1px solid ${C.line}`, borderRadius: 15, padding: "13px 15px", fontSize: 14, fontFamily: FONT, outline: "none", color: C.ink, maxHeight: 100, background: C.paper } }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => ask(), disabled: loading || !input.trim(), "aria-label": "send", style: { width: 48, height: 48, borderRadius: 15, border: "none", background: input.trim() ? C.g4 : C.d5, display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() ? "pointer" : "default", flexShrink: 0, transition: ".15s", boxShadow: input.trim() ? "0 4px 12px -4px rgba(18,185,129,.5)" : "none" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.send, s: 20, c: "#fff" }))), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10.5, color: C.d4, textAlign: "center", marginTop: 9, lineHeight: 1.4 } }, t.assistFoot)));
+    }, placeholder: t.placeholder, rows: 1, style: { flex: 1, resize: "none", border: `1px solid ${C.line}`, borderRadius: 16, padding: "13px 15px", fontSize: 14, fontFamily: FONT, outline: "none", color: C.ink, maxHeight: 100, background: C.paper } }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => ask(), disabled: loading || !input.trim(), "aria-label": "send", style: { width: 48, height: 48, borderRadius: 16, border: "none", background: input.trim() ? C.g4 : C.d5, display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() ? "pointer" : "default", flexShrink: 0, transition: ".15s", boxShadow: input.trim() ? "0 4px 12px -4px rgba(18,185,129,.5)" : "none" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.send, s: 20, c: "#fff" }))), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10.5, color: C.d4, textAlign: "center", marginTop: 9, lineHeight: 1.4 } }, t.assistFoot)));
   }
   function Report({ t }) {
     const ko = t.reviewed === STR.ko.reviewed;
     const labels = ko ? [["\uC811\uC885\uBD80\uC704 \uD1B5\uC99D", 40, "\uC57D\uD568", C.g4], ["\uBC1C\uC5F4", 15, "\uC5C6\uC74C", C.g4], ["\uD53C\uB85C\uAC10", 55, "\uBCF4\uD1B5", C.amber], ["\uB450\uD1B5", 10, "\uC5C6\uC74C", C.g4]] : [["Injection pain", 40, "Mild", C.g4], ["Fever", 15, "None", C.g4], ["Fatigue", 55, "Moderate", C.amber], ["Headache", 10, "None", C.g4]];
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.report), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.reactionLog), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, t.reactionSub), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, t.latest, " \xB7 ", t.influenzaLatest), labels.map(([l, w, v, col]) => /* @__PURE__ */ import_react.default.createElement("div", { key: l, style: { display: "flex", alignItems: "center", gap: 11, marginTop: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d2, width: 96, flexShrink: 0 } }, l), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, height: 9, borderRadius: 6, background: C.g1, overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { height: "100%", width: `${w}%`, background: col, borderRadius: 6 } })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4, width: 56, textAlign: "right" } }, v)))), /* @__PURE__ */ import_react.default.createElement("button", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: 16, borderRadius: 16, background: `linear-gradient(135deg,${C.g5},${C.g6})`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", marginTop: 14, boxShadow: "0 6px 16px -6px rgba(13,162,152,.5)" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 5v14M5 12h14" }), s: 18, c: "#fff" }), t.logToday), /* @__PURE__ */ import_react.default.createElement(Warn, { t, kind: "danger" }, t.emergency), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.reportShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginBottom: 4, fontSize: 13.5 } }, t.reportShareSub), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.building, b: t.toKdca, s: t.toKdcaSub, chev: true, onClick: () => {
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.report), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.reactionLog), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, t.reactionSub), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15.5, fontWeight: 700, color: C.ink } }, t.latest, " \xB7 ", t.influenzaLatest), labels.map(([l, w, v, col]) => /* @__PURE__ */ import_react.default.createElement("div", { key: l, style: { display: "flex", alignItems: "center", gap: 11, marginTop: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12.5, color: C.d2, width: 96, flexShrink: 0 } }, l), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, height: 9, borderRadius: 8, background: C.g1, overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { height: "100%", width: `${w}%`, background: col, borderRadius: 8 } })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4, width: 56, textAlign: "right" } }, v)))), /* @__PURE__ */ import_react.default.createElement("button", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: 16, borderRadius: 16, background: `linear-gradient(135deg,${C.g5},${C.g6})`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", marginTop: 14, boxShadow: "0 6px 16px -6px rgba(13,162,152,.5)" } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 5v14M5 12h14" }), s: 18, c: "#fff" }), t.logToday), /* @__PURE__ */ import_react.default.createElement(Warn, { t, kind: "danger" }, t.emergency), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.reportShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginBottom: 4, fontSize: 13.5 } }, t.reportShareSub), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.building, b: t.toKdca, s: t.toKdcaSub, chev: true, onClick: () => {
     } }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.hospital, b: t.toClinic, s: t.toClinicSub, chev: true, onClick: () => {
     } })));
   }
   function My({ t, lang, profile }) {
-    const events = lang === "ko" ? [["\uC601\uC720\uC544\uAE30", "BCG\xB7B\uD615\uAC04\uC5FC\xB7DTaP \uB4F1 \uAE30\uCD08\uC811\uC885", "1958~1959 \xB7 \uD45C\uC900 \uC77C\uC815 \uC644\uB8CC", "done"], ["\uC131\uC778\uAE30", "A\uD615\uAC04\uC5FC \xB7 Tdap", "2015 \xB7 OO\uC758\uC6D0", "done"], ["\uB178\uB144\uAE30", "\uD3D0\uB834\uAD6C\uADE0(PPSV23)", "2024.03.02 \xB7 OO\uB0B4\uACFC", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2025.10.14 \xB7 OO\uBCF4\uAC74\uC18C", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2026.10 \uC608\uC815 \xB7 \uC54C\uB9BC \uC124\uC815\uB428", "open"], ["", "\uB300\uC0C1\uD3EC\uC9C4", "\uBBF8\uC811\uC885 \xB7 \uC0C1\uB2F4 \uAD8C\uC7A5", "warn"]] : [["Infancy", "BCG \xB7 Hep B \xB7 DTaP (primary series)", "1958\u20131959 \xB7 completed", "done"], ["Adulthood", "Hepatitis A \xB7 Tdap", "2015 \xB7 OO clinic", "done"], ["Later life", "Pneumococcal (PPSV23)", "2024.03.02 \xB7 OO internal med", "done"], ["", "Influenza (flu)", "2025.10.14 \xB7 OO health center", "done"], ["", "Influenza (flu)", "Oct 2026 \xB7 reminder set", "open"], ["", "Shingles", "Not yet \xB7 worth discussing", "warn"]];
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.my), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.myRecord), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, profile.name, " \xB7 ", TONES[profile.ageGroup].label[lang], " \xB7 ", t.lifelong), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, marginTop: 14 } }, [["12", t.done, C.g1, C.g5], ["1", t.upcoming, C.card, C.ink], ["1", t.discuss, C.coralBg, C.coralD]].map(([n, l, bg, col], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { flex: 1, borderRadius: 18, padding: "16px 8px", textAlign: "center", background: bg, border: bg === C.card ? `1px solid ${C.line}` : "none" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 24, fontWeight: 700, color: col, display: "block" } }, n), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: C.d4, marginTop: 5, display: "block" } }, l)))), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", paddingLeft: 24 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: 6, top: 8, bottom: 8, width: 2, background: C.g2 } }), events.map(([era, b, s, st], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { position: "relative", marginBottom: i === events.length - 1 ? 0 : 17 } }, era && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: C.g5, marginBottom: 8 } }, era), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: -24, top: era ? 27 : 2, width: 14, height: 14, borderRadius: "50%", background: st === "done" ? C.g4 : C.card, border: `3px solid ${st === "warn" ? C.coral : st === "open" ? C.g4 : C.card}`, boxShadow: st === "done" ? "none" : `0 0 0 1px ${C.g2}` } }), /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, display: "block", marginTop: 1, color: st === "warn" ? C.coralD : st === "open" ? C.g5 : C.d4 } }, s))))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.connect), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkHealth, s: t.linkHealthSub }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkPgx, s: t.linkPgxSub, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.violetBg } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.violetD }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.violetD, lineHeight: 1.5 } }, t.sensitive)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.hwShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#4285F4", letter: "G", b: t.hwGoogle, s: t.hwGoogleSub, tip: t.hwTipGoogle }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#C15F3C", letter: "A", b: t.hwAnthropic, s: t.hwAnthropicSub, tip: t.hwTipAnthropic }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#10A37F", letter: "C", b: t.hwChatgpt, s: t.hwChatgptSub, tip: t.hwTipChatgpt, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.g0, border: `1px solid ${C.g2}` } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.hwNote)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.notif), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.kkoInfo, s: t.kkoInfoSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.timing, s: t.timingSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.flightChk, s: t.flightChkSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.newsNew, s: t.newsNewSub, last: true })));
+    const events = lang === "ko" ? [["\uC601\uC720\uC544\uAE30", "BCG\xB7B\uD615\uAC04\uC5FC\xB7DTaP \uB4F1 \uAE30\uCD08\uC811\uC885", "1958~1959 \xB7 \uD45C\uC900 \uC77C\uC815 \uC644\uB8CC", "done"], ["\uC131\uC778\uAE30", "A\uD615\uAC04\uC5FC \xB7 Tdap", "2015 \xB7 OO\uC758\uC6D0", "done"], ["\uB178\uB144\uAE30", "\uD3D0\uB834\uAD6C\uADE0(PPSV23)", "2024.03.02 \xB7 OO\uB0B4\uACFC", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2025.10.14 \xB7 OO\uBCF4\uAC74\uC18C", "done"], ["", "\uC778\uD50C\uB8E8\uC5D4\uC790(\uB3C5\uAC10)", "2026.10 \uC608\uC815 \xB7 \uC54C\uB9BC \uC900\uBE44 \uC911", "open"], ["", "\uB300\uC0C1\uD3EC\uC9C4", "\uBBF8\uC811\uC885 \xB7 \uC0C1\uB2F4 \uAD8C\uC7A5", "warn"]] : [["Infancy", "BCG \xB7 Hep B \xB7 DTaP (primary series)", "1958\u20131959 \xB7 completed", "done"], ["Adulthood", "Hepatitis A \xB7 Tdap", "2015 \xB7 OO clinic", "done"], ["Later life", "Pneumococcal (PPSV23)", "2024.03.02 \xB7 OO internal med", "done"], ["", "Influenza (flu)", "2025.10.14 \xB7 OO health center", "done"], ["", "Influenza (flu)", "Oct 2026 \xB7 reminder set", "open"], ["", "Shingles", "Not yet \xB7 worth discussing", "warn"]];
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.title.my), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, t.myRecord), /* @__PURE__ */ import_react.default.createElement("p", { style: sub }, profile.name, " \xB7 ", TONES[profile.ageGroup].label[lang], " \xB7 ", t.lifelong), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, marginTop: 14 } }, [["12", t.done, C.g1, C.g5], ["1", t.upcoming, C.card, C.ink], ["1", t.discuss, C.coralBg, C.coralD]].map(([n, l, bg, col], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { flex: 1, borderRadius: 16, padding: "16px 8px", textAlign: "center", background: bg, border: bg === C.card ? `1px solid ${C.line}` : "none" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 24, fontWeight: 700, color: col, display: "block" } }, n), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: C.d4, marginTop: 5, display: "block" } }, l)))), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", paddingLeft: 24 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: 6, top: 8, bottom: 8, width: 2, background: C.g2 } }), events.map(([era, b, s, st], i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { position: "relative", marginBottom: i === events.length - 1 ? 0 : 17 } }, era && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: C.g5, marginBottom: 8 } }, era), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: -24, top: era ? 27 : 2, width: 14, height: 14, borderRadius: "50%", background: st === "done" ? C.g4 : C.card, border: `3px solid ${st === "warn" ? C.coral : st === "open" ? C.g4 : C.card}`, boxShadow: st === "done" ? "none" : `0 0 0 1px ${C.g2}` } }), /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, display: "block", marginTop: 1, color: st === "warn" ? C.coralD : st === "open" ? C.g5 : C.d4 } }, s))))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.connect), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkHealth, s: t.linkHealthSub }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.linkPgx, s: t.linkPgxSub, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.violetBg } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.violetD }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.violetD, lineHeight: 1.5 } }, t.sensitive)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.hwShare), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#4285F4", letter: "G", b: t.hwGoogle, s: t.hwGoogleSub, tip: t.hwTipGoogle }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#C15F3C", letter: "A", b: t.hwAnthropic, s: t.hwAnthropicSub, tip: t.hwTipAnthropic }), /* @__PURE__ */ import_react.default.createElement(HwRow, { color: "#10A37F", letter: "C", b: t.hwChatgpt, s: t.hwChatgptSub, tip: t.hwTipChatgpt, last: true })), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 11, padding: 15, borderRadius: 16, marginTop: 13, background: C.g0, border: `1px solid ${C.g2}` } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("g", null, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M12 8v4M12 16h.01" })), s: 19, c: C.g6 }), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 12.5, color: C.g6, lineHeight: 1.5 } }, t.hwNote)), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.notif), /* @__PURE__ */ import_react.default.createElement("div", { style: card }, /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.kkoInfo, s: t.kkoInfoSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.timing, s: t.timingSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.flightChk, s: t.flightChkSub, defOn: true }), /* @__PURE__ */ import_react.default.createElement(Tog, { b: t.newsNew, s: t.newsNewSub, last: true })));
   }
   function HwRow({ color, letter, b, s, tip, last }) {
     const [hover, setHover] = (0, import_react.useState)(false);
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", borderBottom: last ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false), onClick: () => setHover((h) => !h), style: { display: "flex", alignItems: "center", gap: 12, padding: "13px 2px", cursor: "pointer" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 36, height: 36, borderRadius: 11, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 16, fontWeight: 700 } }, letter), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4 } }, s)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 6l6 6-6 6" }), s: 18, c: C.d5 }))), hover && tip && /* @__PURE__ */ import_react.default.createElement("div", { style: { margin: "0 2px 12px", padding: "12px 13px", background: `linear-gradient(135deg,${C.g0},${C.g1})`, border: `1px solid ${C.g2}`, borderRadius: 12, fontSize: 12, color: C.g6, lineHeight: 1.55, animation: "fade .2s ease" } }, tip));
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", borderBottom: last ? "none" : `1px solid ${C.lineSoft}` } }, /* @__PURE__ */ import_react.default.createElement("div", { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false), onClick: () => setHover((h) => !h), style: { display: "flex", alignItems: "center", gap: 12, padding: "13px 2px", cursor: "pointer" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 36, height: 36, borderRadius: 12, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 16, fontWeight: 700 } }, letter), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: 13.5, fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11.5, color: C.d4 } }, s)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: /* @__PURE__ */ import_react.default.createElement("path", { d: "M9 6l6 6-6 6" }), s: 18, c: C.d5 }))), hover && tip && /* @__PURE__ */ import_react.default.createElement("div", { style: { margin: "0 2px 12px", padding: "12px 13px", background: `linear-gradient(135deg,${C.g0},${C.g1})`, border: `1px solid ${C.g2}`, borderRadius: 12, fontSize: 12, color: C.g6, lineHeight: 1.55, animation: "fade .2s ease" } }, tip));
   }
   function Tog({ b, s, defOn, last }) {
     const [on, setOn] = (0, import_react.useState)(defOn || false);
@@ -1182,18 +1182,18 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 <style>
 .mnhw-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(6,65,62,.45);display:none;align-items:flex-end;justify-content:center;font-family:'Pretendard',-apple-system,sans-serif;}
 .mnhw-ov.on{display:flex;}
-.mnhw-sheet{width:100%;max-width:440px;background:#fff;border-radius:22px 22px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px);color:#324744;max-height:84vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(6,65,62,.25);}
+.mnhw-sheet{width:100%;max-width:440px;background:#fff;border-radius:20px 20px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px);color:#274549;max-height:84vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(6,65,62,.25);}
 .mnhw-h{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
-.mnhw-h b{font-size:18px;color:#122423;font-weight:700;letter-spacing:-.02em;}
-.mnhw-h .x{margin-left:auto;font-size:24px;color:#8FA6A2;cursor:pointer;line-height:1;width:44px;height:44px;margin-top:-10px;margin-bottom:-10px;margin-right:-10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.mnhw-sub{font-size:12.5px;color:#5A716D;margin-bottom:14px;line-height:1.6;}
-.mnhw-btn{width:100%;padding:13px;border:none;border-radius:13px;font-family:inherit;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--brand-light),var(--brand));cursor:pointer;box-shadow:0 6px 16px rgba(18,189,176,.3);}
+.mnhw-h b{font-size:18px;color:#0F2327;font-weight:700;letter-spacing:-.02em;}
+.mnhw-h .x{margin-left:auto;font-size:24px;color:#7E9497;cursor:pointer;line-height:1;width:44px;height:44px;margin-top:-10px;margin-bottom:-10px;margin-right:-10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mnhw-sub{font-size:12.5px;color:#577377;margin-bottom:14px;line-height:1.6;}
+.mnhw-btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:inherit;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--brand-light),var(--brand));cursor:pointer;box-shadow:0 6px 16px rgba(18,189,176,.3);}
 .mnhw-btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand-soft);box-shadow:none;margin-top:9px;}
-.mnhw-read{display:flex;align-items:center;gap:12px;background:#EEFBF8;border:1px solid #D8F5EF;border-radius:14px;padding:12px 14px;margin-top:9px;}
-.mnhw-read .ic{width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
-.mnhw-read .t{font-size:12.5px;color:#5A716D;font-weight:700;}
+.mnhw-read{display:flex;align-items:center;gap:12px;background:#EEFBF8;border:1px solid #D8F5EF;border-radius:16px;padding:12px 14px;margin-top:9px;}
+.mnhw-read .ic{width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.mnhw-read .t{font-size:12.5px;color:#577377;font-weight:700;}
 .mnhw-read .v{font-size:20px;font-weight:700;color:var(--brand);}
-.mnhw-note{font-size:11.5px;color:#8FA6A2;line-height:1.6;margin-top:12px;}
+.mnhw-note{font-size:11.5px;color:#7E9497;line-height:1.6;margin-top:12px;}
 .mnhw-st{font-size:12.5px;color:var(--brand);margin-top:10px;min-height:16px;font-weight:700;}
 </style>
 <script>
@@ -1230,16 +1230,31 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       (supported
         ? '<button class="mnhw-btn" id="mnhwConn">블루투스 기기 연결·읽기</button><div id="mnhwOut"></div><button class="mnhw-btn ghost" id="mnhwSave" style="display:none">읽은 값 클라우드에 저장</button><div class="mnhw-st" id="mnhwSt"></div>'
         : '<div class="mnhw-note">이 브라우저는 Web Bluetooth 미지원입니다. Android Chrome에서 열어 주세요(iOS Safari 미지원).</div>')+
-      '<div class="mnhw-note">※ Health Connect·Wear OS(안드로이드 건강데이터)는 웹에서 직접 접근이 불가하며, 앱을 Play스토어용 TWA로 감쌀 때 네이티브 브리지가 필요합니다. 여기서는 표준 블루투스(BLE) 기기를 직접 읽습니다.</div>';
+      '<div class="mnhw-note">표준 블루투스 프로필(혈압 0x1810 · 체온 0x1809 · 심박 0x180D)을 쓰는 기기를 읽습니다. 기기 시계가 붙어 오면 잰 시각으로 저장합니다.<br>'+'제조사 표기로 표준 프로필을 쓰는 것으로 알려진 기기(실기기 확인 전 · 2026-09-25): 혈압계 — Omron HEM-7156T · HEM-7155T · HEM-9200T(BLESmart) · Omron Evolv · Omron 10 Series(BP7450) · A&D UA-651BLE · UA-656BLE · Beurer BM 57 · BM 85 · Microlife BP B3 AFIB · Withings BPM Connect. '+'체온계 — Beurer FT 95 · Microlife NC 150 BT. 심박 — 표준 심박 프로필 스트랩(Polar H10 · Garmin HRM).<br>Health Connect·Wear OS 는 안드로이드 앱에서만 읽습니다(웹에서는 접근 불가).</div>';
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
+    if(window.Native&&typeof window.Native.healthAvailable==="function"){
+      s.insertAdjacentHTML("beforeend",'<button class="mnhw-btn ghost" id="mnhwHc">앱에서 Health Connect 읽기 (걸음·심박·수면)</button>'+
+        '<div class="mnhw-note">값은 이 기기 안에서만 봅니다. 심박은 「클라우드에 저장」에 포함되고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.</div>');
+      document.getElementById("mnhwHc").onclick=function(){
+        try{ if(!window.Native.healthAvailable()){ st("이 폰에는 Health Connect 가 없습니다."); return; } st("Health Connect 읽는 중… (권한 화면이 뜨면 허용해 주세요)"); window.Native.requestHealth(); }
+        catch(e){ st("읽지 못했습니다: "+(e.message||e)); }
+      };
+    }
     var c=document.getElementById("mnhwConn"); if(c) c.onclick=connect;
     var sv=document.getElementById("mnhwSave"); if(sv) sv.onclick=saveCloud;
     ov.classList.add("on");
   }
   function st(m){ var e=document.getElementById("mnhwSt"); if(e) e.textContent=m; }
-  function addRead(icon,label,val,metrics){
+  // BLE Date Time 특성(7바이트: 년 uint16 LE · 월 · 일 · 시 · 분 · 초) — 기기 시계. 없거나 이상하면 null (#18 MN-18-2)
+  function readTs(d,o){
+    try{ if(d.byteLength<o+7) return null; var y=d.getUint16(o,true),mo=d.getUint8(o+2),da=d.getUint8(o+3),h=d.getUint8(o+4),mi=d.getUint8(o+5),se=d.getUint8(o+6);
+      if(y<2000||y>2100||mo<1||mo>12||da<1||da>31) return null; var t=new Date(y,mo-1,da,h,mi,se).getTime(); return isNaN(t)?null:t; }catch(e){ return null; }
+  }
+  function addRead(icon,label,val,metrics,devTs,opts){
     // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
-    readings[label]={value:val,ts:Date.now(),metrics:metrics||[]};
+    // devTs: 기기 시계가 준 잰 시각. 있으면 그것이 effective_time, 없으면 폰이 받은 시각
+    // opts: {clock, channel} — Health Connect 에서 온 값은 clock "health_connect" · channel "health_connect"
+    readings[label]={value:val,ts:devTs||Date.now(),clock:(opts&&opts.clock)||(devTs?"device_clock":"phone"),channel:(opts&&opts.channel)||"device_ble",metrics:metrics||[]};
     var out=document.getElementById("mnhwOut"); if(!out) return;
     var id="mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"");
     var html='<div class="mnhw-read" id="'+id+'"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>';
@@ -1261,11 +1276,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         hc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var hr=(f&1)?d.getUint16(1,true):d.getUint8(1);
           addRead("❤️","심박수",hr+" bpm",[{metric:"heart_rate",value_num:hr,unit:"/min"}]); }); }catch(_){}
       try{ var ts=await server.getPrimaryService("health_thermometer"); var tc=await ts.getCharacteristic("temperature_measurement"); await tc.startNotifications();
-        tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); var exp=d.getInt8(4); var t=mant*Math.pow(10,exp);
-          addRead("🌡️","체온",t.toFixed(1)+" ℃",[{metric:"body_temperature",value_num:Math.round(t*10)/10,unit:"Cel"}]); }); }catch(_){}
+        tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); if(mant>=0x800000) mant-=0x1000000; var exp=d.getInt8(4); var t=mant*Math.pow(10,exp);
+          if(f&1) t=(t-32)*5/9; /* 화씨로 오는 기기 */ var ts=(f&2)?readTs(d,5):null;
+          addRead("🌡️","체온",t.toFixed(1)+" ℃"+(ts?" · 기기 시계":""),[{metric:"body_temperature",value_num:Math.round(t*10)/10,unit:"Cel"}],ts); }); }catch(_){}
       try{ var ps=await server.getPrimaryService("blood_pressure"); var pc=await ps.getCharacteristic("blood_pressure_measurement"); await pc.startNotifications();
-        pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); } var sy=Math.round(sf(1)), di=Math.round(sf(3));
-          addRead("🩸","혈압",sy+"/"+di+" mmHg",[{metric:"sbp",value_num:sy,unit:"mm[Hg]"},{metric:"dbp",value_num:di,unit:"mm[Hg]"}]); }); }catch(_){}
+        pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); }
+          var f=d.getUint8(0); var sy=Math.round(sf(1)), di=Math.round(sf(3)); var off=7; var ts=null; if(f&2){ ts=readTs(d,off); off+=7; } var pr=(f&4&&d.byteLength>=off+2)?Math.round(sf(off)):null;
+          var rows=[{metric:"sbp",value_num:sy,unit:"mm[Hg]"},{metric:"dbp",value_num:di,unit:"mm[Hg]"}]; if(pr) rows.push({metric:"heart_rate",value_num:pr,unit:"/min"});
+          addRead("🩸","혈압",sy+"/"+di+" mmHg"+(pr?" · 맥박 "+pr:"")+(ts?" · 기기 시계":""),rows,ts); }); }catch(_){}
       st("값을 읽었습니다. 안 나오는 항목은 그 기기가 지원하지 않는 것입니다.");
     }catch(e){
       var m=(e&&e.message)||String(e);
@@ -1278,6 +1296,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       }
     }
   }
+  // 앱 셸(window.Native)이 Health Connect 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 레코드마다 시각이 붙어 옴)
+  window.onNativeHealth=function(r){
+    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"이 폰에는 Health Connect 가 없습니다.":"Health Connect 에서 읽지 못했습니다."); return; }
+    var opts={clock:"health_connect",channel:"health_connect"};
+    var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
+    if(steps.length) addRead("🚶","걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
+    var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead("❤️","심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
+    var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
+    if(sl.length) addRead("😴","수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
+    st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다 (기기 안에서만)." : "지난 24시간에 Health Connect 기록이 없습니다.");
+  };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
     try{
@@ -1296,9 +1325,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         if(m.value_num==null||isNaN(m.value_num)) return;
         out.push({user_id:uid,metric:m.metric,value_num:m.value_num,unit:m.unit,
           effective_time:(r.ts?new Date(r.ts).toISOString():now),client_ts:now,
-          channel:"device_ble",grade:"wellness",modality:"sensed",
+          channel:r.channel||"device_ble",grade:"wellness",modality:"sensed",
           status:"final",performer_type:"patient",
-          device_name:devName||null,note:label+" "+r.value});
+          device_name:devName||(r.channel==="health_connect"?"Health Connect":null),note:label+" "+r.value+(r.clock==="device_clock"?" · 잰 시각=기기 시계":r.clock==="health_connect"?" · 잰 시각=Health Connect 레코드":" · 잰 시각=폰 수신 시각")});
       });
     });
     return out;
@@ -1370,32 +1399,32 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 <style>
 .mncard-ov{position:fixed;inset:0;z-index:2147483200;background:rgba(6,65,62,.5);display:none;align-items:center;justify-content:center;padding:16px;font-family:'Pretendard',-apple-system,sans-serif;}
 .mncard-ov.on{display:flex;}
-.mncard{width:100%;max-width:402px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:22px;padding:22px 20px 18px;box-shadow:0 24px 60px rgba(6,65,62,.35);color:#324744;letter-spacing:-.01em;}
+.mncard{width:100%;max-width:402px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 24px 60px rgba(6,65,62,.35);color:#274549;letter-spacing:-.01em;}
 .mncard-eb{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
 .mncard-eb .dot{width:6px;height:6px;border-radius:50%;background:var(--brand-light);box-shadow:0 0 0 4px rgba(18,189,176,.14);}
 .mncard-eb span{font-size:11.5px;font-weight:700;color:var(--brand);letter-spacing:.026em;}
-.mncard-eb .x{margin-left:auto;font-size:23px;color:#8FA6A2;cursor:pointer;line-height:1;width:44px;height:44px;margin-top:-10px;margin-bottom:-10px;margin-right:-10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.mncard h2{font-size:20px;font-weight:700;color:#122423;letter-spacing:-.02em;line-height:1.3;}
-.mncard-lead{margin-top:12px;background:linear-gradient(135deg,#EEFBF8,#D8F5EF);border:1px solid #AEEAE2;border-radius:14px;padding:13px 15px;position:relative;}
-.mncard-lead::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:4px;background:var(--brand-light);}
+.mncard-eb .x{margin-left:auto;font-size:23px;color:#7E9497;cursor:pointer;line-height:1;width:44px;height:44px;margin-top:-10px;margin-bottom:-10px;margin-right:-10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mncard h2{font-size:20px;font-weight:700;color:#0F2327;letter-spacing:-.02em;line-height:1.3;}
+.mncard-lead{margin-top:12px;background:linear-gradient(135deg,#EEFBF8,#D8F5EF);border:1px solid #AEEAE2;border-radius:16px;padding:13px 15px;position:relative;}
+.mncard-lead::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:8px;background:var(--brand-light);}
 .mncard-lead .k{font-size:11px;font-weight:700;color:#0DA298;letter-spacing:.09em;margin-bottom:3px;padding-left:9px;}
 .mncard-lead .v{font-size:15px;font-weight:700;color:var(--brand-deep);line-height:1.5;padding-left:9px;}
 .mncard-sec{margin-top:15px;}
-.mncard-sec .lb{font-size:14.5px;font-weight:700;color:#122423;margin-bottom:5px;}
-.mncard-sec p{font-size:14.5px;color:#324744;line-height:1.66;}
+.mncard-sec .lb{font-size:14.5px;font-weight:700;color:#0F2327;margin-bottom:5px;}
+.mncard-sec p{font-size:14.5px;color:#274549;line-height:1.66;}
 .mncard-sec ul{list-style:none;}
-.mncard-sec li{position:relative;padding-left:16px;font-size:14.5px;color:#324744;line-height:1.6;margin-bottom:2px;}
+.mncard-sec li{position:relative;padding-left:16px;font-size:14.5px;color:#274549;line-height:1.6;margin-bottom:2px;}
 .mncard-sec li::before{content:"";position:absolute;left:2px;top:10px;width:6px;height:6px;border-radius:50%;background:var(--brand-light);}
-.mncard-urg{margin-top:15px;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:14px;padding:13px 15px;}
+.mncard-urg{margin-top:15px;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:16px;padding:13px 15px;}
 .mncard-urg .t{font-size:14px;font-weight:700;color:#E4573E;margin-bottom:6px;}
 .mncard-urg ul{list-style:none;}
 .mncard-urg li{position:relative;padding-left:16px;font-size:14px;color:#7A3327;line-height:1.55;margin-bottom:2px;}
 .mncard-urg li::before{content:"";position:absolute;left:3px;top:9px;width:6px;height:6px;border-radius:50%;background:#E4573E;}
-.mncard-call{display:inline-flex;align-items:center;gap:6px;margin-top:9px;background:#E4573E;color:#fff;text-decoration:none;font-weight:700;font-size:13px;border-radius:10px;padding:8px 14px;}
-.mncard-cau{margin-top:15px;background:#FBF3E4;border:1px solid #F1E1C4;border-radius:14px;padding:13px 15px;}
-.mncard-cau .t{font-size:13.5px;font-weight:700;color:#C9832B;margin-bottom:3px;}
+.mncard-call{display:inline-flex;align-items:center;gap:6px;margin-top:9px;background:#E4573E;color:#fff;text-decoration:none;font-weight:700;font-size:13px;border-radius:12px;padding:8px 14px;}
+.mncard-cau{margin-top:15px;background:#FBF3E2;border:1px solid #F1E1C4;border-radius:16px;padding:13px 15px;}
+.mncard-cau .t{font-size:13.5px;font-weight:700;color:#8A5A00;margin-bottom:3px;}
 .mncard-cau p{font-size:14px;color:#7A5B22;line-height:1.6;}
-.mncard-ft{margin-top:16px;padding-top:13px;border-top:1px solid var(--brand-soft);font-size:11.5px;color:#8FA6A2;line-height:1.55;}
+.mncard-ft{margin-top:16px;padding-top:13px;border-top:1px solid var(--brand-soft);font-size:11.5px;color:#7E9497;line-height:1.55;}
 </style>
 <script>
 (function(){
@@ -1518,40 +1547,40 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 #mnsy-back{position:fixed;inset:0;background:rgba(6,65,62,.34);backdrop-filter:blur(2px);z-index:99998;opacity:0;pointer-events:none;transition:opacity .22s;}
 #mnsy-back.on{opacity:1;pointer-events:auto;}
 #mnsy-sheet{position:fixed;left:0;right:0;bottom:0;z-index:99999;max-width:480px;margin:0 auto;background:#fff;
-  border-radius:24px 24px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.22);padding:8px 20px calc(22px + env(safe-area-inset-bottom));
+  border-radius:20px 20px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.22);padding:8px 20px calc(22px + env(safe-area-inset-bottom));
   transform:translateY(102%);transition:transform .26s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;font-family:'Pretendard',-apple-system,sans-serif;letter-spacing:-.01em;}
 #mnsy-sheet.on{transform:translateY(0);}
-#mnsy-sheet .grip{width:42px;height:5px;border-radius:5px;background:#D8E9E6;margin:8px auto 12px;}
+#mnsy-sheet .grip{width:42px;height:5px;border-radius:8px;background:#D8E5E7;margin:8px auto 12px;}
 #mnsy-sheet .hd{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
 #mnsy-sheet .hd .em{font-family:'Gaegu',cursive;font-weight:700;font-size:21px;color:#0DA298;}
-#mnsy-sheet .hd .cl{margin-left:auto;border:none;background:#F1FAF9;color:#5A716D;width:44px;height:44px;border-radius:12px;font-size:20px;cursor:pointer;flex-shrink:0;}
-#mnsy-sheet .sub{font-size:12.5px;color:#5A716D;margin:0 2px 14px;line-height:1.55;}
+#mnsy-sheet .hd .cl{margin-left:auto;border:none;background:#F2F6F7;color:#577377;width:44px;height:44px;border-radius:12px;font-size:20px;cursor:pointer;flex-shrink:0;}
+#mnsy-sheet .sub{font-size:12.5px;color:#577377;margin:0 2px 14px;line-height:1.55;}
 #mnsy-sheet label{display:block;font-size:12.5px;font-weight:700;color:var(--brand);margin:14px 2px 6px;}
-#mnsy-sheet input,#mnsy-sheet textarea{width:100%;font-family:inherit;font-size:14.5px;color:#122423;border:1.5px solid var(--brand-soft);border-radius:12px;padding:11px 13px;background:#F7FCFB;letter-spacing:-.01em;}
+#mnsy-sheet input,#mnsy-sheet textarea{width:100%;font-family:inherit;font-size:14.5px;color:#0F2327;border:1.5px solid var(--brand-soft);border-radius:12px;padding:11px 13px;background:#F2F6F7;letter-spacing:-.01em;}
 #mnsy-sheet textarea{resize:vertical;min-height:58px;line-height:1.55;}
 #mnsy-sheet input:focus,#mnsy-sheet textarea:focus{outline:none;border-color:var(--brand-light);background:#fff;}
 #mnsy-sheet .sev{display:flex;gap:8px;}
-#mnsy-sheet .sev button{flex:1;font-family:inherit;font-weight:700;font-size:13.5px;border:1.5px solid var(--brand-soft);background:#F7FCFB;color:#5A716D;border-radius:12px;padding:10px 0;cursor:pointer;transition:.15s;}
+#mnsy-sheet .sev button{flex:1;font-family:inherit;font-weight:700;font-size:13.5px;border:1.5px solid var(--brand-soft);background:#F2F6F7;color:#577377;border-radius:12px;padding:10px 0;cursor:pointer;transition:.15s;}
 #mnsy-sheet .sev button.sel{background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(18,189,176,.28);}
 #mnsy-rxwrap{position:relative;}
-#mnsy-ai{position:absolute;right:6px;top:6px;border:none;border-radius:9px;padding:7px 11px;font-family:inherit;font-weight:700;font-size:12px;color:#fff;
+#mnsy-ai{position:absolute;right:6px;top:6px;border:none;border-radius:12px;padding:7px 11px;font-family:inherit;font-weight:700;font-size:12px;color:#fff;
   background:linear-gradient(135deg,var(--brand-light),#0DA298);cursor:pointer;box-shadow:0 4px 10px rgba(18,189,176,.3);}
 /* 비활성 — 투명도 대신 토큰. --n-700 #274549 / --n-200 #D8E5E7 = 8.01:1 (opacity .6 은 2.65:1) · VN-44-5 */
 #mnsy-ai:disabled{background:var(--n-200);color:var(--n-700);box-shadow:none;opacity:1;cursor:not-allowed;}
 #mnsy-rx{padding-right:78px;}
-#mnsy-hint{font-size:11.5px;color:#8FA6A2;margin:6px 2px 0;line-height:1.5;min-height:15px;}
+#mnsy-hint{font-size:11.5px;color:#7E9497;margin:6px 2px 0;line-height:1.5;min-height:15px;}
 #mnsy-hint b{color:var(--brand);}
-#mnsy-save{width:100%;margin-top:18px;font-family:inherit;font-weight:700;font-size:15px;color:#fff;border:none;border-radius:14px;padding:14px 0;cursor:pointer;
+#mnsy-save{width:100%;margin-top:18px;font-family:inherit;font-weight:700;font-size:15px;color:#fff;border:none;border-radius:16px;padding:14px 0;cursor:pointer;
   background:linear-gradient(135deg,var(--brand-light),var(--brand));box-shadow:0 8px 20px rgba(18,189,176,.3);}
 #mnsy-st{font-size:12.5px;font-weight:700;color:var(--brand);text-align:center;margin-top:10px;min-height:16px;}
 #mnsy-list{margin-top:16px;}
-#mnsy-list .it{background:#F7FCFB;border:1px solid var(--brand-soft);border-radius:13px;padding:11px 13px;margin-bottom:8px;}
+#mnsy-list .it{background:#F2F6F7;border:1px solid var(--brand-soft);border-radius:12px;padding:11px 13px;margin-bottom:8px;}
 #mnsy-list .it .r1{display:flex;align-items:center;gap:8px;}
-#mnsy-list .it .dt{font-size:12px;font-weight:700;color:#5A716D;}
+#mnsy-list .it .dt{font-size:12px;font-weight:700;color:#577377;}
 #mnsy-list .it .bg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
-#mnsy-list .it .sy{font-size:14px;font-weight:700;color:#122423;margin-top:4px;}
-#mnsy-list .it .mx{font-size:12px;color:#5A716D;margin-top:2px;}
-#mnsy-foot{font-size:11px;color:#8FA6A2;text-align:center;margin-top:14px;line-height:1.55;border-top:1px solid #EEF6F4;padding-top:12px;}
+#mnsy-list .it .sy{font-size:14px;font-weight:700;color:#0F2327;margin-top:4px;}
+#mnsy-list .it .mx{font-size:12px;color:#577377;margin-top:2px;}
+#mnsy-foot{font-size:11px;color:#7E9497;text-align:center;margin-top:14px;line-height:1.55;border-top:1px solid #EEF6F4;padding-top:12px;}
 </style>
 <script>
 (function(){
@@ -1560,7 +1589,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var SB_KEY=window.MEDINOTE_CONFIG.key;
   function REPORT_KEY(){ return window.MediNoteKV.reportKey(); }
   var RX_KEYS=["medinote:rx","medit:rx"];   // QR 약봉투(복약정보) 히스토리 저장 키 후보
-  var SEV=[{k:"약함",bg:"#EAF7EC",c:"#3E8E4E"},{k:"보통",bg:"#FBF3E4",c:"#C9832B"},{k:"심함",bg:"#FDEDE9",c:"#E4573E"}];
+  var SEV=[{k:"약함",bg:"#EAF7EC",c:"#3E8E4E"},{k:"보통",bg:"#FBF3E2",c:"#8A5A00"},{k:"심함",bg:"#FDEDE9",c:"#E4573E"}];
 
   function el(id){return document.getElementById(id);}
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
@@ -1582,14 +1611,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       '<label>날짜</label><input id="mnsy-date" type="date">'+
       '<label>정도</label><div class="sev" id="mnsy-sev"></div>'+
       '<label>증상</label><input id="mnsy-sym" placeholder="예: 콧물, 두통, 기운 없음">'+
-      '<label>관련 약 <span style="font-weight:600;color:#8FA6A2">· 복약정보에서 자동으로 채워요</span></label>'+
+      '<label>관련 약 <span style="font-weight:600;color:#7E9497">· 복약정보에서 자동으로 채워요</span></label>'+
       '<div id="mnsy-rxwrap"><input id="mnsy-rx" placeholder="복용 중인 약 (자동 채움)">'+
         '<button id="mnsy-ai" type="button">AI 채움</button></div>'+
       '<div id="mnsy-hint"></div>'+
-      '<label>메모 <span style="font-weight:600;color:#8FA6A2">· 선택</span></label>'+
+      '<label>메모 <span style="font-weight:600;color:#7E9497">· 선택</span></label>'+
       '<textarea id="mnsy-memo" placeholder="언제부터, 어떤 상황에서 그런지 등"></textarea>'+
       '<button id="mnsy-save">이 증상 기록하기</button>'+
-      '<button id="mnsy-toreport" type="button" style="width:100%;margin-top:9px;font-family:inherit;font-weight:700;font-size:14px;color:var(--brand);background:#fff;border:1.5px solid var(--brand-soft);border-radius:14px;padding:12px 0;cursor:pointer;">기록으로 신고·공유하기</button>'+
+      '<button id="mnsy-toreport" type="button" style="width:100%;margin-top:9px;font-family:inherit;font-weight:700;font-size:14px;color:var(--brand);background:#fff;border:1.5px solid var(--brand-soft);border-radius:16px;padding:12px 0;cursor:pointer;">기록으로 신고·공유하기</button>'+
       '<div id="mnsy-st"></div>'+
       '<div id="mnsy-list"></div>'+
       '<div id="mnsy-foot">MediNote · 정보 제공·상담 연결까지만, 판정·처방은 하지 않습니다<br>처방은 의사, 조제·상담은 약사와 상의해 주세요.</div>';
@@ -1774,13 +1803,13 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 #mnrp-back{position:fixed;inset:0;background:rgba(6,65,62,.34);z-index:100000;opacity:0;pointer-events:none;transition:opacity .22s;}
 #mnrp-back.on{opacity:1;pointer-events:auto;}
 #mnrp-wrap{position:fixed;left:0;right:0;bottom:0;z-index:100001;max-width:480px;margin:0 auto;height:94vh;background:#e9f7f4;
-  border-radius:22px 22px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.24);transform:translateY(102%);transition:transform .28s cubic-bezier(.22,1,.36,1);
+  border-radius:20px 20px 0 0;box-shadow:0 -18px 50px rgba(6,65,62,.24);transform:translateY(102%);transition:transform .28s cubic-bezier(.22,1,.36,1);
   display:flex;flex-direction:column;overflow:hidden;}
 #mnrp-wrap.on{transform:translateY(0);}
 #mnrp-bar{display:flex;align-items:center;gap:9px;padding:12px 16px calc(12px);background:#fff;border-bottom:1px solid var(--brand-soft);flex-shrink:0;}
-#mnrp-bar .gp{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:42px;height:5px;border-radius:5px;background:#D8E9E6;}
+#mnrp-bar .gp{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:42px;height:5px;border-radius:8px;background:#D8E5E7;}
 #mnrp-bar .tt{font-family:'Gaegu',cursive;font-weight:700;font-size:19px;color:var(--brand);}
-#mnrp-bar .cl{margin-left:auto;border:none;background:#F1FAF9;color:#5A716D;width:44px;height:44px;border-radius:12px;font-size:20px;cursor:pointer;flex-shrink:0;}
+#mnrp-bar .cl{margin-left:auto;border:none;background:#F2F6F7;color:#577377;width:44px;height:44px;border-radius:12px;font-size:20px;cursor:pointer;flex-shrink:0;}
 #mnrp-frame{flex:1;width:100%;border:none;background:#e9f7f4;}
 </style>
 <script>
@@ -1828,26 +1857,138 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 </script>
 <!-- ===== /증상 신고·공유 레이어 ===== -->
 
+<!-- ===== 복약 알림 레이어 (2026-09-25 · #16 MN-16-6 · 대표님 결정 C-21 · 금연노트 알림 규칙 재사용) ===== -->
+<style>
+#mnmd-pill{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:2147482000;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:800;font-size:14px;box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
+#mnmd-pill.on{display:flex;}
+.mnmd-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #E6F1EE;font-size:15px;color:#0F2327;}
+.mnmd-row .t{flex:1;} .mnmd-row .t small{display:block;color:#577377;font-size:13px;}
+.mnmd-row .x{font-size:22px;color:#7E9497;cursor:pointer;padding:0 6px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+.mnmd-fld{margin:10px 0;} .mnmd-fld label{display:block;font-size:13px;font-weight:800;color:#577377;margin-bottom:5px;}
+.mnmd-fld input{width:100%;font-family:inherit;font-size:16px;padding:12px 13px;border-radius:12px;border:1.5px solid #E6F1EE;}
+.mnmd-chips{display:flex;flex-wrap:wrap;gap:7px;} .mnmd-chips button{font-family:inherit;font-size:14.5px;font-weight:700;padding:9px 13px;min-height:44px;border-radius:20px;border:1.5px solid #E6F1EE;background:#fff;color:#577377;cursor:pointer;}
+.mnmd-chips button.on{background:var(--brand,#0A7168);color:#fff;border-color:var(--brand,#0A7168);}
+.mnmd-chk{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:#0F2327;padding:10px 0;min-height:44px;} .mnmd-chk input{width:22px;height:22px;accent-color:var(--brand,#0A7168);}
+.mnmd-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+</style>
+<div id="mnmd-pill" role="button" tabindex="0" aria-label="복약 알림">💊 복약 알림</div>
+<script>
+(function(){
+  "use strict";
+  var KEY="medinote:meds:sched", LOG="medinote:meds:log";
+  var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} }
+  function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
+  function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
+  var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
+  function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
+  function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
+  function esc(x){ return String(x).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function dayKey(){ return new Date().toDateString(); }
+
+  var pill=document.getElementById("mnmd-pill");
+  function showPill(){ pill.classList.add("on"); }
+  setTimeout(showPill, 2500);
+  pill.onclick=open; pill.onkeydown=function(e){ if(e.key==="Enter"||e.key===" ") open(); };
+
+  function ensure(){
+    var ov=document.getElementById("mnmdOv"); if(ov) return ov;
+    ov=document.createElement("div"); ov.className="mnhw-ov"; ov.id="mnmdOv"; ov.innerHTML='<div class="mnhw-sheet" id="mnmdSheet"></div>';
+    document.body.appendChild(ov); ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("on"); }); return ov;
+  }
+  var pickTimes=[];
+  function open(){
+    var ov=ensure(), s=document.getElementById("mnmdSheet"); pickTimes=[];
+    var taken7=log().filter(function(e){ return e.action==="taken"&&Date.now()-e.at<7*86400000; }).length;
+    s.innerHTML='<div class="mnhw-h"><b>복약 알림</b><span class="x" id="mnmdX">×</span></div>'+
+      '<div class="mnhw-sub">정한 시각에 알려 드리고, 알림의 「복용했어요」를 누르면 기록에 남아요. 앱을 열어 둔 동안 울립니다(닫혀 있을 때는 서버 푸시가 필요 · #16). 조용한 시간에는 오지 않아요.</div>'+
+      '<label class="mnmd-chk"><input type="checkbox" id="mnmdOn"'+(sc.on?" checked":"")+'> 복약 알림 켜기</label>'+
+      '<div id="mnmdList"></div>'+
+      '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" placeholder="예: 혈압약"></div>'+
+      '<div class="mnmd-fld"><label>시각 (여러 개 가능)</label><div class="mnmd-chips" id="mnmdChips">'+PRESET.map(function(p){ return '<button type="button" data-t="'+p[1]+'">'+p[0]+' '+p[1]+'</button>'; }).join("")+'</div></div>'+
+      '<div class="mnmd-fld"><label for="mnmdCustom">직접 시각</label><input type="time" id="mnmdCustom"></div>'+
+      '<button class="mnhw-btn" id="mnmdAdd">이 약 알림 추가</button>'+
+      '<div class="mnmd-two" style="margin-top:12px"><div class="mnmd-fld"><label for="mnmdQ1">조용한 시간 시작</label><input type="time" id="mnmdQ1" value="'+esc(sc.quiet.from)+'"></div><div class="mnmd-fld"><label for="mnmdQ2">끝</label><input type="time" id="mnmdQ2" value="'+esc(sc.quiet.to)+'"></div></div>'+
+      '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.</div><div class="mnhw-st" id="mnmdSt"></div>';
+    document.getElementById("mnmdX").onclick=function(){ ov.classList.remove("on"); };
+    document.getElementById("mnmdOn").onchange=function(){
+      var c=this; if(c.checked && "Notification" in window && Notification.permission!=="granted"){ Notification.requestPermission().then(function(p){ if(p!=="granted"){ c.checked=false; sc.on=false; save(); stt("알림 권한이 없어 켤 수 없어요."); } }); }
+      sc.on=c.checked; save(); stt(sc.on?"알림을 켰어요":"알림을 껐어요");
+    };
+    document.querySelectorAll("#mnmdChips button").forEach(function(b){ b.onclick=function(){ var t=b.dataset.t, i=pickTimes.indexOf(t); if(i<0) pickTimes.push(t); else pickTimes.splice(i,1); b.classList.toggle("on",i<0); }; });
+    document.getElementById("mnmdAdd").onclick=function(){
+      var name=document.getElementById("mnmdName").value.trim(), custom=document.getElementById("mnmdCustom").value; var times=pickTimes.slice(); if(/^\d\d:\d\d$/.test(custom)) times.push(custom);
+      if(!name) return stt("약 이름을 적어 주세요"); if(!times.length) return stt("시각을 하나는 골라 주세요");
+      sc.items.push({id:"m"+Date.now().toString(36),name:name,times:times.sort()}); sc.on=true; save(); renderList(); document.getElementById("mnmdOn").checked=true; document.getElementById("mnmdName").value=""; stt("추가했어요");
+      if("Notification" in window && Notification.permission==="default") Notification.requestPermission();
+    };
+    ["mnmdQ1","mnmdQ2"].forEach(function(id){ document.getElementById(id).onchange=function(){ var v=this.value; if(/^\d\d:\d\d$/.test(v)){ if(id==="mnmdQ1") sc.quiet.from=v; else sc.quiet.to=v; save(); stt("조용한 시간을 저장했어요"); } }; });
+    renderList(); ov.classList.add("on");
+  }
+  function stt(m){ var e=document.getElementById("mnmdSt"); if(e) e.textContent=m; }
+  function renderList(){
+    var el=document.getElementById("mnmdList"); if(!el) return;
+    el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><span class="x" data-id="'+it.id+'" aria-label="지우기">×</span></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
+    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); }; });
+  }
+
+  // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
+  function notify(it,time){
+    var body=it.name+" 드실 시간이에요 ("+time+")";
+    var data={id:it.id,name:it.name,time:time};
+    try{
+      if(navigator.serviceWorker && navigator.serviceWorker.controller){
+        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+it.id+"-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"}]}); });
+      } else if("Notification" in window && Notification.permission==="granted"){
+        var n=new Notification("메디노트 복약 알림",{body:body,icon:"icon-192.png",tag:"mnmd-"+it.id+"-"+time}); n.onclick=function(){ record("taken",data); n.close(); };
+      }
+    }catch(e){}
+  }
+  function record(action,data){
+    addLog({action:action,id:data.id,name:data.name,time:data.time,at:Date.now()});
+    if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
+  }
+  function tick(){
+    if(!sc.on || !sc.items.length) return;
+    if(!("Notification" in window) || Notification.permission!=="granted") return;
+    var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();
+    if(quiet(m)) return;
+    sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){
+      var k=it.id+"|"+t; var sn=sc.snooze[k];
+      var due = (Math.abs(m-hm(t))<=1 && sc.sent[k]!==dk) || (sn && Date.now()>=sn);
+      if(!due) return; sc.sent[k]=dk; delete sc.snooze[k]; save(); notify(it,t);
+    }); });
+  }
+  setInterval(tick,30000); tick();
+
+  // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
+  if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
+  try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){ record(q.get("mnmd"),{id:q.get("id")||"",name:q.get("name")||"",time:q.get("time")||""}); history.replaceState(null,"",location.pathname); } }catch(e){}
+  window.MediNoteMeds={open:open,log:log};
+})();
+</script>
+<!-- ===== /복약 알림 레이어 ===== -->
 <!-- ===== 앱 설치(다운로드) 레이어 ===== -->
 <style>
 #mnin-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;z-index:100050;
   background:#fff;border:1px solid var(--brand-soft);border-radius:16px;box-shadow:0 16px 40px rgba(6,65,62,.18);
   padding:12px 14px;display:none;align-items:center;gap:12px;font-family:'Pretendard',-apple-system,sans-serif;}
 #mnin-bar.on{display:flex;}
-#mnin-bar .ic{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+#mnin-bar .ic{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 #mnin-bar .ic svg{width:22px;height:22px;}
 #mnin-bar .tx{flex:1;min-width:0;}
-#mnin-bar .tx .a{font-size:13.5px;font-weight:700;color:#122423;letter-spacing:-.01em;}
-#mnin-bar .tx .b{font-size:11.5px;color:#5A716D;margin-top:1px;}
-#mnin-bar .go{border:none;background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:11px;padding:10px 14px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 14px rgba(18,189,176,.28);}
-#mnin-bar .cl{border:none;background:transparent;color:#8FA6A2;font-size:20px;cursor:pointer;width:44px;height:44px;flex-shrink:0;}
+#mnin-bar .tx .a{font-size:13.5px;font-weight:700;color:#0F2327;letter-spacing:-.01em;}
+#mnin-bar .tx .b{font-size:11.5px;color:#577377;margin-top:1px;}
+#mnin-bar .go{border:none;background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;font-family:inherit;font-weight:700;font-size:13px;border-radius:12px;padding:10px 14px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 14px rgba(18,189,176,.28);}
+#mnin-bar .cl{border:none;background:transparent;color:#7E9497;font-size:20px;cursor:pointer;width:44px;height:44px;flex-shrink:0;}
 #mnin-ios{position:fixed;inset:0;z-index:100060;background:rgba(6,65,62,.4);display:none;align-items:flex-end;justify-content:center;}
 #mnin-ios.on{display:flex;}
-#mnin-ios .sh{background:#fff;max-width:456px;width:calc(100% - 24px);margin:0 12px 18px;border-radius:18px;padding:18px;font-family:'Pretendard',sans-serif;text-align:center;}
-#mnin-ios .sh h4{font-size:16px;font-weight:700;color:#122423;margin-bottom:8px;}
-#mnin-ios .sh p{font-size:13px;color:#5A716D;line-height:1.6;}
+#mnin-ios .sh{background:#fff;max-width:456px;width:calc(100% - 24px);margin:0 12px 18px;border-radius:16px;padding:18px;font-family:'Pretendard',sans-serif;text-align:center;}
+#mnin-ios .sh h4{font-size:16px;font-weight:700;color:#0F2327;margin-bottom:8px;}
+#mnin-ios .sh p{font-size:13px;color:#577377;line-height:1.6;}
 #mnin-ios .sh b{color:var(--brand);}
-#mnin-ios .sh button{margin-top:14px;border:none;background:#F1FAF9;color:var(--brand);font-family:inherit;font-weight:700;font-size:14px;border-radius:12px;padding:11px 20px;cursor:pointer;}
+#mnin-ios .sh button{margin-top:14px;border:none;background:#F2F6F7;color:var(--brand);font-family:inherit;font-weight:700;font-size:14px;border-radius:12px;padding:11px 20px;cursor:pointer;}
 </style>
 <script>
 (function(){
@@ -1910,49 +2051,49 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 <style>
 #mnlg-pill{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:99990;display:flex;align-items:center;gap:7px;
-  background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid var(--brand-soft);border-radius:22px;padding:6px 12px 6px 8px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid var(--brand-soft);border-radius:20px;padding:6px 12px 6px 8px;
   box-shadow:0 6px 16px rgba(6,65,62,.14);cursor:pointer;font-family:'Pretendard',-apple-system,sans-serif;}
 #mnlg-pill .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
 #mnlg-pill .nm{font-size:13px;font-weight:700;color:var(--brand);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #mnlg-back{position:fixed;inset:0;background:rgba(6,65,62,.34);z-index:100070;opacity:0;pointer-events:none;transition:opacity .22s;}
 #mnlg-back.on{opacity:1;pointer-events:auto;}
-#mnlg-sheet{position:fixed;left:0;right:0;bottom:0;z-index:100071;max-width:460px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;
+#mnlg-sheet{position:fixed;left:0;right:0;bottom:0;z-index:100071;max-width:460px;margin:0 auto;background:#fff;border-radius:20px 20px 0 0;
   box-shadow:0 -18px 50px rgba(6,65,62,.22);padding:8px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);
   transition:transform .26s cubic-bezier(.22,1,.36,1);font-family:'Pretendard',-apple-system,sans-serif;letter-spacing:-.01em;}
 #mnlg-sheet.on{transform:translateY(0);}
-#mnlg-sheet .gp{width:42px;height:5px;border-radius:5px;background:#D8E9E6;margin:8px auto 14px;}
+#mnlg-sheet .gp{width:42px;height:5px;border-radius:8px;background:#D8E5E7;margin:8px auto 14px;}
 #mnlg-sheet .hd{font-family:'Gaegu',cursive;font-weight:700;font-size:21px;color:var(--brand);margin-bottom:3px;}
-#mnlg-x{position:absolute;top:10px;right:12px;width:44px;height:44px;border:none;background:#F0F7F5;border-radius:50%;font-size:22px;line-height:1;color:#5A716D;cursor:pointer;display:grid;place-items:center;}
+#mnlg-x{position:absolute;top:10px;right:12px;width:44px;height:44px;border:none;background:#F2F6F7;border-radius:50%;font-size:22px;line-height:1;color:#577377;cursor:pointer;display:grid;place-items:center;}
 #mnlg-x:hover{background:var(--brand-soft);color:var(--brand);}
-#mnlg-sheet .sub{font-size:16px;color:#5A716D;margin-bottom:16px;line-height:1.55;}
-#mnlg-cur{background:#F1FAF9;border:1px solid var(--brand-soft);border-radius:13px;padding:11px 13px;font-size:15px;color:var(--brand);font-weight:700;margin-bottom:14px;display:none;}
+#mnlg-sheet .sub{font-size:16px;color:#577377;margin-bottom:16px;line-height:1.55;}
+#mnlg-cur{background:#F2F6F7;border:1px solid var(--brand-soft);border-radius:12px;padding:11px 13px;font-size:15px;color:var(--brand);font-weight:700;margin-bottom:14px;display:none;}
 #mnlg-cur.on{display:block;}
 .mnlg-g{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;font-family:inherit;font-weight:700;font-size:17px;color:#3c4043;
-  background:#fff;border:1.5px solid #dadce0;border-radius:13px;padding:12px 0;cursor:pointer;}
+  background:#fff;border:1.5px solid #dadce0;border-radius:12px;padding:12px 0;cursor:pointer;}
 .mnlg-g svg{width:19px;height:19px;}
-.mnlg-or{display:flex;align-items:center;gap:10px;color:#5A716D;font-size:13px;font-weight:700;margin:14px 0;}
+.mnlg-or{display:flex;align-items:center;gap:10px;color:#577377;font-size:13px;font-weight:700;margin:14px 0;}
 .mnlg-or::before,.mnlg-or::after{content:"";flex:1;height:1px;background:#EAF3F1;}
-#mnlg-id{width:100%;font-family:inherit;font-size:17px;color:#122423;border:1.5px solid var(--brand-soft);border-radius:13px;padding:12px 13px;background:#F7FCFB;}
+#mnlg-id{width:100%;font-family:inherit;font-size:17px;color:#0F2327;border:1.5px solid var(--brand-soft);border-radius:12px;padding:12px 13px;background:#F2F6F7;}
 #mnlg-id:focus{outline:none;border-color:var(--brand-light);background:#fff;}
-#mnlg-start{width:100%;margin-top:9px;font-family:inherit;font-weight:700;font-size:17px;color:#fff;border:none;border-radius:13px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,var(--brand-light),var(--brand));box-shadow:0 8px 18px rgba(18,189,176,.28);}
-#mnlg-out{width:100%;margin-top:12px;font-family:inherit;font-weight:700;font-size:16px;color:#B23A28;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:13px;padding:11px 0;cursor:pointer;display:none;}
+#mnlg-start{width:100%;margin-top:9px;font-family:inherit;font-weight:700;font-size:17px;color:#fff;border:none;border-radius:12px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,var(--brand-light),var(--brand));box-shadow:0 8px 18px rgba(18,189,176,.28);}
+#mnlg-out{width:100%;margin-top:12px;font-family:inherit;font-weight:700;font-size:16px;color:#A3231B;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:12px;padding:11px 0;cursor:pointer;display:none;}
 #mnlg-out.on{display:block;}
-#mnlg-note{font-size:15px;color:#5A716D;margin-top:12px;line-height:1.6;text-align:center;}
-#mnlg-gerr{display:none;font-size:15px;color:#B23A28;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:11px;padding:9px 11px;margin-top:9px;line-height:1.55;}
+#mnlg-note{font-size:15px;color:#577377;margin-top:12px;line-height:1.6;text-align:center;}
+#mnlg-gerr{display:none;font-size:15px;color:#A3231B;background:#FDEDE9;border:1px solid #F6D3CB;border-radius:12px;padding:9px 11px;margin-top:9px;line-height:1.55;}
 #mnlg-gerr.on{display:block;}
 .mnlg-tabs{display:flex;gap:8px;margin-bottom:12px;}
-.mnlg-tabs button{flex:1;font-family:inherit;font-weight:700;font-size:16px;padding:9px 0;border-radius:11px;border:1.5px solid var(--brand-soft);background:#F7FCFB;color:#5A716D;cursor:pointer;}
+.mnlg-tabs button{flex:1;font-family:inherit;font-weight:700;font-size:16px;padding:9px 0;border-radius:12px;border:1.5px solid var(--brand-soft);background:#F2F6F7;color:#577377;cursor:pointer;}
 .mnlg-tabs button.on{background:linear-gradient(135deg,var(--brand-light),var(--brand));color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(18,189,176,.24);}
-#mnlg-forms input{width:100%;font-family:inherit;font-size:17px;color:#122423;border:1.5px solid var(--brand-soft);border-radius:13px;padding:12px 13px;background:#F7FCFB;margin-bottom:9px;}
+#mnlg-forms input{width:100%;font-family:inherit;font-size:17px;color:#0F2327;border:1.5px solid var(--brand-soft);border-radius:12px;padding:12px 13px;background:#F2F6F7;margin-bottom:9px;}
 /* 포커스 링 — --brand #0A7168 / 흰 시트 5.87:1 (≥3:1, WCAG 1.4.11) · VN-44-5 */
 #mnlg-forms input:focus{outline:2px solid var(--brand);outline-offset:2px;border-color:var(--brand-light);background:#fff;}
 /* 입력 오류 — 1px 테두리 + inset 1px 로 칸이 밀리지 않습니다. --danger #A3231B / #FFF 7.46:1 · VN-44-5 */
 #mnlg-forms input[aria-invalid="true"]{border-color:var(--danger);box-shadow:inset 0 0 0 1px var(--danger);background:#fff;}
-#mnlg-submit{width:100%;font-family:inherit;font-weight:700;font-size:17px;color:#fff;border:none;border-radius:13px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,var(--brand-light),var(--brand));box-shadow:0 8px 18px rgba(18,189,176,.28);}
+#mnlg-submit{width:100%;font-family:inherit;font-weight:700;font-size:17px;color:#fff;border:none;border-radius:12px;padding:13px 0;cursor:pointer;background:linear-gradient(135deg,var(--brand-light),var(--brand));box-shadow:0 8px 18px rgba(18,189,176,.28);}
 /* 비활성 — --n-700 #274549 / --n-200 #D8E5E7 = 8.01:1 (opacity .6 은 2.65:1) · VN-44-5 */
 #mnlg-submit:disabled{background:var(--n-200);color:var(--n-700);box-shadow:none;opacity:1;cursor:not-allowed;}
 #mnlg-status{font-size:15px;font-weight:700;margin-top:9px;min-height:16px;line-height:1.5;}
-#mnlg-status.err{color:#B23A28;} #mnlg-status.ok{color:var(--brand);}
+#mnlg-status.err{color:#A3231B;} #mnlg-status.ok{color:var(--brand);}
 .mnlg-link{display:block;width:100%;margin-top:10px;background:none;border:none;color:var(--brand);font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;text-decoration:underline;}
 .mnlg-2nd{width:100%;margin-top:8px;font-family:inherit;font-weight:700;font-size:17px;color:var(--brand)!important;background:#fff!important;border:1.5px solid var(--brand-soft)!important;border-radius:12px;padding:11px 0;cursor:pointer;box-shadow:none!important;}
 /* 터치 영역 44px — 보이는 크기는 그대로, ::after 로 안 보이는 여백만 (#24 · MN-24-1~3) */
