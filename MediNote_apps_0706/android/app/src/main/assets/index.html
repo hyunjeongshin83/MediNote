@@ -1878,10 +1878,16 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var KEY="medinote:meds:sched", LOG="medinote:meds:log";
   var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); }
+  // 앱 셸(안드로이드·iOS)이 있으면 일정을 폰에 넘깁니다 — 앱을 닫아도 폰이 정한 시각에 울립니다 (#16 MN-16-6)
+  var NATIVE=!!(window.Native && typeof window.Native.scheduleMeds==="function");
+  function pushNative(){ if(!NATIVE) return; try{ window.Native.scheduleMeds(JSON.stringify({on:!!sc.on,quiet:sc.quiet,items:sc.items})); }catch(e){} }
+  function pullNative(){ if(!NATIVE || typeof window.Native.medsLogTake!=="function") return; try{ var nl=JSON.parse(window.Native.medsLogTake()||"[]"); if(nl&&nl.length){ nl.forEach(function(e){ addLog({action:e.action,id:e.id,name:e.name,time:e.time,at:e.at||Date.now()}); }); } }catch(e){} }
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
+  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden) pullNative(); });
+  window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
   function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
   function esc(x){ return String(x).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -1902,7 +1908,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     var ov=ensure(), s=document.getElementById("mnmdSheet"); pickTimes=[];
     var taken7=log().filter(function(e){ return e.action==="taken"&&Date.now()-e.at<7*86400000; }).length;
     s.innerHTML='<div class="mnhw-h"><b>복약 알림</b><span class="x" id="mnmdX">×</span></div>'+
-      '<div class="mnhw-sub">정한 시각에 알려 드리고, 알림의 「복용했어요」를 누르면 기록에 남아요. 앱을 열어 둔 동안 울립니다(닫혀 있을 때는 서버 푸시가 필요 · #16). 조용한 시간에는 오지 않아요.</div>'+
+      '<div class="mnhw-sub">정한 시각에 알려 드리고, 알림의 「복용했어요」를 누르면 기록에 남아요. '+(NATIVE?'앱을 닫아도 폰이 정한 시각에 울립니다.':'앱을 열어 둔 동안 울립니다(닫혀 있을 때는 서버 푸시가 필요 · #16).')+' 조용한 시간에는 오지 않아요.</div>'+
+      (NATIVE && typeof window.Native.exactAlarmAllowed==="function" && !window.Native.exactAlarmAllowed() ? '<div class="mnhw-note">정확한 시각에 울리려면 폰 설정에서 「알람 및 리마인더」를 허용해 주세요. <button type="button" class="mnhw-btn" id="mnmdExact" style="margin-top:6px">설정 열기</button></div>' : '')+
       '<label class="mnmd-chk"><input type="checkbox" id="mnmdOn"'+(sc.on?" checked":"")+'> 복약 알림 켜기</label>'+
       '<div id="mnmdList"></div>'+
       '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" placeholder="예: 혈압약"></div>'+
@@ -1912,6 +1919,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       '<div class="mnmd-two" style="margin-top:12px"><div class="mnmd-fld"><label for="mnmdQ1">조용한 시간 시작</label><input type="time" id="mnmdQ1" value="'+esc(sc.quiet.from)+'"></div><div class="mnmd-fld"><label for="mnmdQ2">끝</label><input type="time" id="mnmdQ2" value="'+esc(sc.quiet.to)+'"></div></div>'+
       '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.</div><div class="mnhw-st" id="mnmdSt"></div>';
     document.getElementById("mnmdX").onclick=function(){ ov.classList.remove("on"); };
+    var ex=document.getElementById("mnmdExact"); if(ex) ex.onclick=function(){ try{ window.Native.openExactAlarmSettings(); }catch(e){} };
     document.getElementById("mnmdOn").onchange=function(){
       var c=this; if(c.checked && "Notification" in window && Notification.permission!=="granted"){ Notification.requestPermission().then(function(p){ if(p!=="granted"){ c.checked=false; sc.on=false; save(); stt("알림 권한이 없어 켤 수 없어요."); } }); }
       sc.on=c.checked; save(); stt(sc.on?"알림을 켰어요":"알림을 껐어요");
@@ -1950,6 +1958,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
   }
   function tick(){
+    if(NATIVE) return; // 폰이 맡습니다 (MedScheduler · iOS UNUserNotificationCenter)
     if(!sc.on || !sc.items.length) return;
     if(!("Notification" in window) || Notification.permission!=="granted") return;
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();

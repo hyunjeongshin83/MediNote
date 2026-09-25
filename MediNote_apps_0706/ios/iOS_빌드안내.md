@@ -6,6 +6,17 @@
 안드로이드와 달리, iOS는 **무료 자동 빌드(APK 같은)가 없습니다.**
 아이폰에 앱을 올리려면 아래가 필요합니다.
 
+## 2026-09-25 부터 달라진 것 (#20 MN-20-3 · #14 MN-14-2 · #16 MN-16-6)
+
+- **Xcode 프로젝트를 손으로 만들지 않습니다.** `project.yml` 이 있습니다.
+  Mac 에서 `brew install xcodegen && xcodegen generate` 하면 `MediNote.xcodeproj` 가 생깁니다.
+  HealthKit 권한(entitlements) · Info.plist 문구도 거기서 같이 만들어집니다.
+- **Mac 이 없어도 컴파일은 확인됩니다.** Actions 탭 → 「iOS 빌드 확인」이 GitHub 의 macOS 러너에서
+  시뮬레이터용으로 빌드합니다 (서명 없음). 빨갛게 뜨면 Swift 오류입니다. 아이폰에 올리는 것은 여전히 아래 준비물이 필요합니다.
+- **안드로이드와 같은 다리(window.Native)** 가 있습니다 — `ContentView.swift` 의 `NativeBridge`.
+  걸음·심박·수면은 HealthKit 에서, 복약 알림은 `MedNotifier.swift` 가 폰의 지역 알림으로 (앱을 닫아도 울립니다).
+- 아직 안 되는 것: Google 로그인(배포 주소가 정해져야 · MN-20-2) · Web Bluetooth(WKWebView 에 없음 — 혈압계는 건강 앱 경유).
+
 ## 준비물
 1. **Mac 컴퓨터** (필수) — Xcode가 macOS에서만 실행됩니다.
    (본인 Mac이 없으면: 지인 Mac, 학교 실습실 Mac, 또는 클라우드 Mac 대여 이용)
