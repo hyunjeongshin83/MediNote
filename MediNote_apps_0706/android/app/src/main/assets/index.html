@@ -1978,6 +1978,59 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 })();
 </script>
 <!-- ===== /복약 알림 레이어 ===== -->
+<!-- ===== 접근성 보강 (#31 MN-31-1 · MN-31-2) — 화면 모양은 그대로, 키보드·스크린리더만 ===== -->
+<style>
+/* 키보드 초점 링 — 터치·마우스에는 안 보이고 Tab 으로 옮길 때만 (WCAG 2.4.7 · 2.4.13). --brand 는 흰 배경 5.87:1 */
+:focus-visible{outline:3px solid var(--brand,#0A7168);outline-offset:2px;}
+#mnsy-sheet input:focus-visible,#mnsy-sheet textarea:focus-visible,#mnlg-id:focus-visible{outline:3px solid var(--brand,#0A7168);outline-offset:2px;}
+[role="dialog"]:focus{outline:none;}
+</style>
+<script>
+(function(){
+  "use strict";
+  /* 시트 7개를 대화상자로 — .on 을 얻으면 role·aria 를 붙이고 초점을 안으로, 닫히면 열었던 곳으로 되돌립니다.
+     Esc 는 그 시트의 닫기 단추를 누릅니다(각 레이어의 close() 가 하던 정리를 그대로 태우려고). */
+  var WATCH=".mnhw-ov,#mncardOv,#mnsy-sheet,#mnrp-wrap,#mnlg-sheet,#mnin-ios";
+  var CLOSE="#mnhwX,#mnmdX,#mncardX,#mnsy-x,#mnrp-x,#mnlg-x,#mnin-iosok,.cl,.x";
+  var FOCUS='button:not([disabled]),[href],input:not([type="hidden"]):not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"]),[role="button"]';
+  var last=null;
+  function dialogOf(el){ return el.querySelector(".mnhw-sheet,.mncard,.sh")||el; }
+  function opened(el){
+    var d=dialogOf(el);
+    d.setAttribute("role","dialog"); d.setAttribute("aria-modal","true");
+    var h=d.querySelector(".mnhw-h b,.mncard-eb b,.hd,.tt,h2,h3,b");
+    if(h){ if(!h.id) h.id=(el.id||"mn")+"-title"; d.setAttribute("aria-labelledby",h.id); }
+    d.querySelectorAll(".x").forEach(function(x){
+      if(!x.hasAttribute("role")) x.setAttribute("role","button");
+      if(!x.hasAttribute("tabindex")) x.tabIndex=0;
+      if(!x.hasAttribute("aria-label")) x.setAttribute("aria-label","닫기");
+    });
+    d.querySelectorAll(".mnhw-st,#mnmdSt,#mnsy-hint,#mnlg-gerr").forEach(function(s){ s.setAttribute("aria-live","polite"); });
+    if(!d.hasAttribute("tabindex")) d.tabIndex=-1;
+    last=document.activeElement;
+    setTimeout(function(){ var f=d.querySelector(FOCUS); (f||d).focus({preventScroll:true}); },40);
+  }
+  function closed(){ var l=last; last=null; if(l&&l.focus&&document.contains(l)){ try{ l.focus({preventScroll:true}); }catch(e){} } }
+  new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      var el=m.target; if(!el.matches||!el.matches(WATCH)) return;
+      var on=el.classList.contains("on");
+      if(on&&!el.__mnOpen){ el.__mnOpen=true; opened(el); }
+      else if(!on&&el.__mnOpen){ el.__mnOpen=false; closed(); }
+    });
+  }).observe(document.documentElement,{attributes:true,attributeFilter:["class"],subtree:true});
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){
+      var open=Array.prototype.slice.call(document.querySelectorAll(WATCH)).filter(function(x){ return x.classList.contains("on"); }).pop();
+      if(!open) return; var d=dialogOf(open); var c=d.querySelector(CLOSE)||open.querySelector(CLOSE);
+      e.preventDefault(); if(c) c.click(); else open.classList.remove("on");
+      return;
+    }
+    if((e.key==="Enter"||e.key===" ")&&e.target&&e.target.matches&&e.target.matches('span[role="button"],div[role="button"]')){ e.preventDefault(); e.target.click(); }
+  });
+})();
+</script>
+<!-- ===== /접근성 보강 ===== -->
 <!-- ===== 앱 설치(다운로드) 레이어 ===== -->
 <style>
 #mnin-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;z-index:100050;
