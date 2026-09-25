@@ -1,0 +1,20 @@
+{
+  "name": "MediNote · 복약 도우미",
+  "short_name": "MediNote",
+  "description": "QR 약봉투 스캔으로 처방을 등록하고, 복약 중 궁금한 점을 안내받는 복약 도우미. 처방은 의사, 조제·상담은 약사 — MedIT는 정보 안내만 제공합니다.",
+  "id": "/MediNote_app.html",
+  "start_url": "MediNote_app.html?src=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0f1a",
+  "theme_color": "#10B981",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["medical", "health", "lifestyle"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

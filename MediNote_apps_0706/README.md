@@ -7,8 +7,22 @@
 ## 추천 방식으로 만든 이유
 
 - 이미 완성된 웹앱(HTML) 하나를 두 앱이 함께 사용합니다.
-  → 화면을 고칠 때 **웹앱 한 곳만 고치면** 안드로이드·iOS·웹페이지가 모두 바뀝니다.
+  → 화면을 고칠 곳은 저장소 맨 위의 **`MediNote_app.html` 한 곳**입니다.
 - 같은 `shared/index.html`은 **웹페이지로도 그대로** 열 수 있습니다.
+
+### 화면을 고친 뒤에는 반드시
+
+```
+python3 tools/build-packaged-app.py
+```
+
+앱 안의 `index.html` 세 벌은 이 명령으로 **다시 만들어집니다.** 손으로 복사하지 마세요.
+
+> 2026-07 부터 2026-09 까지 이 세 벌이 웹앱과 따로 놀았습니다.
+> 앱 화면에는 로그인도 Supabase 연결도 없었고, React 를 인터넷에서 받고 있어
+> **비행기 모드에서는 빈 화면**이었습니다. 지금은 React·Supabase·설정이
+> 파일 안에 들어가 있어 인터넷 없이도 로그인 화면까지 열립니다.
+> 갈라졌는지만 보려면 `python3 tools/build-packaged-app.py --check`.
 
 ## 폴더 구성
 
@@ -37,27 +51,53 @@ MediNote_apps_0706/
 │  ├─ ContentView.swift       ← WebView 화면
 │  └─ HealthKitManager.swift  ← 건강 데이터 로컬 연동
 ├─ shared/index.html          ← 웹앱 (웹페이지로도 사용)
-├─ APK_빌드안내.md            ← APK 자동 빌드 사용법
+├─ APK_빌드안내.md            ← APK 빌드 현황
 └─ README.md                  ← 이 문서
 ```
 
-> APK 자동 빌드 설정(`android-build.yml`)은 저장소 **최상위**의
-> `.github/workflows/` 폴더에 있습니다. (이 폴더 안이 아니라 저장소 맨 위)
-> 워크플로는 `working-directory: MediNote_apps_0706/android` 로 이 폴더의 코드를 빌드합니다.
+`index.html` 세 곳과 그 옆의 아이콘·manifest 는 **만들어지는 파일**입니다.
+직접 고치지 마세요 — `tools/build-packaged-app.py` 를 다시 돌리면 지워집니다.
+
+> **APK 자동 빌드는 아직 설정돼 있지 않습니다.** 저장소에 `.github/` 폴더가 없습니다.
+> 무엇이 더 필요한지는 `APK_빌드안내.md` 에 적어 두었습니다.
 
 ## 열어보는 방법
 
-- **APK 자동 빌드:** 코드를 저장소에 올리면 GitHub가 APK를 자동으로 만듭니다.
-  자세한 방법은 `APK_빌드안내.md` 참고. (저장소 상단 Actions 탭 → 결과 APK 내려받기)
-- **안드로이드:** Android Studio로 `android/` 폴더를 열어 실행할 수도 있습니다.
-- **iOS(애플):** Xcode로 `ios/MediNote/` 파일들을 넣어 빌드합니다. (Mac + Xcode 필요)
-- **웹페이지:** `shared/index.html`을 인터넷 브라우저에서 바로 엽니다.
+- **웹페이지:** `shared/index.html` 을 브라우저에서 바로 엽니다. **지금 바로 됩니다.**
+- **안드로이드:** Android Studio 로 `android/` 폴더를 엽니다.
+  다만 지금 이대로는 빌드가 **실패합니다** — 빠진 것이 `APK_빌드안내.md` 에 적혀 있습니다.
+- **iOS(애플):** Xcode 로 `ios/MediNote/` 파일들을 넣어 빌드합니다. (Mac + Xcode 필요)
+  `index.html` 과 그 옆의 아이콘·manifest 를 **모두** Bundle 에 넣으세요.
+  하위 폴더가 없으므로 Xcode 에서 폴더 구조를 신경 쓸 일은 없습니다.
+
+## 설치형 앱(APK · iOS)에서 지금 안 되는 것 (2026-09-24 확인 · #20)
+
+두 앱은 `index.html` 을 **`file://` 로 WebView 에 띄웁니다.** 화면은 웹앱과 같지만(빌드가 매번 맞춥니다),
+아래 세 기능은 웹앱(https · Android Chrome)에서만 되고 **설치형 앱에서는 안내문만 뜹니다.**
+
+| 기능 | 웹앱 (https, Android Chrome) | Android APK (WebView) | iOS (WKWebView) | 안 되는 까닭 |
+|---|---|---|---|---|
+| 블루투스 건강기기 읽기 | 됨 | 안 됨 | 안 됨 | `navigator.bluetooth` 가 WebView·WKWebView 에 없음 |
+| Google 로그인 | 됨 | 안 됨 | 안 됨 | 화면이 `file://` 이라 OAuth 가 돌아올 주소가 없음 (코드가 미리 막아 둠) |
+| 푸시 알림 | Chrome 에서 됨 | 안 됨 | 안 됨 | `file://` 에서는 서비스워커 등록 불가 (#16) |
+| 아이디·비밀번호 로그인 · 클라우드 저장 | 됨 | 됨 | 됨 | fetch 는 `file://` 에서도 나감 |
+
+그래서 설치형 앱에서 「블루투스 기기 연결」을 누르면 **「Android Chrome 에서 열어 주세요」** 가 뜹니다.
+연구 참여자에게 APK 를 나눠 줄 때 이 점을 먼저 알려야 합니다.
+
+길은 두 가지이고, 어느 쪽인지는 결정이 필요합니다 (#20).
+- **Android** — WebView 대신 **TWA(Trusted Web Activity)** 로 감싸면 Chrome 이 실행하므로 세 기능이 웹앱과 같아집니다.
+- **iOS** — 같은 방법이 없습니다. CoreBluetooth · HealthKit · 네이티브 로그인 브리지를 따로 만들어야 합니다.
 
 ## 건강 데이터 연동 (합법적 설계)
 
 - 건강 센서 데이터(걸음·심박)는 개인정보보호법상 **민감정보**입니다.
-- 앱은 데이터를 **서버로 보내지 않고**, 기기 안(Health Connect / HealthKit)에서 읽어
-  **로컬에서만 계산**합니다. 사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
+- `HealthConnectManager` · `HealthKitManager` 는 데이터를 **서버로 보내지 않고**,
+  기기 안(Health Connect / HealthKit)에서 읽어 **로컬에서만 계산**하도록 짰습니다.
+  사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
+- **다만 이 두 매니저는 아직 화면에 연결돼 있지 않습니다.** 지금 실제로 도는 건강
+  기능은 웹 화면의 블루투스 읽기이고, 거기에는 클라우드 저장 단추가 있습니다.
+  자세한 것은 `android/.../HEALTH_SETUP.md` 를 보세요.
 - 로그인(Google·카카오·네이버)과 건강 데이터는 **완전히 분리**되어 있습니다.
 - 남은 설정과 연동 원리는 `android/app/src/main/java/kr/medit/medinote/HEALTH_SETUP.md` 참고.
 - ※ Apple Watch 데이터는 아이폰 네이티브 앱의 HealthKit로만 접근 가능합니다.

@@ -32,13 +32,29 @@
 - `android/` — 안드로이드 앱 (Kotlin, WebView) + 건강 데이터 로컬 연동
 - `ios/MediNote/` — iOS 앱 (Swift, WKWebView) + 건강 데이터 로컬 연동 + iOS 빌드 안내
 - `shared/index.html` — 웹앱 (웹페이지로도 사용)
-- `APK_빌드안내.md` — GitHub에서 APK 자동으로 만드는 방법
+- `APK_빌드안내.md` — APK 빌드 현황과 남은 준비
 - 자세한 내용은 `MediNote_apps_0706/README.md` 참고
+
+### 화면을 고친 뒤에는
+
+앱 세 곳(`android` · `ios` · `shared`)의 `index.html` 은 **만들어지는 파일**입니다.
+`MediNote_app.html` 을 고쳤으면 이어서 이 명령을 돌리세요.
+
+```
+python3 tools/build-packaged-app.py          다시 만들기
+python3 tools/build-packaged-app.py --check  갈라졌는지만 보기
+```
+
+손으로 복사하면 또 갈라집니다. 2026-07 부터 두 달 넘게 갈라져 있었고,
+그동안 앱 화면에는 로그인도 접속 설정도 없었습니다.
 
 ### 자동 빌드 설정
 
-- `.github/workflows/android-build.yml` — 저장소 **최상위**에 있어야 하며,
-  코드를 올리면 GitHub가 APK를 자동으로 만들어 줍니다. (Actions 탭에서 내려받기)
+**아직 없습니다.** `.github/workflows/android-build.yml` 은 저장소에 존재하지 않습니다.
+켜려면 Gradle 래퍼·앱 아이콘·건강 연동 의존성이 먼저 갖춰져야 합니다.
+무엇이 빠졌는지는 `MediNote_apps_0706/APK_빌드안내.md` 에 적어 두었습니다.
+
+그때까지는 휴대폰 브라우저에서 웹앱을 열고 **홈 화면에 추가** 해 쓰시면 됩니다.
 
 ---
 
