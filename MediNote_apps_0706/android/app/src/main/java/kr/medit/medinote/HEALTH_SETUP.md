@@ -8,14 +8,14 @@
 - 로그인(Google·카카오·네이버)과 건강 데이터는 **완전히 분리**되어 있습니다.
 
 > ⚠️ **지금 앱 전체가 그렇다는 뜻은 아닙니다.**
-> 이 두 매니저는 **아직 화면에 연결돼 있지 않습니다** (MainActivity·ContentView 가
-> WebView 만 띄우고, 자바스크립트 다리가 없습니다). 실제로 동작하는 건강 기능은
-> 웹 화면의 **블루투스(BLE) 읽기**이고, 거기에는 「읽은 값 클라우드에 저장」 단추가
-> 있어 값이 Supabase `measurements` 로 **올라갑니다.**
+> **Android** 는 2026-09-25 부터 화면에 연결돼 있습니다 (MN-14-2). MainActivity 의
+> `window.Native` 다리 → 「건강기기 연결」 시트의 「건강 데이터 읽기 (Health Connect)」.
+> 걸음 24시간 · 심박 6시간 · 수면 24시간을 읽어 보여 주고, 기기 localStorage
+> (`medinote:hc:v1`)에만 둡니다. 이 경로는 서버로 보내지 않습니다.
+> **iOS HealthKitManager 는 아직 연결돼 있지 않습니다.**
 >
-> 즉 지금은 경로가 둘입니다 — 설계상 로컬 전용(미연결)과, 실제 동작하는 클라우드
-> 저장(동의 후 수동). 어느 쪽으로 갈지는 정해지지 않았습니다.
-> MediNote 이슈에서 다룹니다.
+> 같은 시트의 **블루투스(BLE) 읽기**는 별개 경로입니다. 「읽은 값 클라우드에 저장」
+> 단추를 누르면 값이 Supabase `measurements` 로 **올라갑니다.**
 
 ## 연동 원리
 워치/밴드 → 폰의 건강 플랫폼(Health Connect / HealthKit) → (동의) → 앱이 로컬에서 읽음
@@ -29,8 +29,10 @@
 2. AndroidManifest.xml 에 권한 추가:
    <uses-permission android:name="android.permission.health.READ_STEPS"/>
    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+   <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+   (1·2 는 들어 있습니다. 「왜 읽는지」 화면용 intent-filter · activity-alias 도 들어 있습니다.)
 3. 테스트 기기에 'Health Connect' 앱 설치(최신 안드로이드는 내장).
-4. HealthConnectManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.
+4. 화면 연결은 끝났습니다 — 앱의 「건강기기 연결」 시트에서 「건강 데이터 읽기」.
 
 ## iOS — 남은 설정 (빌드 직전)
 1. Xcode → Signing & Capabilities → **HealthKit** 추가.

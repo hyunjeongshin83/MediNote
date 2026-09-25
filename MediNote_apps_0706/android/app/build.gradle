@@ -40,4 +40,7 @@ dependencies {
        판본은 HEALTH_SETUP.md 가 적어 둔 것을 그대로 씁니다 — 이 작업 환경에서는
        dl.google.com 이 막혀 있어 확인할 수 없었고, Actions 가 처음 돌 때 확인됩니다. */
     implementation 'androidx.health.connect:connect-client:1.1.0-alpha07'
+    /* window.Native 다리(MN-14-2)가 lifecycleScope 에서 읽습니다 — 금연노트 셸과 같은 판본 (Actions 성공) */
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
 }

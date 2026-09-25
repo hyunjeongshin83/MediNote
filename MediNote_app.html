@@ -880,6 +880,8 @@ button,input,select,textarea{font-family:inherit}</style>
   document.addEventListener("click",function(e){
     try{
       var n=e.target,depth=0;
+      // 시트 안의 단추(「건강 데이터 읽기 (Health Connect)」 등)는 여기서 다시 시트를 열지 않는다
+      if(n&&n.closest&&n.closest("#mnhwOv")) return;
       while(n&&depth<6){ var t=(n.textContent||""); if(t.length<90&&/(건강기기|Health Connect|건강 기기 연결|건강기기 연결)/.test(t)){ openSheet(); connect(); return; } n=n.parentElement; depth++; }
     }catch(_){}
   },true);
@@ -899,6 +901,9 @@ button,input,select,textarea{font-family:inherit}</style>
     s.innerHTML=
       '<div class="mnhw-h"><b>건강 기기 읽기</b><span class="x" id="mnhwX">×</span></div>'+
       '<div class="mnhw-sub">동의 기반으로 블루투스 건강기기(심박·체온·혈압·배터리)를 연결해 값을 읽어옵니다. 앱은 정보 제공까지만 하며 판정·처방은 하지 않습니다.</div>'+
+      (hasNative()
+        ? '<button class="mnhw-btn" id="mnhwHc">건강 데이터 읽기 (Health Connect)</button><div class="mnhw-note" style="margin-top:6px">이 폰의 건강 데이터를 이 기기 안에서만 읽어 보여 드려요. 서버로 보내지 않아요.</div><div id="mnhwHcOut"></div><div class="mnhw-st" id="mnhwHcSt"></div><div style="height:12px"></div>'
+        : '')+
       (supported
         ? '<button class="mnhw-btn" id="mnhwConn">블루투스 기기 연결·읽기</button><div id="mnhwOut"></div><button class="mnhw-btn ghost" id="mnhwSave" style="display:none">읽은 값 클라우드에 저장</button><div class="mnhw-st" id="mnhwSt"></div>'
         : '<div class="mnhw-note">이 브라우저는 Web Bluetooth 미지원입니다. Android Chrome에서 열어 주세요(iOS Safari 미지원).</div>')+
@@ -906,8 +911,49 @@ button,input,select,textarea{font-family:inherit}</style>
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
     var c=document.getElementById("mnhwConn"); if(c) c.onclick=connect;
     var sv=document.getElementById("mnhwSave"); if(sv) sv.onclick=saveCloud;
+    var hb=document.getElementById("mnhwHc"); if(hb){ hb.onclick=readHc; var last=hcLast(); if(last) showHc(last,true); }
     ov.classList.add("on");
   }
+
+  /* 안드로이드 셸(window.Native) — Health Connect 걸음 24시간 · 심박 6시간 · 수면 24시간 (MN-14-2).
+     웹·iOS 에는 window.Native 가 없어 단추가 보이지 않는다.
+     값은 이 기기 localStorage(medinote:hc:v1)에만 남긴다. readings·measurements·hub_state 로 가지 않는다. */
+  var HC_KEY="medinote:hc:v1";
+  function hasNative(){ var N=window.Native; return !!(N&&typeof N.healthAvailable==="function"&&typeof N.requestHealth==="function"); }
+  function hcSt(m){ var e=document.getElementById("mnhwHcSt"); if(e) e.textContent=m; }
+  function hcLast(){ try{ var v=JSON.parse(localStorage.getItem(HC_KEY)||"null"); return v&&Array.isArray(v.reads)&&v.reads[0]||null; }catch(e){ return null; } }
+  function hcKeep(r){
+    try{
+      var v=JSON.parse(localStorage.getItem(HC_KEY)||"null"); if(!v||!Array.isArray(v.reads)) v={reads:[]};
+      v.reads.unshift(r); v.reads=v.reads.slice(0,30);
+      localStorage.setItem(HC_KEY,JSON.stringify(v)); return true;
+    }catch(e){ return false; }
+  }
+  function hcCard(icon,label,val){ return '<div class="mnhw-read"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>'; }
+  function showHc(r,old){
+    var out=document.getElementById("mnhwHcOut"); if(!out) return;
+    var sleepH=Math.round((r.sleepMin||0)/60*10)/10;
+    out.innerHTML=hcCard("👣","걸음 (지난 24시간)",(r.steps||0).toLocaleString("ko-KR")+" 걸음")+
+      hcCard("❤️","심박 평균 (지난 6시간)",r.hrAvg==null?"—":r.hrAvg+" bpm")+
+      hcCard("🛌","수면 (지난 24시간)",sleepH+" 시간");
+    var d=new Date(r.at||Date.now());
+    hcSt((old?"마지막으로 읽은 값 · ":"읽었어요 · ")+(d.getMonth()+1)+"월 "+d.getDate()+"일 "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2));
+  }
+  function readHc(){
+    var N=window.Native;
+    try{
+      if(!N.healthAvailable()){ hcSt("이 폰에는 Health Connect 가 없어요."); return; }
+      hcSt("읽는 중…"); N.requestHealth();
+    }catch(e){ hcSt("읽지 못했어요."); }
+  }
+  window.onNativeHealth=function(r){
+    if(!r||r.error){
+      hcSt(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았어요.":r&&r.error==="unavailable"?"이 폰에는 Health Connect 가 없어요.":"읽지 못했어요.");
+      return;
+    }
+    var rec={at:typeof r.at==="number"?r.at:Date.now(),steps:Number(r.steps)||0,hrAvg:r.hrAvg==null?null:Number(r.hrAvg),hrN:Number(r.hrN)||0,sleepMin:Number(r.sleepMin)||0};
+    hcKeep(rec); showHc(rec,false);
+  };
   function st(m){ var e=document.getElementById("mnhwSt"); if(e) e.textContent=m; }
   function addRead(icon,label,val,metrics){
     // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
