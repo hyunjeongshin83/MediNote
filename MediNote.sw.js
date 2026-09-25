@@ -1,5 +1,5 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v5";
+const CACHE="medinote-app-v6";
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "icon-192.png","icon-512.png","icon-512-maskable.png","apple-touch-icon.png","favicon-32.png"];
@@ -28,5 +28,17 @@ self.addEventListener("push",e=>{
 });
 self.addEventListener("notificationclick",e=>{
   e.notification.close();
+  const d=e.notification.data||{};
+  // 복약 알림 단추 (MN-16-6): 「복용했어요」·「10분 뒤」를 열린 화면에 전하고, 없으면 주소로 전달해 연다
+  if(d.id){
+    const action=e.action||"taken";
+    e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(cl=>{
+      if(cl.length){ cl.forEach(c=>c.postMessage({type:"mnmd",action:action,data:d})); return cl[0].focus&&cl[0].focus(); }
+      if(action==="later") return;
+      const q="?mnmd="+action+"&id="+encodeURIComponent(d.id)+"&name="+encodeURIComponent(d.name||"")+"&time="+encodeURIComponent(d.time||"");
+      return self.clients.openWindow("MediNote_app.html"+q);
+    }));
+    return;
+  }
   e.waitUntil(self.clients.matchAll({type:"window"}).then(cl=>{ for(const c of cl){ if("focus" in c) return c.focus(); } if(self.clients.openWindow) return self.clients.openWindow("MediNote_app.html"); }));
 });

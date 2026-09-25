@@ -1,68 +1,127 @@
 package kr.medit.medinote
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
-import android.webkit.WebSettings
+import android.view.ViewGroup
+import android.webkit.JavascriptInterface
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.health.connect.client.PermissionController
+import androidx.lifecycle.lifecycleScope
+import androidx.webkit.WebViewAssetLoader
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 /**
- * MediNote (메디노트) - Android 셸
+ * MediNote (메디노트) — Android 셸 (2026-09-25 · 대표님 결정 C-18 · #14 MN-14-2 · #20)
  *
- * 앱 화면(예방접종·복약 안내)은 assets/index.html 에 번들된 웹앱을 그대로 사용합니다.
- * - 오프라인: 인터넷 없이도 앱이 열립니다(HTML이 앱 안에 포함됨).
- * - 로컬 저장: WebView의 DOM Storage(local storage)를 켜 두어, 기기 안에 데이터를 보관합니다.
- *
- * assets/index.html 은 손으로 만든 파일이 아닙니다.
+ * 화면은 assets/index.html 에 든 웹앱 그대로입니다. 손으로 만든 파일이 아니라
  * 저장소 맨 위의 MediNote_app.html 에서 tools/build-packaged-app.py 가 만듭니다.
- * React·Supabase·접속 설정이 그 파일 안에 들어 있어, 인터넷 없이도 화면이 뜹니다.
  *
- * [나중에 확장할 부분]
- * - 더 큰 로컬 데이터베이스가 필요하면, WebView의 저장소 대신
- *   Room(안드로이드 기본 DB)을 붙이고 JavascriptInterface로 연결하면 됩니다.
- * - 글꼴은 아직 인터넷에서 받습니다. 인터넷이 없으면 기기 기본 글꼴로 보입니다
- *   (글자는 그대로 읽힙니다). 글꼴까지 넣으려면 assets 에 함께 담아야 합니다.
+ * 전과 다른 점
+ *  - file:// 대신 WebViewAssetLoader 로 https://appassets.androidplatform.net/assets/index.html 을 띄웁니다.
+ *    file:// 에서는 서비스워커·푸시·Web Bluetooth 가 돌지 않아 「웹에서 열어 주세요」로 돌려보냈습니다 (#20).
+ *  - window.Native 다리로 HealthConnectManager 를 웹 화면에 잇습니다 (MN-14-2). 값은 기기 안에서만 씁니다.
+ *
+ * window.Native
+ *  platform()         "android"
+ *  healthAvailable()  Health Connect 가 이 폰에 있는지
+ *  requestHealth()    걸음·심박·수면 읽기 권한을 OS 화면으로 묻고, 허락되면 읽어 window.onNativeHealth(json)
+ *  readHealth()       이미 권한이 있으면 읽어서 같은 콜백으로
+ *
+ * 남은 것: Google 로그인(OAuth)은 WebView 안에서 완결되지 않습니다 — 폰 브라우저로 넘겨 돌아오게 하는 것은 #20 MN-20-2.
  */
 class MainActivity : ComponentActivity() {
+
+    companion object { const val APP_HOST = "appassets.androidplatform.net" }
+
+    private lateinit var web: WebView
+    private lateinit var health: HealthConnectManager
+
+    private val askHealth = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.containsAll(health.permissions)) pushHealth()
+        else callback("""{"error":"denied"}""")
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { inner ->
-                    MediNoteWebView(modifier = Modifier.fillMaxSize().padding(inner))
+        health = HealthConnectManager(this)
+
+        val loader = WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+
+        web = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.databaseEnabled = true
+            webViewClient = object : WebViewClient() {
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                    loader.shouldInterceptRequest(request.url)
+
+                /* window.Native 가 건강 데이터를 돌려주므로 이 WebView 안에서는 우리 화면만 엽니다.
+                   바깥 링크(질병관리청 · tel: 등)는 폰의 브라우저·전화 앱으로 넘깁니다. */
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    val url = request.url
+                    if (url.host == APP_HOST) return false
+                    try { startActivity(Intent(Intent.ACTION_VIEW, url)) } catch (_: Exception) {}
+                    return true
                 }
+            }
+            addJavascriptInterface(Bridge(), "Native")
+            loadUrl("https://$APP_HOST/assets/index.html")
+        }
+        setContentView(web)
+    }
+
+    override fun onDestroy() {
+        if (this::web.isInitialized) {
+            (web.parent as? ViewGroup)?.removeView(web)
+            web.stopLoading()
+            web.removeJavascriptInterface("Native")
+            web.destroy()
+        }
+        super.onDestroy()
+    }
+
+    private fun pushHealth() {
+        lifecycleScope.launch {
+            val json = try { health.readSummary().toString() } catch (e: Exception) { JSONObject().put("error", e.message ?: "read").toString() }
+            callback(json)
+        }
+    }
+
+    private fun callback(json: String) {
+        runOnUiThread { web.evaluateJavascript("window.onNativeHealth && window.onNativeHealth($json)", null) }
+    }
+
+    inner class Bridge {
+        @JavascriptInterface fun platform(): String = "android"
+        @JavascriptInterface fun healthAvailable(): Boolean = health.isAvailable()
+        @JavascriptInterface fun requestHealth() {
+            if (!health.isAvailable()) { callback("""{"error":"unavailable"}"""); return }
+            lifecycleScope.launch {
+                if (health.hasAllPermissions()) pushHealth()
+                else askHealth.launch(health.permissions)
+            }
+        }
+        @JavascriptInterface fun readHealth() {
+            lifecycleScope.launch {
+                if (health.isAvailable() && health.hasAllPermissions()) pushHealth()
+                else callback("""{"error":"no-permission"}""")
             }
         }
     }
-}
 
-@Composable
-fun MediNoteWebView(modifier: Modifier = Modifier) {
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            WebView(context).apply {
-                webViewClient = WebViewClient() // 링크를 앱 안에서 열기
-                settings.apply {
-                    javaScriptEnabled = true            // 웹앱 실행에 필요
-                    domStorageEnabled = true            // 로컬 저장(local storage) 사용
-                    databaseEnabled = true              // 로컬 DB 사용
-                    cacheMode = WebSettings.LOAD_DEFAULT
-                    // 번들된 자바스크립트가 파일에 접근해야 할 때를 대비
-                    allowFileAccess = true
-                    allowContentAccess = true
-                }
-                // 앱 안에 포함된 HTML을 로드 (오프라인)
-                loadUrl("file:///android_asset/index.html")
-            }
-        }
-    )
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (this::web.isInitialized && web.canGoBack()) web.goBack() else super.onBackPressed()
+    }
 }

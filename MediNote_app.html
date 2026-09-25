@@ -904,6 +904,14 @@ button,input,select,textarea{font-family:inherit}</style>
         : '<div class="mnhw-note">이 브라우저는 Web Bluetooth 미지원입니다. Android Chrome에서 열어 주세요(iOS Safari 미지원).</div>')+
       '<div class="mnhw-note">표준 블루투스 프로필(혈압 0x1810 · 체온 0x1809 · 심박 0x180D)을 쓰는 기기를 읽습니다. 기기 시계가 붙어 오면 잰 시각으로 저장합니다.<br>'+'제조사 표기로 표준 프로필을 쓰는 것으로 알려진 기기(실기기 확인 전 · 2026-09-25): 혈압계 — Omron HEM-7156T · HEM-7155T · HEM-9200T(BLESmart) · Omron Evolv · Omron 10 Series(BP7450) · A&D UA-651BLE · UA-656BLE · Beurer BM 57 · BM 85 · Microlife BP B3 AFIB · Withings BPM Connect. '+'체온계 — Beurer FT 95 · Microlife NC 150 BT. 심박 — 표준 심박 프로필 스트랩(Polar H10 · Garmin HRM).<br>Health Connect·Wear OS 는 안드로이드 앱에서만 읽습니다(웹에서는 접근 불가).</div>';
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
+    if(window.Native&&typeof window.Native.healthAvailable==="function"){
+      s.insertAdjacentHTML("beforeend",'<button class="mnhw-btn ghost" id="mnhwHc">앱에서 Health Connect 읽기 (걸음·심박·수면)</button>'+
+        '<div class="mnhw-note">값은 이 기기 안에서만 봅니다. 심박은 「클라우드에 저장」에 포함되고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.</div>');
+      document.getElementById("mnhwHc").onclick=function(){
+        try{ if(!window.Native.healthAvailable()){ st("이 폰에는 Health Connect 가 없습니다."); return; } st("Health Connect 읽는 중… (권한 화면이 뜨면 허용해 주세요)"); window.Native.requestHealth(); }
+        catch(e){ st("읽지 못했습니다: "+(e.message||e)); }
+      };
+    }
     var c=document.getElementById("mnhwConn"); if(c) c.onclick=connect;
     var sv=document.getElementById("mnhwSave"); if(sv) sv.onclick=saveCloud;
     ov.classList.add("on");
@@ -914,10 +922,11 @@ button,input,select,textarea{font-family:inherit}</style>
     try{ if(d.byteLength<o+7) return null; var y=d.getUint16(o,true),mo=d.getUint8(o+2),da=d.getUint8(o+3),h=d.getUint8(o+4),mi=d.getUint8(o+5),se=d.getUint8(o+6);
       if(y<2000||y>2100||mo<1||mo>12||da<1||da>31) return null; var t=new Date(y,mo-1,da,h,mi,se).getTime(); return isNaN(t)?null:t; }catch(e){ return null; }
   }
-  function addRead(icon,label,val,metrics,devTs){
+  function addRead(icon,label,val,metrics,devTs,opts){
     // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
     // devTs: 기기 시계가 준 잰 시각. 있으면 그것이 effective_time, 없으면 폰이 받은 시각
-    readings[label]={value:val,ts:devTs||Date.now(),clock:devTs?"device_clock":"phone",metrics:metrics||[]};
+    // opts: {clock, channel} — Health Connect 에서 온 값은 clock "health_connect" · channel "health_connect"
+    readings[label]={value:val,ts:devTs||Date.now(),clock:(opts&&opts.clock)||(devTs?"device_clock":"phone"),channel:(opts&&opts.channel)||"device_ble",metrics:metrics||[]};
     var out=document.getElementById("mnhwOut"); if(!out) return;
     var id="mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"");
     var html='<div class="mnhw-read" id="'+id+'"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>';
@@ -959,6 +968,17 @@ button,input,select,textarea{font-family:inherit}</style>
       }
     }
   }
+  // 앱 셸(window.Native)이 Health Connect 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 레코드마다 시각이 붙어 옴)
+  window.onNativeHealth=function(r){
+    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"이 폰에는 Health Connect 가 없습니다.":"Health Connect 에서 읽지 못했습니다."); return; }
+    var opts={clock:"health_connect",channel:"health_connect"};
+    var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
+    if(steps.length) addRead("🚶","걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
+    var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead("❤️","심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
+    var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
+    if(sl.length) addRead("😴","수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
+    st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다 (기기 안에서만)." : "지난 24시간에 Health Connect 기록이 없습니다.");
+  };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
     try{
@@ -977,9 +997,9 @@ button,input,select,textarea{font-family:inherit}</style>
         if(m.value_num==null||isNaN(m.value_num)) return;
         out.push({user_id:uid,metric:m.metric,value_num:m.value_num,unit:m.unit,
           effective_time:(r.ts?new Date(r.ts).toISOString():now),client_ts:now,
-          channel:"device_ble",grade:"wellness",modality:"sensed",
+          channel:r.channel||"device_ble",grade:"wellness",modality:"sensed",
           status:"final",performer_type:"patient",
-          device_name:devName||null,note:label+" "+r.value+(r.clock==="device_clock"?" · 잰 시각=기기 시계":" · 잰 시각=폰 수신 시각")});
+          device_name:devName||(r.channel==="health_connect"?"Health Connect":null),note:label+" "+r.value+(r.clock==="device_clock"?" · 잰 시각=기기 시계":r.clock==="health_connect"?" · 잰 시각=Health Connect 레코드":" · 잰 시각=폰 수신 시각")});
       });
     });
     return out;
@@ -1509,6 +1529,118 @@ button,input,select,textarea{font-family:inherit}</style>
 </script>
 <!-- ===== /증상 신고·공유 레이어 ===== -->
 
+<!-- ===== 복약 알림 레이어 (2026-09-25 · #16 MN-16-6 · 대표님 결정 C-21 · 금연노트 알림 규칙 재사용) ===== -->
+<style>
+#mnmd-pill{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:2147482000;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:800;font-size:14px;box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
+#mnmd-pill.on{display:flex;}
+.mnmd-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #E6F1EE;font-size:15px;color:#0F2327;}
+.mnmd-row .t{flex:1;} .mnmd-row .t small{display:block;color:#577377;font-size:13px;}
+.mnmd-row .x{font-size:22px;color:#7E9497;cursor:pointer;padding:0 6px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+.mnmd-fld{margin:10px 0;} .mnmd-fld label{display:block;font-size:13px;font-weight:800;color:#577377;margin-bottom:5px;}
+.mnmd-fld input{width:100%;font-family:inherit;font-size:16px;padding:12px 13px;border-radius:12px;border:1.5px solid #E6F1EE;}
+.mnmd-chips{display:flex;flex-wrap:wrap;gap:7px;} .mnmd-chips button{font-family:inherit;font-size:14.5px;font-weight:700;padding:9px 13px;min-height:44px;border-radius:20px;border:1.5px solid #E6F1EE;background:#fff;color:#577377;cursor:pointer;}
+.mnmd-chips button.on{background:var(--brand,#0A7168);color:#fff;border-color:var(--brand,#0A7168);}
+.mnmd-chk{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:#0F2327;padding:10px 0;min-height:44px;} .mnmd-chk input{width:22px;height:22px;accent-color:var(--brand,#0A7168);}
+.mnmd-two{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+</style>
+<div id="mnmd-pill" role="button" tabindex="0" aria-label="복약 알림">💊 복약 알림</div>
+<script>
+(function(){
+  "use strict";
+  var KEY="medinote:meds:sched", LOG="medinote:meds:log";
+  var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} }
+  function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
+  function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
+  var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
+  function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
+  function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
+  function esc(x){ return String(x).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function dayKey(){ return new Date().toDateString(); }
+
+  var pill=document.getElementById("mnmd-pill");
+  function showPill(){ pill.classList.add("on"); }
+  setTimeout(showPill, 2500);
+  pill.onclick=open; pill.onkeydown=function(e){ if(e.key==="Enter"||e.key===" ") open(); };
+
+  function ensure(){
+    var ov=document.getElementById("mnmdOv"); if(ov) return ov;
+    ov=document.createElement("div"); ov.className="mnhw-ov"; ov.id="mnmdOv"; ov.innerHTML='<div class="mnhw-sheet" id="mnmdSheet"></div>';
+    document.body.appendChild(ov); ov.addEventListener("click",function(e){ if(e.target===ov) ov.classList.remove("on"); }); return ov;
+  }
+  var pickTimes=[];
+  function open(){
+    var ov=ensure(), s=document.getElementById("mnmdSheet"); pickTimes=[];
+    var taken7=log().filter(function(e){ return e.action==="taken"&&Date.now()-e.at<7*86400000; }).length;
+    s.innerHTML='<div class="mnhw-h"><b>복약 알림</b><span class="x" id="mnmdX">×</span></div>'+
+      '<div class="mnhw-sub">정한 시각에 알려 드리고, 알림의 「복용했어요」를 누르면 기록에 남아요. 앱을 열어 둔 동안 울립니다(닫혀 있을 때는 서버 푸시가 필요 · #16). 조용한 시간에는 오지 않아요.</div>'+
+      '<label class="mnmd-chk"><input type="checkbox" id="mnmdOn"'+(sc.on?" checked":"")+'> 복약 알림 켜기</label>'+
+      '<div id="mnmdList"></div>'+
+      '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" placeholder="예: 혈압약"></div>'+
+      '<div class="mnmd-fld"><label>시각 (여러 개 가능)</label><div class="mnmd-chips" id="mnmdChips">'+PRESET.map(function(p){ return '<button type="button" data-t="'+p[1]+'">'+p[0]+' '+p[1]+'</button>'; }).join("")+'</div></div>'+
+      '<div class="mnmd-fld"><label for="mnmdCustom">직접 시각</label><input type="time" id="mnmdCustom"></div>'+
+      '<button class="mnhw-btn" id="mnmdAdd">이 약 알림 추가</button>'+
+      '<div class="mnmd-two" style="margin-top:12px"><div class="mnmd-fld"><label for="mnmdQ1">조용한 시간 시작</label><input type="time" id="mnmdQ1" value="'+esc(sc.quiet.from)+'"></div><div class="mnmd-fld"><label for="mnmdQ2">끝</label><input type="time" id="mnmdQ2" value="'+esc(sc.quiet.to)+'"></div></div>'+
+      '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.</div><div class="mnhw-st" id="mnmdSt"></div>';
+    document.getElementById("mnmdX").onclick=function(){ ov.classList.remove("on"); };
+    document.getElementById("mnmdOn").onchange=function(){
+      var c=this; if(c.checked && "Notification" in window && Notification.permission!=="granted"){ Notification.requestPermission().then(function(p){ if(p!=="granted"){ c.checked=false; sc.on=false; save(); stt("알림 권한이 없어 켤 수 없어요."); } }); }
+      sc.on=c.checked; save(); stt(sc.on?"알림을 켰어요":"알림을 껐어요");
+    };
+    document.querySelectorAll("#mnmdChips button").forEach(function(b){ b.onclick=function(){ var t=b.dataset.t, i=pickTimes.indexOf(t); if(i<0) pickTimes.push(t); else pickTimes.splice(i,1); b.classList.toggle("on",i<0); }; });
+    document.getElementById("mnmdAdd").onclick=function(){
+      var name=document.getElementById("mnmdName").value.trim(), custom=document.getElementById("mnmdCustom").value; var times=pickTimes.slice(); if(/^\d\d:\d\d$/.test(custom)) times.push(custom);
+      if(!name) return stt("약 이름을 적어 주세요"); if(!times.length) return stt("시각을 하나는 골라 주세요");
+      sc.items.push({id:"m"+Date.now().toString(36),name:name,times:times.sort()}); sc.on=true; save(); renderList(); document.getElementById("mnmdOn").checked=true; document.getElementById("mnmdName").value=""; stt("추가했어요");
+      if("Notification" in window && Notification.permission==="default") Notification.requestPermission();
+    };
+    ["mnmdQ1","mnmdQ2"].forEach(function(id){ document.getElementById(id).onchange=function(){ var v=this.value; if(/^\d\d:\d\d$/.test(v)){ if(id==="mnmdQ1") sc.quiet.from=v; else sc.quiet.to=v; save(); stt("조용한 시간을 저장했어요"); } }; });
+    renderList(); ov.classList.add("on");
+  }
+  function stt(m){ var e=document.getElementById("mnmdSt"); if(e) e.textContent=m; }
+  function renderList(){
+    var el=document.getElementById("mnmdList"); if(!el) return;
+    el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><span class="x" data-id="'+it.id+'" aria-label="지우기">×</span></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
+    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); }; });
+  }
+
+  // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
+  function notify(it,time){
+    var body=it.name+" 드실 시간이에요 ("+time+")";
+    var data={id:it.id,name:it.name,time:time};
+    try{
+      if(navigator.serviceWorker && navigator.serviceWorker.controller){
+        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+it.id+"-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"}]}); });
+      } else if("Notification" in window && Notification.permission==="granted"){
+        var n=new Notification("메디노트 복약 알림",{body:body,icon:"icon-192.png",tag:"mnmd-"+it.id+"-"+time}); n.onclick=function(){ record("taken",data); n.close(); };
+      }
+    }catch(e){}
+  }
+  function record(action,data){
+    addLog({action:action,id:data.id,name:data.name,time:data.time,at:Date.now()});
+    if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
+  }
+  function tick(){
+    if(!sc.on || !sc.items.length) return;
+    if(!("Notification" in window) || Notification.permission!=="granted") return;
+    var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();
+    if(quiet(m)) return;
+    sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){
+      var k=it.id+"|"+t; var sn=sc.snooze[k];
+      var due = (Math.abs(m-hm(t))<=1 && sc.sent[k]!==dk) || (sn && Date.now()>=sn);
+      if(!due) return; sc.sent[k]=dk; delete sc.snooze[k]; save(); notify(it,t);
+    }); });
+  }
+  setInterval(tick,30000); tick();
+
+  // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
+  if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
+  try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){ record(q.get("mnmd"),{id:q.get("id")||"",name:q.get("name")||"",time:q.get("time")||""}); history.replaceState(null,"",location.pathname); } }catch(e){}
+  window.MediNoteMeds={open:open,log:log};
+})();
+</script>
+<!-- ===== /복약 알림 레이어 ===== -->
 <!-- ===== 앱 설치(다운로드) 레이어 ===== -->
 <style>
 #mnin-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;z-index:100050;
