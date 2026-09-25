@@ -1,0 +1,41 @@
+# Xcode 프로젝트 정의 — XcodeGen 이 이 파일로 MediNote.xcodeproj 를 만듭니다.
+#
+# 왜 .xcodeproj 를 저장소에 안 넣나
+#   .pbxproj 는 사람이 읽기 어렵고 합칠 때마다 깨집니다. 이 파일 하나가 그 대신입니다.
+#   Mac 에서:  brew install xcodegen && cd MediNote_apps_0706/ios && xcodegen generate
+#   Actions:   .github/workflows/ios-build.yml 이 같은 명령으로 만들어 시뮬레이터용으로 컴파일합니다 (#20 MN-20-3).
+#
+# 서명(Team)은 여기 없습니다 — Xcode 에서 Signing & Capabilities 로 본인 계정을 고릅니다 (iOS_빌드안내.md).
+name: MediNote
+options:
+  bundleIdPrefix: kr.medit
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+targets:
+  MediNote:
+    type: application
+    platform: iOS
+    sources:
+      - path: MediNote            # .swift 는 컴파일, index.html·아이콘·manifest 는 번들 자원으로
+    entitlements:
+      path: MediNote/MediNote.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    info:
+      path: MediNote/Info.plist
+      properties:
+        CFBundleDisplayName: 메디노트
+        CFBundleShortVersionString: "0.5"
+        CFBundleVersion: "2"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSHealthShareUsageDescription: "복약·접종 안내를 돕기 위해 걸음·심박·수면을 읽습니다. 값은 이 기기 안에서만 쓰며, 사용자가 「클라우드에 저장」을 눌렀을 때만 올라갑니다."
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: kr.medit.medinote
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: false

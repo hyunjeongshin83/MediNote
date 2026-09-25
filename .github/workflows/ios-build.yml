@@ -1,0 +1,63 @@
+# iOS 컴파일 확인 — Mac 이 없어도 Swift 가 실제로 빌드되는지 봅니다 (#20 MN-20-3 · #14 MN-14-2)
+#
+# 왜
+#   iOS 셸(ContentView · HealthKitManager · MedNotifier)은 이 작업 환경에서 컴파일할 수 없습니다.
+#   GitHub 의 macOS 러너는 공개 저장소에 무료라, 여기서 시뮬레이터용으로 빌드해 오류를 잡습니다.
+#   서명은 하지 않습니다 — 아이폰에 올리는 것은 iOS_빌드안내.md 대로 Mac + Apple 계정이 필요합니다.
+#
+# 프로젝트 파일은 저장소에 없고 project.yml 에서 XcodeGen 이 만듭니다.
+
+name: iOS 빌드 확인
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'MediNote_apps_0706/ios/**'
+      - 'MediNote_app.html'
+      - 'tools/build-packaged-app.py'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'MediNote_apps_0706/ios/**'
+      - 'MediNote_app.html'
+      - 'tools/build-packaged-app.py'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 앱 화면이 웹앱과 같은지
+        run: python3 tools/build-packaged-app.py --check
+
+      - name: XcodeGen
+        run: brew install xcodegen
+
+      - name: 프로젝트 만들기
+        working-directory: MediNote_apps_0706/ios
+        run: xcodegen generate
+
+      - name: 시뮬레이터용 빌드 (서명 없음)
+        working-directory: MediNote_apps_0706/ios
+        run: |
+          xcodebuild build \
+            -project MediNote.xcodeproj -scheme MediNote \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: 시뮬레이터 앱 받아 두기
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: medinote-ios-sim-${{ github.run_number }}
+          path: MediNote_apps_0706/ios/build/Build/Products/Debug-iphonesimulator/MediNote.app
+          retention-days: 14
+          if-no-files-found: ignore
