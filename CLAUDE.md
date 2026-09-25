@@ -80,7 +80,9 @@ QA-tool 에는 무엇을 알아냈는지만 적습니다.
 AI 도우미 · AI 채움     묻는 순간 나갑니다 — 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
                        → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 서버에는 토큰 수만 남습니다
 생년월일               Google 로그인 때 Google People API 에서 받아 와 health_profiles 로
-Health Connect·HealthKit  매니저는 있으나 어느 화면에서도 불리지 않습니다
+Health Connect (안드로이드 앱만)  「건강기기 연결」 시트의 「건강 데이터 읽기」 단추로 걸음·심박·수면을 읽습니다
+                       → 기기 localStorage medinote:hc:v1 에만. 서버로 보내지 않습니다 (MN-14-2, 2026-09-25)
+HealthKit (iOS)        매니저는 있으나 어느 화면에서도 불리지 않습니다
 ```
 
 세 줄(증상 기록 · AI 도우미 · 생년월일)은 2026-09-24 에 확인해 더한 것입니다 (#22).
