@@ -114,6 +114,8 @@ enum NativeBridge {
           window.Native = {
             platform: function(){ return "ios"; },
             healthAvailable: function(){ return \(healthAvailable ? "true" : "false"); },
+            healthStatus: function(){ return "\(healthAvailable ? "available" : "none")"; },
+            openHealthConnectInstall: function(){},
             requestHealth: function(){ post({fn:"requestHealth"}); },
             readHealth: function(){ post({fn:"readHealth"}); },
             medsNative: function(){ return true; },

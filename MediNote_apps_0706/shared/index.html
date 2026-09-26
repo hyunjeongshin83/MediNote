@@ -1233,11 +1233,21 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       '<div class="mnhw-note">표준 블루투스 프로필(혈압 0x1810 · 체온 0x1809 · 심박 0x180D)을 쓰는 기기를 읽습니다. 기기 시계가 붙어 오면 잰 시각으로 저장합니다.<br>'+'제조사 표기로 표준 프로필을 쓰는 것으로 알려진 기기(실기기 확인 전 · 2026-09-25): 혈압계 — Omron HEM-7156T · HEM-7155T · HEM-9200T(BLESmart) · Omron Evolv · Omron 10 Series(BP7450) · A&D UA-651BLE · UA-656BLE · Beurer BM 57 · BM 85 · Microlife BP B3 AFIB · Withings BPM Connect. '+'체온계 — Beurer FT 95 · Microlife NC 150 BT. 심박 — 표준 심박 프로필 스트랩(Polar H10 · Garmin HRM).<br>Health Connect·Wear OS 는 안드로이드 앱에서만 읽습니다(웹에서는 접근 불가).</div>';
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
     if(window.Native&&typeof window.Native.healthAvailable==="function"){
-      s.insertAdjacentHTML("beforeend",'<button class="mnhw-btn ghost" id="mnhwHc">앱에서 Health Connect 읽기 (걸음·심박·수면)</button>'+
-        '<div class="mnhw-note">값은 이 기기 안에서만 봅니다. 심박은 「클라우드에 저장」에 포함되고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.</div>');
-      document.getElementById("mnhwHc").onclick=function(){
-        try{ if(!window.Native.healthAvailable()){ st("이 폰에는 Health Connect 가 없습니다."); return; } st("Health Connect 읽는 중… (권한 화면이 뜨면 허용해 주세요)"); window.Native.requestHealth(); }
+      // 없음과 업데이트 필요를 구분합니다 (#33 MN-33-2). 옛 셸(healthStatus 없음)은 있음/없음만.
+      var hs="available"; try{ hs=(typeof window.Native.healthStatus==="function")?String(window.Native.healthStatus()):(window.Native.healthAvailable()?"available":"none"); }catch(e){ hs="none"; }
+      var isIOS=false; try{ isIOS=(typeof window.Native.platform==="function"&&window.Native.platform()==="ios"); }catch(e){}
+      var hcName=isIOS?"건강(HealthKit)":"Health Connect";
+      s.insertAdjacentHTML("beforeend",(hs==="available"
+        ? '<button class="mnhw-btn ghost" id="mnhwHc">앱에서 '+hcName+' 읽기 (걸음·심박·수면)</button>'
+        : '<button class="mnhw-btn ghost" id="mnhwHcGet">'+(hs==="update"?"Health Connect 업데이트하기":"Health Connect 설치하기")+'</button>'+
+          '<div class="mnhw-note">'+(hs==="update"?"이 폰의 Health Connect 가 오래돼 읽을 수 없습니다. 업데이트한 뒤 다시 열어 주세요.":"이 폰에는 Health Connect 가 없습니다. Play 스토어에서 설치하면 걸음·심박·수면을 읽을 수 있습니다.")+'</div>')+
+        '<div class="mnhw-note">값은 이 기기 안에서 읽어 보여 줍니다. 심박은 「클라우드에 저장」을 누르면 함께 올라가고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.</div>');
+      var hcBtn=document.getElementById("mnhwHc"); if(hcBtn) hcBtn.onclick=function(){
+        try{ st(hcName+" 읽는 중… (권한 화면이 뜨면 허용해 주세요)"); window.Native.requestHealth(); }
         catch(e){ st("읽지 못했습니다: "+(e.message||e)); }
+      };
+      var hcGet=document.getElementById("mnhwHcGet"); if(hcGet) hcGet.onclick=function(){
+        try{ if(typeof window.Native.openHealthConnectInstall==="function") window.Native.openHealthConnectInstall(); else st("Play 스토어에서 「Health Connect」를 찾아 설치해 주세요."); }catch(e){}
       };
     }
     var c=document.getElementById("mnhwConn"); if(c) c.onclick=connect;
@@ -1298,7 +1308,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   }
   // 앱 셸(window.Native)이 Health Connect 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 레코드마다 시각이 붙어 옴)
   window.onNativeHealth=function(r){
-    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"이 폰에는 Health Connect 가 없습니다.":"Health Connect 에서 읽지 못했습니다."); return; }
+    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":"Health Connect 에서 읽지 못했습니다."); return; }
     var opts={clock:"health_connect",channel:"health_connect"};
     var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
     if(steps.length) addRead("🚶","걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
