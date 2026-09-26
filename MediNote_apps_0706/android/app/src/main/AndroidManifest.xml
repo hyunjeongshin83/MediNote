@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- Health Connect — 읽기만. 서버로 보내지 않습니다 (HEALTH_SETUP.md · #14 MN-14-2) -->
+    <!-- Health Connect — 읽기만. 기기 안에서 읽어 화면에 넘기고, 사용자가 「클라우드에 저장」을 누르면 심박만 Supabase 로 (HEALTH_SETUP.md · #14 MN-14-2 · #33) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />

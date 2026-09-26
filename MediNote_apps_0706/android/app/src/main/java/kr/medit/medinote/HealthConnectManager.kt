@@ -16,9 +16,9 @@ import java.time.Instant
  * MediNote — Health Connect 읽기 (걸음 · 심박 · 수면)
  *
  * [설계 원칙]
- * - 건강 센서 데이터는 개인정보보호법상 '민감정보'입니다. 이 매니저는 서버로 보내지 않습니다.
- *   기기 안(Health Connect)에서 읽어 웹 화면이 보여 주고, 「클라우드에 저장」은 사용자가 단추를 눌렀을 때만
- *   웹 화면 쪽 규칙(measurements · metric_defs)으로 갑니다.
+ * - 건강 센서 데이터는 개인정보보호법상 '민감정보'입니다. 이 매니저는 기기 안(Health Connect)에서 읽어
+ *   웹 화면에 넘기기만 합니다. 서버로 가는 것은 사용자가 「클라우드에 저장」을 눌렀을 때의 심박뿐이고,
+ *   그 규칙은 웹 화면 쪽(measurements · metric_defs)에 있습니다 (#33 MN-33-1).
  * - 사용자 동의는 OS 권한 화면으로 별도로 받습니다.
  *
  * [MN-18-4] 걸음을 합계로, 심박을 값 목록으로만 돌려주던 것을 고쳐 레코드마다 startTime · endTime · zoneOffset 을
@@ -36,6 +36,13 @@ class HealthConnectManager(private val context: Context) {
 
     fun isAvailable(): Boolean =
         HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
+
+    /** "available" · "update"(앱은 있으나 오래됨) · "none"(Android 13 이하에서 미설치) — #33 MN-33-2 */
+    fun status(): String = when (HealthConnectClient.getSdkStatus(context)) {
+        HealthConnectClient.SDK_AVAILABLE -> "available"
+        HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> "update"
+        else -> "none"
+    }
 
     suspend fun hasAllPermissions(): Boolean =
         client.permissionController.getGrantedPermissions().containsAll(permissions)

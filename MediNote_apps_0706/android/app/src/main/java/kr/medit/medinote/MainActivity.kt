@@ -149,6 +149,22 @@ class MainActivity : ComponentActivity() {
     inner class Bridge {
         @JavascriptInterface fun platform(): String = "android"
         @JavascriptInterface fun healthAvailable(): Boolean = health.isAvailable()
+        /* "available" · "update" · "none" — 없음과 업데이트 필요를 구분합니다 (#33 MN-33-2) */
+        @JavascriptInterface fun healthStatus(): String = health.status()
+        /* Play 스토어의 Health Connect 설치·업데이트 화면으로 (Google 안내 주소 그대로) */
+        @JavascriptInterface fun openHealthConnectInstall() {
+            val market = android.net.Uri.parse("market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding")
+            val web = android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata")
+            runOnUiThread {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, market).apply {
+                        setPackage("com.android.vending"); putExtra("overlay", true); putExtra("callerId", packageName)
+                    })
+                } catch (_: Exception) {
+                    try { startActivity(Intent(Intent.ACTION_VIEW, web)) } catch (_: Exception) {}
+                }
+            }
+        }
         @JavascriptInterface fun requestHealth() {
             if (!health.isAvailable()) { callback("""{"error":"unavailable"}"""); return }
             lifecycleScope.launch {
