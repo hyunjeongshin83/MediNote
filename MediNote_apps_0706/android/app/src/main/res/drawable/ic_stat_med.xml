@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 알림 작은 아이콘 — 단색 알약 (#36 MN-36-2). 안드로이드는 이 아이콘의 알파만 써서 상태바에 칠합니다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4.22,11.29l7.07,-7.07a5,5 0,0 1,7.07 7.07l-7.07,7.07a5,5 0,0 1,-7.07 -7.07zM12.71,5.64L9.17,9.17l5.66,5.66 3.54,-3.54a3,3 0,0 0,-4.24 -4.24L12.71,5.64z" />
+</vector>

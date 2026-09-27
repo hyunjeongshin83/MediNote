@@ -19,6 +19,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     private let center = UNUserNotificationCenter.current()
     private let logKey = "medinote.meds.log"
+    private let quietKey = "medinote.meds.quiet"   // 「10분 뒤」가 조용한 시간을 보도록 일정과 함께 둡니다 (#36 MN-36-3)
     private let category = "MNMD"
 
     private override init() {
@@ -40,6 +41,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
               sc["on"] as? Bool == true,
               let items = sc["items"] as? [[String: Any]] else { return }
         let quiet = sc["quiet"] as? [String: String] ?? [:]
+        UserDefaults.standard.set(quiet, forKey: quietKey)
 
         center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
             guard ok else {
@@ -101,8 +103,14 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             addLog(action: "taken", id: id, name: name, time: time)
         case "later":
             addLog(action: "later", id: id, name: name, time: time)
-            add(id: id, name: name, time: time,
-                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 600, repeats: false), suffix: "-later")
+            // 10분 뒤가 조용한 시간 안이면 기록만 남기고 울리지 않습니다 — 안드로이드(MED_FIRE 에서 확인)와 같은 결과 (#36 MN-36-3)
+            let quiet = UserDefaults.standard.dictionary(forKey: quietKey) as? [String: String] ?? [:]
+            let later = Calendar.current.dateComponents([.hour, .minute], from: Date(timeIntervalSinceNow: 600))
+            let laterMin = (later.hour ?? 0) * 60 + (later.minute ?? 0)
+            if !Self.inQuiet(minutes: laterMin, quiet: quiet) {
+                add(id: id, name: name, time: time,
+                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: 600, repeats: false), suffix: "-later")
+            }
         default:
             js("window.MediNoteMeds && window.MediNoteMeds.open()")
         }
