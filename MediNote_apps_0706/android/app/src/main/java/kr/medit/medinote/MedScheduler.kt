@@ -26,6 +26,7 @@ import java.util.Calendar
  *   정한 시각  → MedAlarmReceiver(MED_FIRE) → 알림(복용했어요 · 10분 뒤) → 다음 날 같은 시각 다시 걺
  *   단추       → MedAlarmReceiver(MED_TAKEN · MED_LATER) → 기록(log)에 남김 → 웹이 열리면 Native.medsLogTake() 로 가져감
  *   재부팅     → MedAlarmReceiver(BOOT_COMPLETED) → 저장된 일정으로 다시 걺
+ *   앱 업데이트 · 시간대/시계 변경 · 정확 알람 권한 변경 → 같은 수신기 → 다시 걺 (#36 MN-36-1)
  *
  * 정확한 시각(setExactAndAllowWhileIdle)은 Android 12 이상에서 사용자가 「알람 및 리마인더」를
  * 허용했을 때만 씁니다. 안 했으면 setAndAllowWhileIdle 로 걸며, 몇 분 늦을 수 있습니다.
@@ -156,7 +157,8 @@ object MedScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val b = Notification.Builder(c).apply {
             if (Build.VERSION.SDK_INT >= 26) setChannelId(CHANNEL)
-            setSmallIcon(R.mipmap.ic_launcher)
+            setSmallIcon(R.drawable.ic_stat_med)   // 단색 벡터 — 런처 아이콘을 쓰면 상태바에 흰 네모로 뜹니다 (#36 MN-36-2)
+            setColor(0xFF0A7168.toInt())          // 기존 --brand 토큰
             setContentTitle("메디노트 복약 알림")
             setContentText("$name 드실 시간이에요 ($time)")
             setContentIntent(open)
