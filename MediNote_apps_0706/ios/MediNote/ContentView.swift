@@ -35,6 +35,11 @@ struct WebView: UIViewRepresentable {
         ucc.addUserScript(WKUserScript(
             source: NativeBridge.script(healthAvailable: HKHealthStore.isHealthDataAvailable()),
             injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        // iOS 「텍스트 크기」(Dynamic Type)를 웹 화면에 옮깁니다 — WKWebView 는 혼자서는 따르지 않습니다.
+        // 상한 200% (APP-STYLE 3-2-2 · MediNote #31 MN-31-5). 설정이 바뀌면 Coordinator 가 다시 넣습니다.
+        ucc.addUserScript(WKUserScript(
+            source: TextSizeBridge.script(percent: TextSizeBridge.percent()),
+            injectionTime: .atDocumentStart, forMainFrameOnly: true))
         config.userContentController = ucc
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -42,6 +47,7 @@ struct WebView: UIViewRepresentable {
         webView.scrollView.bounces = false
         context.coordinator.web = webView
         MedNotifier.shared.web = webView
+        context.coordinator.watchTextSize()
 
         if let url = Bundle.main.url(forResource: "index", withExtension: "html") {
             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
@@ -82,6 +88,13 @@ struct WebView: UIViewRepresentable {
 
         func js(_ code: String) {
             DispatchQueue.main.async { self.web?.evaluateJavaScript(code, completionHandler: nil) }
+        }
+
+        /// 사용자가 설정 앱에서 「텍스트 크기」를 바꾸면 열린 화면에도 바로 반영합니다 (MN-31-5)
+        func watchTextSize() {
+            NotificationCenter.default.addObserver(forName: UIContentSizeCategory.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+                self?.js(TextSizeBridge.apply(percent: TextSizeBridge.percent()))
+            }
         }
 
         // 우리 화면(file://)만 이 안에서 엽니다. 바깥 링크는 Safari 로.
@@ -125,6 +138,23 @@ enum NativeBridge {
           };
         })();
         """
+    }
+}
+
+/// iOS 「텍스트 크기」 → 웹 화면 (APP-STYLE 3-2-2 · MN-31-5)
+/// Dynamic Type 의 본문 17pt 가 지금 몇 pt 인지로 배율을 구해 <html> 의 -webkit-text-size-adjust 에 넣습니다.
+/// 상한 200% — 그 위 배율은 검사한 적이 없습니다. 더 키우려면 손가락 확대(maximum-scale 없음).
+enum TextSizeBridge {
+    static func percent() -> Int {
+        let scaled = UIFontMetrics(forTextStyle: .body).scaledValue(for: 17)
+        let pct = Int((scaled / 17 * 100).rounded())
+        return min(max(pct, 100), 200)
+    }
+    static func apply(percent: Int) -> String {
+        "document.documentElement.style.webkitTextSizeAdjust='\(percent)%';"
+    }
+    static func script(percent: Int) -> String {
+        "(function(){ try { \(apply(percent: percent)) } catch(e) {} })();"
     }
 }
 
