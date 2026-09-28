@@ -1,5 +1,5 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v6";
+const CACHE="medinote-app-v7";   // v7: 공통 선 아이콘·알약 앱 아이콘 (2026-09-28)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "icon-192.png","icon-512.png","icon-512-maskable.png","apple-touch-icon.png","favicon-32.png"];
