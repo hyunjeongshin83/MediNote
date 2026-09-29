@@ -351,7 +351,7 @@ button,input,select,textarea{font-family:inherit}</style>
       hwChatgpt: "ChatGPT \uC5F0\uACB0 \uAE30\uAE30",
       hwChatgptSub: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC815\uBCF4 \uC81C\uACF5",
       hwNote: "\uC5F0\uACB0\uC740 \uBAA8\uB450 \uB3D9\uC758 \uAE30\uBC18\uC774\uBA70, \uC571\uC740 \uC815\uBCF4 \uC81C\uACF5\xB7\uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4. \uD310\uC815\xB7\uCC98\uBC29\uC740 \uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
-      hwTipGoogle: "혈압계·체온계·심박 측정기(블루투스)는 이 화면에서 바로 읽고, 「읽은 값 클라우드에 저장」을 누른 값만 서버(Supabase)에 저장돼요. 안드로이드 앱에서는 Health Connect 의 걸음·심박·수면을 기기 안에서만 읽어요.",
+      hwTipGoogle: "혈압계·체온계·심박 측정기(블루투스)는 이 화면에서 바로 읽고, 「읽은 값 클라우드에 저장」을 누른 값만 서버(Supabase)에 저장돼요. 안드로이드 앱에서는 Health Connect 의 걸음·심박·수면을 읽어 와요. 저장을 누른 심박만 서버에 올라가요.",
       hwTipAnthropic: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30(\uC608: \uC2A4\uD53C\uCEE4\xB7\uB85C\uBD07)\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC2DC\uAE30\uB97C \uC74C\uC131\uC73C\uB85C \uC548\uB0B4\uD560 \uC218 \uC788\uC5B4\uC694. \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0, \uC548\uB0B4\uC640 \uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4.",
       hwTipChatgpt: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC624\uB298\uC758 \uBCF5\uC57D\xB7\uC811\uC885 \uC77C\uC815\uC744 \uC804\uB2EC\uD574, \uB9D0\uB85C \uC54C\uB824\uC8FC\uB3C4\uB85D \uD560 \uC218 \uC788\uC5B4\uC694. \uCD5C\uC885 \uD310\uB2E8\uC740 \uB298 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694."
     },
@@ -450,7 +450,7 @@ button,input,select,textarea{font-family:inherit}</style>
       hwChatgpt: "ChatGPT-connected device",
       hwChatgptSub: "Provide info to a linked voice assistant",
       hwNote: "All connections are consent-based; the app only informs and refers \u2014 it does not decide or prescribe.",
-      hwTipGoogle: "Bluetooth blood-pressure, thermometer and heart-rate monitors are read right here; only values you save with \"Save to cloud\" go to the server (Supabase). In the Android app, Health Connect steps, heart rate and sleep are read on-device only.",
+      hwTipGoogle: "Bluetooth blood-pressure, thermometer and heart-rate monitors are read right here; only values you save with \"Save to cloud\" go to the server (Supabase). In the Android app, Health Connect steps, heart rate and sleep are read in; only heart rate you save goes to the server.",
       hwTipAnthropic: "A linked care device (e.g. a speaker or robot) can voice your medication and vaccine reminders. It never decides on medicines \u2014 it only informs and refers.",
       hwTipChatgpt: "A linked voice assistant can read out today's medication and vaccine schedule. Always confirm final decisions with your doctor or pharmacist."
     }
@@ -1030,7 +1030,7 @@ button,input,select,textarea{font-family:inherit}</style>
     var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
     var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
     if(sl.length) addRead("😴","수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
-    st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다 (기기 안에서만)." : "지난 24시간에 Health Connect 기록이 없습니다.");
+    st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다." : "지난 24시간에 Health Connect 기록이 없습니다.");
   };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
