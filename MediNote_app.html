@@ -907,6 +907,8 @@ button,input,select,textarea{font-family:inherit}</style>
 .mnhw-read .t{font-size:var(--fs-caption);color:#577377;font-weight:700;}
 .mnhw-read .v{font-size:var(--fs-headline);font-weight:700;color:var(--brand);}
 .mnhw-note{font-size:.875rem;color:#577377;line-height:1.6;margin-top:12px;}
+/* 설치형 앱의 막다른 안내에 웹 주소 링크 (#20 MN-20-4) — 글자색은 둘레 문장 그대로라 대비가 바뀌지 않습니다 */
+.mnhw-note a,#mnlg-gerr a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere;}
 .mnhw-st{font-size:var(--fs-sub);color:var(--brand);margin-top:10px;min-height:16px;font-weight:700;}
 </style>
 <script>
@@ -942,7 +944,7 @@ button,input,select,textarea{font-family:inherit}</style>
       '<div class="mnhw-sub">동의 기반으로 블루투스 건강기기(심박·체온·혈압·배터리)를 연결해 값을 읽어옵니다. 앱은 정보 제공까지만 하며 판정·처방은 하지 않습니다.</div>'+
       (supported
         ? '<button class="mnhw-btn" id="mnhwConn">블루투스 기기 연결·읽기</button><div id="mnhwOut"></div><button class="mnhw-btn ghost" id="mnhwSave" style="display:none">읽은 값 클라우드에 저장</button><div class="mnhw-st" id="mnhwSt"></div>'
-        : '<div class="mnhw-note">이 브라우저는 Web Bluetooth 미지원입니다. Android Chrome에서 열어 주세요(iOS Safari 미지원).</div>')+
+        : '<div class="mnhw-note">여기서는 블루투스 기기를 읽을 수 없습니다. 폰의 Chrome에서 <a href="https://hyunjeongshin83.github.io/MediNote/" target="_blank" rel="noopener">hyunjeongshin83.github.io/MediNote</a> 를 열어 주세요(iOS Safari 미지원).</div>')+
       '<div class="mnhw-note">표준 블루투스 프로필(혈압 0x1810 · 체온 0x1809 · 심박 0x180D)을 쓰는 기기를 읽습니다. 기기 시계가 붙어 오면 잰 시각으로 저장합니다.<br>'+'제조사 표기로 표준 프로필을 쓰는 것으로 알려진 기기(실기기 확인 전 · 2026-09-25): 혈압계 — Omron HEM-7156T · HEM-7155T · HEM-9200T(BLESmart) · Omron Evolv · Omron 10 Series(BP7450) · A&D UA-651BLE · UA-656BLE · Beurer BM 57 · BM 85 · Microlife BP B3 AFIB · Withings BPM Connect. '+'체온계 — Beurer FT 95 · Microlife NC 150 BT. 심박 — 표준 심박 프로필 스트랩(Polar H10 · Garmin HRM).<br>Health Connect·Wear OS 는 안드로이드 앱에서만 읽습니다(웹에서는 접근 불가).</div>';
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
     if(window.Native&&typeof window.Native.healthAvailable==="function"){
@@ -2050,7 +2052,7 @@ button,input,select,textarea{font-family:inherit}</style>
   function gerr(msg){ var e=document.getElementById("mnlg-gerr"); if(e){ e.classList.add("on"); e.innerHTML=msg; } }
   function googleLogin(){
     var e=document.getElementById("mnlg-gerr"); if(e) e.classList.remove("on");
-    if(location.protocol==="file:"){ gerr("파일을 직접 연 상태(file://)에서는 Google 로그인이 안 됩니다. <b>배포한 https 주소</b>에서 열어 주세요."); return; }
+    if(location.protocol==="file:"){ gerr("이 앱에서는 Google 로그인이 안 됩니다. 웹 주소 <a href=\"https://hyunjeongshin83.github.io/MediNote/\" target=\"_blank\" rel=\"noopener\">hyunjeongshin83.github.io/MediNote</a> 에서 해 주세요."); return; }
     if(location.protocol!=="https:" && location.hostname!=="localhost"){ gerr("Google 로그인은 <b>https</b> 주소에서만 됩니다."); return; }
     if(!sb){ gerr("로그인 모듈을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."); return; }
     try{
