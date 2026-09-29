@@ -52,11 +52,26 @@ const SYSTEM_BASE =
   "- 진단하거나 처방하지 않습니다. 정보 제공까지만 하고, 최종 판단은 의사·약사와 상담하도록 안내합니다.\n" +
   "- 질병관리청(KDCA)·예방접종도우미·식약처 등 공신력 있는 출처를 웹검색으로 확인해 답합니다.\n" +
   "- 확실하지 않으면 확실하지 않다고 말합니다. 지어내지 않습니다.\n" +
+  "- 사용자의 기록에서 원인을 추정하거나(「…때문입니다」) 이 사람에게 맞춘 새 권고를 만들지 않습니다. " +
+  "공식 지침의 내용을 출처와 함께 전하는 것까지입니다.\n" +
   "- 응급 징후(호흡곤란, 얼굴·입 부위 붓기, 의식 저하, 심한 어지러움, 반복 구토)가 보이면 " +
   "먼저 119 또는 1339로 연락하도록 안내합니다.\n" +
   "\n" +
   "말투: 어르신이 읽기 쉬운 담백한 존댓말. 짧은 문단과 항목으로 나눕니다. " +
   "전문용어는 쉬운 말로 풀어 씁니다. 답변 끝에 근거 출처를 한 줄로 적습니다.";
+
+// 증상 시트 「AI 채움」 — 오늘 증상 + 복약 히스토리 → 관련약·메모. 웹검색 없음.
+// 전에는 앱이 이 지시문을 system 으로 보냈고 서버는 받은 것을 그대로 썼다 (#44 MN-44-1).
+// 지시문은 서버에만 두고, 앱은 mode 이름만 보낸다. 클라이언트가 보내는 system 은 무시한다.
+const SYSTEM_FILL =
+  "너는 복약 기록 정리 도우미다. 처방·진단은 하지 않는다. " +
+  "사용자의 오늘 증상과 복용 약 목록을 보고, 그 증상과 관련 있을 만한 약만 골라 관련약으로 정리한다. " +
+  "판정·처방 표현은 쓰지 않고, 증상의 원인을 추정하거나 복약을 바꾸라고 권하지 않는다. " +
+  "반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). " +
+  '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
+
+const MODES = { helper: SYSTEM_BASE, fill: SYSTEM_FILL } as const;
+type Mode = keyof typeof MODES;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -102,7 +117,8 @@ Deno.serve(async (req: Request) => {
   let body: {
     messages?: Array<{ role: "user" | "assistant"; content: string }>;
     context?: Record<string, unknown>;
-    system?: string;
+    mode?: string;          // "helper"(기본) | "fill" — 서버의 지시문 이름
+    system?: string;        // 받아도 쓰지 않는다 (MN-44-1)
     max_tokens?: number;
     web_search?: boolean;
   };
@@ -117,10 +133,12 @@ Deno.serve(async (req: Request) => {
   );
   if (!messages.length) return json({ ok: false, error: "empty_messages" }, 400);
 
-  const system = (body.system ? String(body.system) : SYSTEM_BASE) + contextBlock(body.context);
+  // 지시문은 서버 것만 — 앱이 보낸 system 은 무시한다. 「진단·처방 안 함」이 제안이 아니라 규칙이려면 여기 있어야 한다.
+  const mode: Mode = body.mode === "fill" ? "fill" : "helper";
+  const system = mode === "fill" ? SYSTEM_FILL : SYSTEM_BASE + contextBlock(body.context);
   const maxTokens = Math.min(Math.max(Number(body.max_tokens ?? 4000), 256), 16000);
   const effort = (Deno.env.get("AI_EFFORT") ?? "medium") as "low" | "medium" | "high" | "xhigh" | "max";
-  const wantSearch = body.web_search !== false;
+  const wantSearch = mode === "helper" && body.web_search !== false;
 
   const client = new Anthropic({ apiKey });
 
