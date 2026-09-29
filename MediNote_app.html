@@ -1598,7 +1598,8 @@ button,input,select,textarea{font-family:inherit}</style>
 
 <!-- ===== 복약 알림 레이어 (2026-09-25 · #16 MN-16-6 · 대표님 결정 C-21 · 금연노트 알림 규칙 재사용) ===== -->
 <style>
-#mnmd-pill{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:2147482000;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:700;font-size:var(--fs-sub);box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
+/* z-index 는 로그인 알약(99990)과 같은 층 — 시트·배경(99998 이상)이 열리면 그 아래로 들어가 가리지 않습니다 */
+#mnmd-pill{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:99990;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:700;font-size:var(--fs-sub);box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
 #mnmd-pill.on{display:flex;}
 .mnmd-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #E6F1EE;font-size:var(--fs-sub);color:#0F2327;}
 .mnmd-row .t{flex:1;} .mnmd-row .t small{display:block;color:#577377;font-size:.9375rem;}
