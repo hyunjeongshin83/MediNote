@@ -146,6 +146,12 @@
    넘치므로(한 칸 85px < 91px) 폭과 상관없이 이름을 아래에 둡니다. */
 .mn-nav-below .mn-tab-in{flex-direction:column;gap:4px;padding:4px 6px;}
 .mn-nav-below .mn-tab svg{width:22px;height:22px;}
+/* 글자를 키우면(iOS 텍스트 크기 · 브라우저 200%) 380px 이상에서도 이름이 칸을 넘습니다 (#46 Codex).
+   폭 기준만으로는 못 잡으므로, 실제로 넘치는지 재서 html.mn-tabs-below 를 붙입니다(아래 스크립트).
+   아래 배치에서도 넘치면 이름을 줄바꿈합니다. */
+html.mn-tabs-below .mn-tab-in{flex-direction:column;gap:4px;padding:4px 6px;white-space:normal;max-width:100%;}
+html.mn-tabs-below .mn-tab svg{width:22px;height:22px;}
+html.mn-tabs-below .mn-tab-t{text-align:center;overflow-wrap:anywhere;}
 </style>
 <style>*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:var(--brand-deep);font-family:Pretendard,-apple-system,sans-serif}#root{height:100%}
 /* 단추·입력은 브라우저 기본 서체(Arial)로 떨어집니다. 서체는 물려받게 합니다 — 크기·굵기는 그대로 (#17) */
@@ -679,7 +685,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       hwChatgpt: "ChatGPT \uC5F0\uACB0 \uAE30\uAE30",
       hwChatgptSub: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC815\uBCF4 \uC81C\uACF5",
       hwNote: "\uC5F0\uACB0\uC740 \uBAA8\uB450 \uB3D9\uC758 \uAE30\uBC18\uC774\uBA70, \uC571\uC740 \uC815\uBCF4 \uC81C\uACF5\xB7\uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4. \uD310\uC815\xB7\uCC98\uBC29\uC740 \uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
-      hwTipGoogle: "혈압계·체온계·심박 측정기(블루투스)는 이 화면에서 바로 읽고, 「읽은 값 클라우드에 저장」을 누른 값만 서버(Supabase)에 저장돼요. 안드로이드 앱에서는 Health Connect 의 걸음·심박·수면을 읽어 와요. 저장을 누른 심박만 서버에 올라가요.",
+      hwTipGoogle: "혈압계·체온계·심박 측정기(블루투스)는 이 화면에서 바로 읽고, 「읽은 값 클라우드에 저장」을 누른 값만 서버(Supabase)에 저장돼요. 안드로이드 앱에서는 Health Connect 의 걸음·심박·수면을 읽어 화면에 보여 줘요(앱에는 아직 저장 단추가 없어요).",
       hwTipAnthropic: "\uC5F0\uACB0\uB41C \uB3CC\uBD04 \uAE30\uAE30(\uC608: \uC2A4\uD53C\uCEE4\xB7\uB85C\uBD07)\uC5D0 \uBCF5\uC57D\xB7\uC811\uC885 \uC2DC\uAE30\uB97C \uC74C\uC131\uC73C\uB85C \uC548\uB0B4\uD560 \uC218 \uC788\uC5B4\uC694. \uC57D\uC744 \uD310\uC815\uD558\uC9C0 \uC54A\uACE0, \uC548\uB0B4\uC640 \uC0C1\uB2F4 \uC5F0\uACB0\uAE4C\uC9C0\uB9CC \uD569\uB2C8\uB2E4.",
       hwTipChatgpt: "\uC5F0\uACB0\uB41C \uC74C\uC131 \uBE44\uC11C\uC5D0 \uC624\uB298\uC758 \uBCF5\uC57D\xB7\uC811\uC885 \uC77C\uC815\uC744 \uC804\uB2EC\uD574, \uB9D0\uB85C \uC54C\uB824\uC8FC\uB3C4\uB85D \uD560 \uC218 \uC788\uC5B4\uC694. \uCD5C\uC885 \uD310\uB2E8\uC740 \uB298 \uC758\uC0AC\xB7\uC57D\uC0AC\uC640 \uC0C1\uB2F4\uD558\uC138\uC694."
     },
@@ -778,7 +784,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       hwChatgpt: "ChatGPT-connected device",
       hwChatgptSub: "Provide info to a linked voice assistant",
       hwNote: "All connections are consent-based; the app only informs and refers \u2014 it does not decide or prescribe.",
-      hwTipGoogle: "Bluetooth blood-pressure, thermometer and heart-rate monitors are read right here; only values you save with \"Save to cloud\" go to the server (Supabase). In the Android app, Health Connect steps, heart rate and sleep are read in; only heart rate you save goes to the server.",
+      hwTipGoogle: "Bluetooth blood-pressure, thermometer and heart-rate monitors are read right here; only values you save with \"Save to cloud\" go to the server (Supabase). In the Android app, Health Connect steps, heart rate and sleep are read and shown on screen (the app has no save button yet).",
       hwTipAnthropic: "A linked care device (e.g. a speaker or robot) can voice your medication and vaccine reminders. It never decides on medicines \u2014 it only informs and refers.",
       hwTipChatgpt: "A linked voice assistant can read out today's medication and vaccine schedule. Always confirm final decisions with your doctor or pharmacist."
     }
@@ -1268,12 +1274,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function openSheet(){
     var ov=ensureSheet(), s=document.getElementById("mnhwSheet");
     var supported=!!(navigator.bluetooth);
+    // iOS 는 앱 셸이든 브라우저든 Web Bluetooth 가 없어, 링크를 줘도 막다른 길입니다 (#46 Codex)
+    var onApple=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+    try{ if(window.Native&&typeof window.Native.platform==="function"&&window.Native.platform()==="ios") onApple=true; }catch(e){}
     s.innerHTML=
       '<div class="mnhw-h"><b>건강 기기 읽기</b><span class="x" id="mnhwX">×</span></div>'+
       '<div class="mnhw-sub">동의 기반으로 블루투스 건강기기(심박·체온·혈압·배터리)를 연결해 값을 읽어옵니다. 앱은 정보 제공까지만 하며 판정·처방은 하지 않습니다.</div>'+
       (supported
         ? '<button class="mnhw-btn" id="mnhwConn">블루투스 기기 연결·읽기</button><div id="mnhwOut"></div><button class="mnhw-btn ghost" id="mnhwSave" style="display:none">읽은 값 클라우드에 저장</button><div class="mnhw-st" id="mnhwSt"></div>'
-        : '<div class="mnhw-note">여기서는 블루투스 기기를 읽을 수 없습니다. 폰의 Chrome에서 <a href="https://hyunjeongshin83.github.io/MediNote/" target="_blank" rel="noopener">hyunjeongshin83.github.io/MediNote</a> 를 열어 주세요(iOS Safari 미지원).</div>')+
+        : (onApple
+          ? '<div class="mnhw-note">iPhone·iPad 에서는 블루투스 기기를 읽을 수 없습니다. 안드로이드 폰의 Chrome 에서만 됩니다.</div>'
+          : '<div class="mnhw-note">여기서는 블루투스 기기를 읽을 수 없습니다. 안드로이드 폰의 Chrome에서 <a href="https://hyunjeongshin83.github.io/MediNote/" target="_blank" rel="noopener">hyunjeongshin83.github.io/MediNote</a> 를 열어 주세요.</div>'))+
       '<div class="mnhw-note">표준 블루투스 프로필(혈압 0x1810 · 체온 0x1809 · 심박 0x180D)을 쓰는 기기를 읽습니다. 기기 시계가 붙어 오면 잰 시각으로 저장합니다.<br>'+'제조사 표기로 표준 프로필을 쓰는 것으로 알려진 기기(실기기 확인 전 · 2026-09-25): 혈압계 — Omron HEM-7156T · HEM-7155T · HEM-9200T(BLESmart) · Omron Evolv · Omron 10 Series(BP7450) · A&D UA-651BLE · UA-656BLE · Beurer BM 57 · BM 85 · Microlife BP B3 AFIB · Withings BPM Connect. '+'체온계 — Beurer FT 95 · Microlife NC 150 BT. 심박 — 표준 심박 프로필 스트랩(Polar H10 · Garmin HRM).<br>Health Connect·Wear OS 는 안드로이드 앱에서만 읽습니다(웹에서는 접근 불가).</div>';
     document.getElementById("mnhwX").onclick=function(){ ov.classList.remove("on"); };
     if(window.Native&&typeof window.Native.healthAvailable==="function"){
@@ -1285,7 +1296,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         ? '<button class="mnhw-btn ghost" id="mnhwHc">앱에서 '+hcName+' 읽기 (걸음·심박·수면)</button>'
         : '<button class="mnhw-btn ghost" id="mnhwHcGet">'+(hs==="update"?"Health Connect 업데이트하기":"Health Connect 설치하기")+'</button>'+
           '<div class="mnhw-note">'+(hs==="update"?"이 폰의 Health Connect 가 오래돼 읽을 수 없습니다. 업데이트한 뒤 다시 열어 주세요.":"이 폰에는 Health Connect 가 없습니다. Play 스토어에서 설치하면 걸음·심박·수면을 읽을 수 있습니다.")+'</div>')+
-        '<div class="mnhw-note">값은 이 기기 안에서 읽어 보여 줍니다. 심박은 「클라우드에 저장」을 누르면 함께 올라가고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.</div>');
+        (supported?'':'<div id="mnhwOut"></div><div class="mnhw-st" id="mnhwSt"></div>')+
+        '<div class="mnhw-note">'+(supported
+          ? '값은 이 기기 안에서 읽어 보여 줍니다. 심박은 「클라우드에 저장」을 누르면 함께 올라가고, 걸음·수면은 저장 표가 아직 없어(#18 MN-18-3) 화면에서만 봅니다.'
+          : '읽은 값은 이 화면에서 보여 줍니다. 앱에는 저장 단추가 아직 없어 서버에 올리지 않습니다.')+'</div>');
       var hcBtn=document.getElementById("mnhwHc"); if(hcBtn) hcBtn.onclick=function(){
         try{ st(hcName+" 읽는 중… (권한 화면이 뜨면 허용해 주세요)"); window.Native.requestHealth(); }
         catch(e){ st("읽지 못했습니다: "+(e.message||e)); }
@@ -1368,7 +1382,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
     var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
     if(sl.length) addRead(ICON_SLEEP,"수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
-    st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다." : "지난 24시간에 Health Connect 기록이 없습니다.");
+    st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?"Health Connect 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":"Health Connect 값을 읽었습니다.") : "지난 24시간에 Health Connect 기록이 없습니다.");
   };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
@@ -1922,6 +1936,22 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 </script>
 <!-- ===== /증상 신고·공유 레이어 ===== -->
 
+<script>
+/* 탭 이름이 칸을 넘는지 재서 아이콘 아래로 내립니다 (#46 Codex) */
+(function(){
+  var q=0;
+  function fit(){ q=0; var r=document.documentElement, tabs=document.querySelectorAll(".mn-tab"); if(!tabs.length) return;
+    r.classList.remove("mn-tabs-below");
+    for(var i=0;i<tabs.length;i++){ var inn=tabs[i].firstElementChild; if(inn&&inn.scrollWidth>tabs[i].clientWidth+0.5){ r.classList.add("mn-tabs-below"); return; } } }
+  function later(){ if(!q) q=requestAnimationFrame(fit); }
+  window.addEventListener("resize",later);
+  try{ document.fonts.ready.then(later); document.fonts.addEventListener("loadingdone",later); }catch(e){} // 웹 글꼴이 늦게 오면 폭이 바뀝니다
+  document.addEventListener("DOMContentLoaded",function(){
+    new MutationObserver(later).observe(document.body,{childList:true,subtree:true});
+    new MutationObserver(later).observe(document.documentElement,{attributes:true,attributeFilter:["style"]});
+    later(); });
+})();
+</script>
 <!-- ===== 복약 알림 레이어 (2026-09-25 · #16 MN-16-6 · 대표님 결정 C-21 · 금연노트 알림 규칙 재사용) ===== -->
 <style>
 /* z-index 는 로그인 알약(99990)과 같은 층 — 시트·배경(99998 이상)이 열리면 그 아래로 들어가 가리지 않습니다 */
