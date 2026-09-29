@@ -1046,15 +1046,16 @@ button,input,select,textarea{font-family:inherit}</style>
     }
   }
   // 앱 셸(window.Native)이 Health Connect 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 레코드마다 시각이 붙어 옴)
+  var hkName="Health Connect"; try{ if(window.Native&&typeof window.Native.platform==="function"&&window.Native.platform()==="ios") hkName="HealthKit"; }catch(e){} // iOS 는 건강 앱(HealthKit)에서 읽습니다 (#47 MN-47-5)
   window.onNativeHealth=function(r){
-    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":"Health Connect 에서 읽지 못했습니다."); return; }
+    if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":hkName+" 에서 읽지 못했습니다."); return; }
     var opts={clock:"health_connect",channel:"health_connect"};
     var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
     if(steps.length) addRead(ICON_STEPS,"걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
-    var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
+    var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 ("+hkName+")",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
     var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
     if(sl.length) addRead(ICON_SLEEP,"수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
-    st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?"Health Connect 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":"Health Connect 값을 읽었습니다.") : "지난 24시간에 Health Connect 기록이 없습니다.");
+    st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?hkName+" 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":hkName+" 값을 읽었습니다.") : "지난 24시간에 "+hkName+" 기록이 없습니다.");
   };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
@@ -1655,7 +1656,7 @@ button,input,select,textarea{font-family:inherit}</style>
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
   pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden) pullNative(); });
-  window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
+  window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
   function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
   function esc(x){ return String(x).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -1742,7 +1743,7 @@ button,input,select,textarea{font-family:inherit}</style>
   // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
   if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
   try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){ record(q.get("mnmd"),{id:q.get("id")||"",name:q.get("name")||"",time:q.get("time")||""}); history.replaceState(null,"",location.pathname); } }catch(e){}
-  window.MediNoteMeds={open:open,log:log};
+  window.MediNoteMeds={open:open,log:log,pull:pullNative}; // pull: iOS 셸이 기록을 올린 뒤 부릅니다 (#47 MN-47-3)
 })();
 </script>
 <!-- ===== /복약 알림 레이어 ===== -->

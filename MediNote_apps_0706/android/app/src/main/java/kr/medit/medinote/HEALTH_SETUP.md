@@ -2,20 +2,17 @@
 
 ## 구조 (합법적 설계)
 - 건강 센서 데이터(걸음·심박)는 '민감정보'입니다.
-- 이 매니저(HealthConnectManager · HealthKitManager)는 데이터를 **서버로 보내지
-  않고**, 기기 안에서 읽어 **로컬에서만 계산**하도록 설계했습니다.
+- 이 매니저(HealthConnectManager · HealthKitManager)는 기기 안(Health Connect / HealthKit)에서 읽어
+  웹 화면에 넘기기만 합니다. 서버로 가는 규칙은 웹 화면에 있습니다 (CLAUDE.md §3 · #33 MN-33-1).
 - 사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
 - 로그인(Google·카카오·네이버)과 건강 데이터는 **완전히 분리**되어 있습니다.
 
-> ⚠️ **지금 앱 전체가 그렇다는 뜻은 아닙니다.**
-> 이 두 매니저는 **아직 화면에 연결돼 있지 않습니다** (MainActivity·ContentView 가
-> WebView 만 띄우고, 자바스크립트 다리가 없습니다). 실제로 동작하는 건강 기능은
-> 웹 화면의 **블루투스(BLE) 읽기**이고, 거기에는 「읽은 값 클라우드에 저장」 단추가
-> 있어 값이 Supabase `measurements` 로 **올라갑니다.**
->
-> 즉 지금은 경로가 둘입니다 — 설계상 로컬 전용(미연결)과, 실제 동작하는 클라우드
-> 저장(동의 후 수동). 어느 쪽으로 갈지는 정해지지 않았습니다.
-> MediNote 이슈에서 다룹니다.
+> **지금 앱 전체가 그렇다는 뜻은 아닙니다.**
+> 두 매니저는 2026-09-25 부터 `window.Native` 다리로 「건강기기 연결」 시트에 이어져 있습니다
+> (안드로이드 MainActivity #27 · iOS ContentView #30). 앱(WebView)에는 블루투스가 없어
+> 「읽은 값 클라우드에 저장」 단추가 생기지 않으므로 읽은 값은 화면 표시만 합니다.
+> 웹(브라우저)의 **블루투스(BLE) 읽기**에는 그 단추가 있어 값이 Supabase `measurements` 로
+> **올라갑니다.** 이 문서의 「~하면 바로 테스트 가능」 줄은 그때(미연결) 목록이고, 지금은 끝났습니다 (#47 MN-47-4).
 
 ## 연동 원리
 워치/밴드 → 폰의 건강 플랫폼(Health Connect / HealthKit) → (동의) → 앱이 로컬에서 읽음
@@ -35,13 +32,13 @@ MainActivity 가 `window.Native` 다리로 HealthConnectManager 를 웹 화면�
    <uses-permission android:name="android.permission.health.READ_STEPS"/>
    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
 3. 테스트 기기에 'Health Connect' 앱 설치(최신 안드로이드는 내장).
-4. HealthConnectManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.
+4. ~~HealthConnectManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.~~ 09-25 에 연결됐습니다 (#27).
 
 ## iOS — 남은 설정 (빌드 직전)
 1. Xcode → Signing & Capabilities → **HealthKit** 추가.
 2. Info.plist 에 사용 목적 문구 추가:
    NSHealthShareUsageDescription = "복약·접종 안내를 돕기 위해 건강 데이터를 읽습니다. 데이터는 기기 안에 있습니다."
-3. HealthKitManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.
+3. ~~HealthKitManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.~~ 09-25 에 연결됐습니다 (#30 · ContentView.swift).
 4. iOS 앱 빌드는 Mac + Xcode 가 필요합니다.
 
 ## 프로토타입 안내
