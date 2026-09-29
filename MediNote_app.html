@@ -975,8 +975,15 @@ button,input,select,textarea{font-family:inherit}</style>
     try{ if(d.byteLength<o+7) return null; var y=d.getUint16(o,true),mo=d.getUint8(o+2),da=d.getUint8(o+3),h=d.getUint8(o+4),mi=d.getUint8(o+5),se=d.getUint8(o+6);
       if(y<2000||y>2100||mo<1||mo>12||da<1||da>31) return null; var t=new Date(y,mo-1,da,h,mi,se).getTime(); return isNaN(t)?null:t; }catch(e){ return null; }
   }
-  // 공통 선 아이콘 · health (❤️ 이모지 대신 — 기기마다 모양이 달라서)
-  var ICON_HEALTH='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/><path d="M7 12h2.5l1.5-2.5 2 5 1.5-2.5H17"/></svg>';
+  // 공통 선 아이콘 (이모지 대신 — 기기마다 모양이 달라서). 세 앱 공통 한 벌과 같은 틀:
+  // viewBox 24 · stroke 2 · 둥근 끝 · currentColor (.mnhw-read .ic 의 var(--brand) 를 따름)
+  function mnIco(d){ return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var ICON_HEALTH=mnIco('<path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/><path d="M7 12h2.5l1.5-2.5 2 5 1.5-2.5H17"/>');
+  var ICON_BATTERY=mnIco('<rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 10.5v3"/><path d="M10 10.5v3"/>');
+  var ICON_TEMP=mnIco('<path d="M14 14.5V5a2 2 0 0 0-4 0v9.5a4 4 0 1 0 4 0z"/><path d="M12 11v6"/><path d="M18 5h2"/><path d="M18 9h2"/>');
+  var ICON_BP=mnIco('<circle cx="9" cy="10" r="6"/><path d="M9 10l2.5-2.5"/><path d="M9 6.5v.5"/><path d="M9 16v1a2 2 0 0 0 2 2h4.5"/><ellipse cx="18.5" cy="19" rx="3" ry="2.5"/>');
+  var ICON_STEPS=mnIco('<path d="M4 16v-2.4C4 11.5 3 10.5 3 8c0-2.7 1.5-6 4.5-6C9.4 2 10 3.8 10 5.5c0 3.1-2 5.7-2 8.7V16a2 2 0 1 1-4 0z"/><path d="M20 20v-2.4c0-2.1 1-3.1 1-5.6 0-2.7-1.5-6-4.5-6C14.6 6 14 7.8 14 9.5c0 3.1 2 5.7 2 8.7V20a2 2 0 1 0 4 0z"/><path d="M16 17h4"/><path d="M4 13h4"/>');
+  var ICON_SLEEP=mnIco('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/><path d="M17 3h3l-3 4h3"/>');
   function addRead(icon,label,val,metrics,devTs,opts){
     // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
     // devTs: 기기 시계가 준 잰 시각. 있으면 그것이 effective_time, 없으면 폰이 받은 시각
@@ -998,19 +1005,19 @@ button,input,select,textarea{font-family:inherit}</style>
       var server=await dev.gatt.connect();
       st((dev.name||"기기")+" 연결됨 · 값 읽는 중…");
       try{ var bs=await server.getPrimaryService("battery_service"); var bc=await bs.getCharacteristic("battery_level"); var bv=await bc.readValue(); var bl=bv.getUint8(0);
-        addRead("🔋","기기 배터리",bl+"%",[{metric:"device_battery",value_num:bl,unit:"%"}]); }catch(_){}
+        addRead(ICON_BATTERY,"기기 배터리",bl+"%",[{metric:"device_battery",value_num:bl,unit:"%"}]); }catch(_){}
       try{ var hs=await server.getPrimaryService("heart_rate"); var hc=await hs.getCharacteristic("heart_rate_measurement"); await hc.startNotifications();
         hc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var hr=(f&1)?d.getUint16(1,true):d.getUint8(1);
           addRead(ICON_HEALTH,"심박수",hr+" bpm",[{metric:"heart_rate",value_num:hr,unit:"/min"}]); }); }catch(_){}
       try{ var ts=await server.getPrimaryService("health_thermometer"); var tc=await ts.getCharacteristic("temperature_measurement"); await tc.startNotifications();
         tc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; var f=d.getUint8(0); var mant=d.getUint8(1)|(d.getUint8(2)<<8)|(d.getUint8(3)<<16); if(mant>=0x800000) mant-=0x1000000; var exp=d.getInt8(4); var t=mant*Math.pow(10,exp);
           if(f&1) t=(t-32)*5/9; /* 화씨로 오는 기기 */ var ts=(f&2)?readTs(d,5):null;
-          addRead("🌡️","체온",t.toFixed(1)+" ℃"+(ts?" · 기기 시계":""),[{metric:"body_temperature",value_num:Math.round(t*10)/10,unit:"Cel"}],ts); }); }catch(_){}
+          addRead(ICON_TEMP,"체온",t.toFixed(1)+" ℃"+(ts?" · 기기 시계":""),[{metric:"body_temperature",value_num:Math.round(t*10)/10,unit:"Cel"}],ts); }); }catch(_){}
       try{ var ps=await server.getPrimaryService("blood_pressure"); var pc=await ps.getCharacteristic("blood_pressure_measurement"); await pc.startNotifications();
         pc.addEventListener("characteristicvaluechanged",function(ev){ var d=ev.target.value; function sf(o){ var v=d.getUint16(o,true); var m=v&0x0FFF; if(m>=0x0800)m-=0x1000; var e=v>>12; if(e>=0x8)e-=0x10; return m*Math.pow(10,e); }
           var f=d.getUint8(0); var sy=Math.round(sf(1)), di=Math.round(sf(3)); var off=7; var ts=null; if(f&2){ ts=readTs(d,off); off+=7; } var pr=(f&4&&d.byteLength>=off+2)?Math.round(sf(off)):null;
           var rows=[{metric:"sbp",value_num:sy,unit:"mm[Hg]"},{metric:"dbp",value_num:di,unit:"mm[Hg]"}]; if(pr) rows.push({metric:"heart_rate",value_num:pr,unit:"/min"});
-          addRead("🩸","혈압",sy+"/"+di+" mmHg"+(pr?" · 맥박 "+pr:"")+(ts?" · 기기 시계":""),rows,ts); }); }catch(_){}
+          addRead(ICON_BP,"혈압",sy+"/"+di+" mmHg"+(pr?" · 맥박 "+pr:"")+(ts?" · 기기 시계":""),rows,ts); }); }catch(_){}
       st("값을 읽었습니다. 안 나오는 항목은 그 기기가 지원하지 않는 것입니다.");
     }catch(e){
       var m=(e&&e.message)||String(e);
@@ -1028,10 +1035,10 @@ button,input,select,textarea{font-family:inherit}</style>
     if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":"Health Connect 에서 읽지 못했습니다."); return; }
     var opts={clock:"health_connect",channel:"health_connect"};
     var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
-    if(steps.length) addRead("🚶","걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
+    if(steps.length) addRead(ICON_STEPS,"걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
     var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 (Health Connect)",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
     var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
-    if(sl.length) addRead("😴","수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
+    if(sl.length) addRead(ICON_SLEEP,"수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
     st(steps.length||hr.length||sl.length ? "Health Connect 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다." : "지난 24시간에 Health Connect 기록이 없습니다.");
   };
   var LOCAL_KEY="medinote:hw:local";
