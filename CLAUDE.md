@@ -80,10 +80,14 @@ QA-tool 에는 무엇을 알아냈는지만 적습니다.
 AI 도우미 · AI 채움     묻는 순간 나갑니다 — 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
                        → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 서버에는 토큰 수만 남습니다
 생년월일               Google 로그인 때 Google People API 에서 받아 와 health_profiles 로
-Health Connect·HealthKit  매니저는 있으나 어느 화면에서도 불리지 않습니다
+Health Connect (안드로이드 앱만)  「건강기기 연결」 시트에서 걸음·심박·수면(지난 24시간)을 읽어 화면에 보여 줍니다
+                       「읽은 값 클라우드에 저장」을 누르면 심박(마지막 값 1개)만 → Supabase measurements
+                       걸음·수면은 화면 표시만. 비로그인이면 기기 localStorage medinote:hw:local 에만
+HealthKit (iOS)        매니저는 있으나 어느 화면에서도 불리지 않습니다
 ```
 
 세 줄(증상 기록 · AI 도우미 · 생년월일)은 2026-09-24 에 확인해 더한 것입니다 (#22).
+Health Connect 줄은 2026-09-28 에 `MediNote_app.html` 의 `onNativeHealth` · `toRows` 를 읽고 고쳤습니다.
 **AI 도우미 경로는 개인정보처리방침(PRIVACY.md)에 아직 없습니다** — MN-22-2.
 
 **「서버로 보내지 않습니다」·「기기를 떠나지 않습니다」라고 쓰지 마세요.** 사실이 아닙니다.
