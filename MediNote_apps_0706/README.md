@@ -87,7 +87,7 @@ MediNote_apps_0706/
 
 길은 두 가지이고, 어느 쪽인지는 결정이 필요합니다 (#20).
 - **Android** — WebView 대신 **TWA(Trusted Web Activity)** 로 감싸면 Chrome 이 실행하므로 세 기능이 웹앱과 같아집니다.
-- **iOS** — 같은 방법이 없습니다. CoreBluetooth · HealthKit · 네이티브 로그인 브리지를 따로 만들어야 합니다.
+- **iOS** — 같은 방법이 없습니다. HealthKit 다리는 있습니다(`ContentView.swift` · #30). CoreBluetooth · 네이티브 로그인 브리지는 따로 만들어야 합니다.
 
 ## 건강 데이터 연동 (합법적 설계)
 
@@ -96,8 +96,9 @@ MediNote_apps_0706/
   웹 화면에 넘기기만 합니다. 서버로 가는 것은 사용자가 「클라우드에 저장」을 눌렀을 때의 심박뿐이고,
   그 규칙은 웹 화면(`measurements` · `metric_defs`)에 있습니다 (#33 MN-33-1).
   사용자 동의는 OS 권한 화면으로 **별도** 수령합니다.
-- **다만 이 두 매니저는 아직 화면에 연결돼 있지 않습니다.** 지금 실제로 도는 건강
-  기능은 웹 화면의 블루투스 읽기이고, 거기에는 클라우드 저장 단추가 있습니다.
+- 두 매니저는 「건강기기 연결」 시트의 「앱에서 Health Connect / 건강(HealthKit) 읽기」 단추에
+  `window.Native.requestHealth()` 로 이어져 있습니다 (#27 · #30). 앱(WebView)에는 블루투스가 없어
+  클라우드 저장 단추가 생기지 않으므로, 읽은 값은 화면 표시만 합니다 (CLAUDE.md §3 · #46).
   자세한 것은 `android/.../HEALTH_SETUP.md` 를 보세요.
 - 로그인(Google·카카오·네이버)과 건강 데이터는 **완전히 분리**되어 있습니다.
 - 남은 설정과 연동 원리는 `android/app/src/main/java/kr/medit/medinote/HEALTH_SETUP.md` 참고.

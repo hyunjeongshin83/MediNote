@@ -11,6 +11,8 @@ import HealthKit
 // 안드로이드 셸(MainActivity.kt)과 같은 다리(window.Native)를 놓습니다.
 //   platform() · healthAvailable() · requestHealth() · readHealth()   → HealthKitManager (걸음·심박·수면)
 //   medsNative() · scheduleMeds(json) · medsLogTake()                  → MedNotifier (복약 알림 · 앱을 닫아도 울림)
+//   알림 단추(복용했어요)는 앱이 꺼져 있어도 받아야 하므로 알림 센터 delegate 는 MediNoteApp 의 AppDelegate 가
+//   앱이 뜨는 순간 겁니다 — 여기(makeUIView)서 거는 것으로는 늦습니다 (#47 MN-47-2)
 // 값은 기기 안에서만 씁니다. 「클라우드에 저장」은 웹 화면에서 사용자가 눌렀을 때만 갑니다.
 //
 // 아직 안 되는 것: Google 로그인(OAuth)은 file:// 안에서 돌아오지 못합니다 (#20 MN-20-2 — 배포 주소가 정해져야 합니다).
@@ -133,8 +135,11 @@ enum NativeBridge {
             readHealth: function(){ post({fn:"readHealth"}); },
             medsNative: function(){ return true; },
             scheduleMeds: function(j){ post({fn:"scheduleMeds", json:String(j)}); },
-            medsLogTake: function(){ var s = window.__mnMedsLog || "[]"; window.__mnMedsLog = "[]"; post({fn:"medsLogAck"}); return s; },
-            exactAlarmAllowed: function(){ return true; }
+            // 빈 것을 가져갈 때는 지우라고 하지 않습니다 — 화면이 먼저 (빈 값을) 가져가고 그 뒤 didFinish 가 기록을 올리므로,
+            // 빈 가져가기에도 지우면 앱이 닫혀 있는 동안 누른 「복용했어요」가 올라오기 전에 사라집니다 (#47 MN-47-3)
+            medsLogTake: function(){ var s = window.__mnMedsLog || "[]"; window.__mnMedsLog = "[]"; if (s !== "[]") post({fn:"medsLogAck"}); return s; },
+            exactAlarmAllowed: function(){ return true; },
+            openExactAlarmSettings: function(){}
           };
         })();
         """

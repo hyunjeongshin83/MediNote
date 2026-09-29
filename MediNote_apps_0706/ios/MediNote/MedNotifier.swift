@@ -12,6 +12,8 @@ import WebKit
 
  알림의 「복용했어요」·「10분 뒤」는 여기서 받아 기록(UserDefaults)에 남기고,
  웹이 열리면 window.__mnMedsLog 로 넘겨 웹의 기록에 합쳐집니다 (Native.medsLogTake).
+ 앱이 꺼진 채로 단추를 누르면 iOS 가 앱을 뒤에서 띄워 didReceive 를 부르는데, 그때 delegate 가 이미 걸려 있어야
+ 합니다 — MediNoteApp 의 AppDelegate 가 앱이 뜨는 순간 MedNotifier.shared 를 만듭니다 (#47 MN-47-2).
 */
 final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     static let shared = MedNotifier()
@@ -139,7 +141,8 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
               let q = String(data: quoted, encoding: .utf8) else { return }
         // ["..."] 에서 바깥 대괄호를 벗겨 JS 문자열 리터럴로 씁니다
         let lit = String(q.dropFirst().dropLast())
-        js("window.__mnMedsLog=\(lit)")
+        // 올린 뒤 바로 가져가게 합니다 — 안 그러면 다음 visibilitychange 까지 기록이 화면에 안 보입니다 (#47 MN-47-3)
+        js("window.__mnMedsLog=\(lit); window.MediNoteMeds && window.MediNoteMeds.pull && window.MediNoteMeds.pull();")
     }
 
     private func js(_ code: String) {
