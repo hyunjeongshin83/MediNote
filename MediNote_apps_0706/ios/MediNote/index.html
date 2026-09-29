@@ -56,7 +56,7 @@
     var sent = {};
     try{ sent = (typeof opts.body === "string") ? JSON.parse(opts.body) : (opts.body || {}); }catch(e){}
 
-    // [[NOCARD]] 는 앱 내부 자동채움용 — 웹검색 없이 원래 지시문을 그대로 쓴다.
+    // [[NOCARD]] 는 앱 내부 자동채움(AI 채움) 표시 — 지시문은 서버(ai-helper)에만 있고 앱은 mode 이름만 보낸다 (#44 MN-44-1).
     var sys = (typeof sent.system === "string") ? sent.system : "";
     var internal = sys.indexOf("[[NOCARD]]") > -1;
 
@@ -67,9 +67,9 @@
         return { role: m && m.role, content: String(c == null ? "" : c) };
       }),
       max_tokens: sent.max_tokens,
-      web_search: !internal
+      web_search: !internal,
+      mode: internal ? "fill" : "helper"
     };
-    if(internal || sys) payload.system = sys;
     if(!internal && window.MediNoteHelperContext){
       try{ payload.context = window.MediNoteHelperContext(); }catch(e){}
     }
@@ -1757,10 +1757,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     var sym=(el("mnsy-sym").value||"").trim();
     if(!meds.length && !sym){ el("mnsy-hint").innerHTML='먼저 <b>증상</b>을 적어 주시면, 관련 있는 약을 더 잘 골라 드려요.'; return; }
     var btn=el("mnsy-ai"); btn.disabled=true; var old=btn.textContent; btn.textContent="채우는 중…";
-    var sysP="[[NOCARD]] 너는 복약 기록 정리 도우미다. 처방·진단은 하지 않는다. "+
-      "사용자의 오늘 증상과 복용 약 목록을 보고, 그 증상과 관련 있을 만한 약만 골라 관련약으로 정리한다. "+
-      "판정·처방 표현은 쓰지 않는다. 반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). "+
-      '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
+    // 지시문은 서버(ai-helper 의 SYSTEM_FILL)에 있다. 여기 표시는 viaHelper 가 mode:"fill" 로 바꿔 보내는 신호일 뿐이다 (#44 MN-44-1).
+    var sysP="[[NOCARD]]";
     var usr="오늘 증상: "+(sym||"(미입력)")+"\n복용 중인 약(복약정보 히스토리): "+(meds.length?meds.join(", "):"(기록 없음)");
     var body={model:"claude-fable-5",max_tokens:400,system:sysP,messages:[{role:"user",content:usr}]};
     fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
