@@ -86,7 +86,14 @@ Health Connect (안드로이드 앱만)  「건강기기 연결」 시트에서 
 HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽기」를 누르면 걸음·심박·수면을 읽어 화면에 보여 줍니다
                        (ContentView.swift 가 Native.requestHealth 를 HealthKitManager 로 잇습니다 · #30)
                        안드로이드와 같이 앱에는 저장 단추가 없어 서버로 가지 않습니다
+글꼴                   앱을 열 때마다 fonts.googleapis.com(Gaegu · Nanum Pen Script) · cdn.jsdelivr.net(Pretendard) 에 접속합니다
+                       건강 데이터는 안 가지만 IP·기기 정보가 Google·jsDelivr 에 남습니다. 개인정보처리방침에 아직 없습니다 (#51)
+푸시 구독              「접종 시기 알림」을 켜면 브라우저의 푸시 서비스(Chrome 은 Google FCM · Safari 는 Apple) 주소와 열쇠가
+                       → Supabase push_subscriptions (비로그인도 등록됨 · uid 없음). 보내는 쪽 소스는 저장소에 없습니다 (#16 MN-16-5)
 ```
+
+**바깥으로 나가는 주소의 장부는 `tools/egress-check.py`** 입니다. 새 주소를 부르려면 거기에 「왜」를 적어야 CI 가 통과합니다.
+앱은 `api.anthropic.com` 을 직접 부르지 않습니다 — 엣지 함수 `ai-helper` 만 부릅니다 (#44 · #51).
 
 세 줄(증상 기록 · AI 도우미 · 생년월일)은 2026-09-24 에 확인해 더한 것입니다 (#22).
 Health Connect 줄은 2026-09-28 에 `onNativeHealth` · `toRows` 를 읽고 고쳤고, 09-29 에 앱에는 저장 단추가 없다는 것(#46 Codex)을 반영했습니다.

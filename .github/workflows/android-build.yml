@@ -59,6 +59,10 @@ jobs:
       - name: 사실이 아닌 문구가 없는지
         run: python3 tools/phrase-check.py
 
+      # 앱이 바깥으로 접속하는 주소가 장부(tools/egress-check.py)와 같은지 — api.anthropic.com 직접 호출은 금지 (#51 MN-51-2)
+      - name: 바깥 주소가 장부와 같은지
+        run: python3 tools/egress-check.py
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

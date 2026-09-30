@@ -85,15 +85,10 @@
     }
   }
 
-  if(_fetch){
-    window.fetch = function(url, opts){
-      try{
-        var u = (typeof url==="string") ? url : (url && url.url) || "";
-        if(u.indexOf("api.anthropic.com")>-1) return viaHelper(opts || {});
-      }catch(e){}
-      return _fetch(url, opts);
-    };
-  }
+  // 앱의 AI 호출은 전부 이 이름을 부릅니다. 전에는 window.fetch 를 가로채 「api.anthropic.com」 을 부르는 코드를
+  // 서버(ai-helper)로 돌렸는데, 가로채기가 안 걸리면 건강 데이터가 열쇠도 없이 미국으로 바로 나갔습니다 (#51 MN-51-1).
+  // 이제 앱 어디에도 그 주소가 없고, tools/egress-check.py 가 CI 에서 새로 들어오는 것을 막습니다 (MN-51-2).
+  window.MediNoteAI = { messages: function(opts){ return viaHelper(opts || {}); } };
 
   // 개인 키를 받던 통로는 없앤다. 예전 키가 남아 있으면 지운다.
   try{ localStorage.removeItem("medit:apikey"); }catch(e){}
@@ -722,7 +717,7 @@ button,input,select,textarea{font-family:inherit}</style>
 5. For side effects, separate common from rare-serious; for serious reactions advise contacting 1339 or a medical facility.`;
       const history = [...msgs, { role: "user", text: question }].map((m) => ({ role: m.role, content: m.text }));
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-fable-5", max_tokens: 1e3, system, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }) });
+        const res = await window.MediNoteAI.messages({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-fable-5", max_tokens: 1e3, system, messages: history, tools: [{ type: "web_search_20250305", name: "web_search" }] }) });
         const data = await res.json();
         const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
         const used = (data.content || []).some((b) => b.type === "server_tool_use" || b.type === "web_search_tool_result");
@@ -1448,7 +1443,7 @@ button,input,select,textarea{font-family:inherit}</style>
     var sysP="[[NOCARD]]";
     var usr="오늘 증상: "+(sym||"(미입력)")+"\n복용 중인 약(복약정보 히스토리): "+(meds.length?meds.join(", "):"(기록 없음)");
     var body={model:"claude-fable-5",max_tokens:400,system:sysP,messages:[{role:"user",content:usr}]};
-    fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    window.MediNoteAI.messages({method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
       .then(function(r){ return r.json(); })
       .then(function(d){
         var t=""; try{ t=(d.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n"); }catch(e){}
