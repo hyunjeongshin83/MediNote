@@ -49,10 +49,10 @@
 
 | id | 이슈 | 무엇 | 커밋 |
 |---|---|---|---|
-| `MN-57-1` | #57 | window.fetch 가로채기 + "api.anthropic.com" 문자열 비교라, #52 뒤로 카드 레이어가 아무 요청도 못 잡음 (DB 예시 카드 즉시 표시 멈춤) | `23b4469` |
-| `MN-57-2` | #57 | STORE-LISTING 「쓰지 않는 낱말」을 지키는 검사가 없음 | `23b4469` |
-| `MN-57-3` | #57 | 두 스토어 2026 요건과 데이터 안전 칸 답안이 문서에 없음 | `23b4469` |
-| `MN-57-4` | #57 | Health Connect 주석이 「심박만 Supabase 로」 — 앱에는 저장 단추가 없어 사실이 아님 (#46) | `23b4469` |
+| `MN-57-1` | #57 | window.fetch 가로채기 + "api.anthropic.com" 문자열 비교라, #52 뒤로 카드 레이어가 아무 요청도 못 잡음 (DB 예시 카드 즉시 표시 멈춤) | `9d05204` |
+| `MN-57-2` | #57 | STORE-LISTING 「쓰지 않는 낱말」을 지키는 검사가 없음 | `9d05204` |
+| `MN-57-3` | #57 | 두 스토어 2026 요건과 데이터 안전 칸 답안이 문서에 없음 | `9d05204` |
+| `MN-57-4` | #57 | Health Connect 주석이 「심박만 Supabase 로」 — 앱에는 저장 단추가 없어 사실이 아님 (#46) | `9d05204` |
 | `MN-55-1` | #55 | 「빠른 체험」이 기기 번호 g_ 를 만드는 대신, 설정 `medinote.config.js` 의 `anonAuth: true` 일 때만 `sb.auth.signInAnonymously()` 로 진짜 계정을 받게 (기본값 false — 지금 동작 그대로) | `dd03d9f` |
 | `MN-55-2` | #55 | 익명 사용자가 meetings · meeting_sessions · meeting_records · meeting_connections 와 hub_state 의 medit:% 키에 닿지 못하게 하는 RESTRICTIVE 정책을 파일로 준비 (is_anonymous = false 요구) | `dd03d9f` |
 | `MN-51-1` | #51 | AI 호출 두 곳이 api.anthropic.com 을 부르는 코드로 남아 window.fetch 가로채기에 기대고 있었습니다. 가로채기가 풀리면 건강 데이터가 열쇠 없이 미국으로 바로 나갑니다 | `99e6a37` |
