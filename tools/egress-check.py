@@ -33,8 +33,15 @@ FORBIDDEN = {
     "api.anthropic.com": "앱에서 직접 부르면 건강 데이터가 서버 규칙 없이 미국으로 나갑니다 — 반드시 ai-helper 경유 (#44 MN-44-1 · #51 MN-51-1)",
 }
 
+HOST = r'([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,})'
+
 def hosts_in(text):
-    return set(re.findall(r'https?://([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text))
+    # 1) 통째로 적힌 주소: https://host/...
+    hosts = set(re.findall(r'https?://' + HOST, text))
+    # 2) 조각으로 이어 붙이는 주소: "https://" + REF + ".supabase.co"  (#52 Sourcery)
+    #    따옴표 안이 「.도메인」 꼴이면 호스트 꼬리로 봅니다 — 장부에는 꼬리(supabase.co)가 적혀 있습니다
+    hosts |= set(re.findall(r'["\']\.' + HOST + r'["\']', text))
+    return hosts
 
 def main():
     found = {}
