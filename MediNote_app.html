@@ -2022,7 +2022,16 @@ button,input,select,textarea{font-family:inherit}</style>
     ["mnlg-email","mnlg-pw"].forEach(function(id){ el(id).addEventListener("input",function(){ invalid(id,false); }); });
     el("mnlg-google").onclick=googleLogin;
     el("mnlg-quicktoggle").onclick=function(){ var q=el("mnlg-quick"); q.style.display=(q.style.display==="none")?"block":"none"; };
-    el("mnlg-start").onclick=function(){ var v=(el("mnlg-id").value||"").trim().replace(/\s+/g,""); if(!v){ el("mnlg-id").focus(); return; } setUid(v); close(); };
+    el("mnlg-start").onclick=function(){ var v=(el("mnlg-id").value||"").trim().replace(/\s+/g,"");
+      var cfg=window.MEDINOTE_CONFIG||{};
+      if(cfg.anonAuth===true&&sb&&sb.auth&&sb.auth.signInAnonymously){
+        /* MN-55-1 — medinote.config.js 의 anonAuth 가 true 일 때만: 기기 번호 대신 익명 계정(진짜 uid)으로.
+           나중에 Google·이메일을 붙이면 같은 계정이 된다. 실패하면 지금까지의 아이디 길 그대로. */
+        sb.auth.signInAnonymously().then(function(r){ if(r&&r.error) throw r.error; close(); })
+          .catch(function(){ if(!v){ el("mnlg-id").focus(); return; } setUid(v); close(); });
+        return;
+      }
+      if(!v){ el("mnlg-id").focus(); return; } setUid(v); close(); };
     el("mnlg-out").onclick=logout;
     el("mnlg-x").onclick=close;
   }

@@ -16,6 +16,9 @@
     ref: REF,
     url: "https://" + REF + ".supabase.co",
     functionsUrl: "https://" + REF + ".functions.supabase.co",
-    key: KEY
+    key: KEY,
+    /* 「빠른 체험」을 기기 번호(g_) 대신 익명 계정(signInAnonymously)으로 — #55 MN-55-1.
+       true 로 바꾸기 전에 MN-55-2 정책 적용 · 대시보드에서 Anonymous sign-ins · Manual linking · Turnstile (MN-55-3). */
+    anonAuth: false
   };
 })();
