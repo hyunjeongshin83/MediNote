@@ -47,8 +47,8 @@
 
 | id | 이슈 | 무엇 | 커밋 |
 |---|---|---|---|
-| `MN-55-1` | #55 | 「빠른 체험」이 기기 번호 g_ 를 만드는 대신, 설정 `medinote.config.js` 의 `anonAuth: true` 일 때만 `sb.auth.signInAnonymously()` 로 진짜 계정을 받게 (기본값 false — 지금 동작 그대로) | `bef5b55` |
-| `MN-55-2` | #55 | 익명 사용자가 meetings · meeting_sessions · meeting_records · meeting_connections 와 hub_state 의 medit:% 키에 닿지 못하게 하는 RESTRICTIVE 정책을 파일로 준비 (is_anonymous = false 요구) | `bef5b55` |
+| `MN-55-1` | #55 | 「빠른 체험」이 기기 번호 g_ 를 만드는 대신, 설정 `medinote.config.js` 의 `anonAuth: true` 일 때만 `sb.auth.signInAnonymously()` 로 진짜 계정을 받게 (기본값 false — 지금 동작 그대로) | `dd03d9f` |
+| `MN-55-2` | #55 | 익명 사용자가 meetings · meeting_sessions · meeting_records · meeting_connections 와 hub_state 의 medit:% 키에 닿지 못하게 하는 RESTRICTIVE 정책을 파일로 준비 (is_anonymous = false 요구) | `dd03d9f` |
 | `MN-51-1` | #51 | AI 호출 두 곳이 api.anthropic.com 을 부르는 코드로 남아 window.fetch 가로채기에 기대고 있었습니다. 가로채기가 풀리면 건강 데이터가 열쇠 없이 미국으로 바로 나갑니다 | `99e6a37` |
 | `MN-51-2` | #51 | 앱이 부르는 바깥 주소의 목록이 어디에도 없어, 새 주소(글꼴 CDN 처럼)가 들어와도 아무도 모릅니다 | `99e6a37` |
 | `MN-49-1` | #49 | 「서버로 보내지 않습니다」류 문구를 09-19 뒤 네 번 따로 고쳤습니다 — 규칙은 있는데 검사가 없습니다 | `d5c60bc` |
