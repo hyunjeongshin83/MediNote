@@ -6,6 +6,7 @@ CLAUDE.md §3 과 PRIVACY.md 가 이 목록을 따르게 합니다. 새 주소�
 
     python3 tools/egress-check.py          장부 밖 주소가 있으면 1
     python3 tools/egress-check.py --list   지금 코드에 있는 주소 전부
+    python3 tools/egress-check.py --selftest   이어 붙인 주소 꼴을 잡는지 (#54 Codex)
 
 보는 파일: MediNote_app.html · MediNote.sw.js · medinote.config.js (앱 화면 사본 3벌은 MediNote_app.html 과 같아야 하므로 뺍니다)
 """
@@ -35,15 +36,37 @@ FORBIDDEN = {
 
 HOST = r'([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,})'
 
+Q = r'["\'`]'
 def hosts_in(text):
     # 1) 통째로 적힌 주소: https://host/...
     hosts = set(re.findall(r'https?://' + HOST, text))
     # 2) 조각으로 이어 붙이는 주소: "https://" + REF + ".supabase.co"  (#52 Sourcery)
-    #    따옴표 안이 「.도메인」 꼴이면 호스트 꼬리로 봅니다 — 장부에는 꼬리(supabase.co)가 적혀 있습니다
-    hosts |= set(re.findall(r'["\']\.' + HOST + r'["\']', text))
+    #    + 뒤에 따옴표로 「.도메인」 꼴이 오면 호스트 꼬리로 봅니다 — 장부에는 꼬리(supabase.co)가 적혀 있습니다.
+    #    + 없이 홀로 있는 ".modal.open" 같은 선택자는 안 잡습니다 (#54 Codex)
+    hosts |= set(re.findall(r'\+\s*' + Q + r'\.' + HOST + Q, text))
+    # 3) 규약 바로 뒤에 호스트를 통째로 이어 붙인 것: "https://" + "api.anthropic.com"  (#54 Codex)
+    hosts |= set(re.findall(r'https?://' + Q + r'\s*\+\s*' + Q + HOST, text))
+    # 4) 템플릿 문자열: `https://${ref}.supabase.co`
+    hosts |= set(re.findall(r'https?://\$\{[^}]*\}\.' + HOST, text))
     return hosts
 
+SELFTEST = [   # (코드 조각, 잡혀야 하는 호스트)
+    ('fetch("https://api.example.com/x")',               {"api.example.com"}),
+    ('"https://" + REF + ".supabase.co"',                {"supabase.co"}),
+    ('"https://" + "api.anthropic.com" + "/v1"',         {"api.anthropic.com"}),
+    ("'https://' + 'api.anthropic.com'",                 {"api.anthropic.com"}),
+    ('`https://${ref}.functions.supabase.co/ai-helper`', {"functions.supabase.co"}),
+    ('document.querySelector(".modal.open")',            set()),
+    ('el.classList.add("is.open")',                      set()),
+]
+def selftest():
+    bad = [(c, hosts_in(c), want) for c, want in SELFTEST if hosts_in(c) != want]
+    for c, got, want in bad: print(f"selftest 실패: {c!r} → {sorted(got)} (기대 {sorted(want)})")
+    print(f"egress-check --selftest: {len(SELFTEST) - len(bad)}/{len(SELFTEST)}")
+    return 1 if bad else 0
+
 def main():
+    if "--selftest" in sys.argv: return selftest()
     found = {}
     for f in FILES:
         p = ROOT / f
