@@ -1689,14 +1689,14 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       '<div class="hd"><span class="em">오늘 증상 기록</span>'+
         '<button class="cl" id="mnsy-x" aria-label="닫기">×</button></div>'+
       '<div class="sub">오늘 몸 상태를 짧게 남겨 두면, 다음 진료·상담 때 그대로 보여 드릴 수 있어요.</div>'+
-      '<label>날짜</label><input id="mnsy-date" type="date">'+
-      '<label>정도</label><div class="sev" id="mnsy-sev"></div>'+
-      '<label>증상</label><input id="mnsy-sym" placeholder="예: 콧물, 두통, 기운 없음">'+
-      '<label>관련 약 <span style="font-weight:600;color:#577377">· 복약정보에서 자동으로 채워요</span></label>'+
-      '<div id="mnsy-rxwrap"><input id="mnsy-rx" placeholder="복용 중인 약 (자동 채움)">'+
+      '<label for="mnsy-date">날짜</label><input id="mnsy-date" type="date">'+
+      '<label id="mnsy-sev-lb">정도</label><div class="sev" id="mnsy-sev" role="group" aria-labelledby="mnsy-sev-lb"></div>'+
+      '<label for="mnsy-sym">증상</label><input id="mnsy-sym" type="text" placeholder="예: 콧물, 두통, 기운 없음">'+
+      '<label for="mnsy-rx">관련 약 <span style="font-weight:600;color:#577377">· 복약정보에서 자동으로 채워요</span></label>'+
+      '<div id="mnsy-rxwrap"><input id="mnsy-rx" type="text" placeholder="복용 중인 약 (자동 채움)">'+
         '<button id="mnsy-ai" type="button">AI 채움</button></div>'+
       '<div id="mnsy-hint"></div>'+
-      '<label>메모 <span style="font-weight:600;color:#577377">· 선택</span></label>'+
+      '<label for="mnsy-memo">메모 <span style="font-weight:600;color:#577377">· 선택</span></label>'+
       '<textarea id="mnsy-memo" placeholder="언제부터, 어떤 상황에서 그런지 등"></textarea>'+
       '<button id="mnsy-save">이 증상 기록하기</button>'+
       '<button id="mnsy-toreport" type="button" style="width:100%;margin-top:9px;font-family:inherit;font-weight:700;font-size:var(--fs-sub);color:var(--brand);background:#fff;border:1.5px solid var(--brand-soft);border-radius:16px;padding:12px 0;cursor:pointer;">기록으로 신고·공유하기</button>'+
@@ -2008,8 +2008,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       (NATIVE && typeof window.Native.exactAlarmAllowed==="function" && !window.Native.exactAlarmAllowed() ? '<div class="mnhw-note">정확한 시각에 울리려면 폰 설정에서 「알람 및 리마인더」를 허용해 주세요. <button type="button" class="mnhw-btn" id="mnmdExact" style="margin-top:6px">설정 열기</button></div>' : '')+
       '<label class="mnmd-chk"><input type="checkbox" id="mnmdOn"'+(sc.on?" checked":"")+'> 복약 알림 켜기</label>'+
       '<div id="mnmdList"></div>'+
-      '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" placeholder="예: 혈압약"></div>'+
-      '<div class="mnmd-fld"><label>시각 (여러 개 가능)</label><div class="mnmd-chips" id="mnmdChips">'+PRESET.map(function(p){ return '<button type="button" data-t="'+p[1]+'">'+p[0]+' '+p[1]+'</button>'; }).join("")+'</div></div>'+
+      '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" type="text" placeholder="예: 혈압약"></div>'+
+      '<div class="mnmd-fld"><label id="mnmdChips-lb">시각 (여러 개 가능)</label><div class="mnmd-chips" id="mnmdChips" role="group" aria-labelledby="mnmdChips-lb">'+PRESET.map(function(p){ return '<button type="button" data-t="'+p[1]+'">'+p[0]+' '+p[1]+'</button>'; }).join("")+'</div></div>'+
       '<div class="mnmd-fld"><label for="mnmdCustom">직접 시각</label><input type="time" id="mnmdCustom"></div>'+
       '<button class="mnhw-btn" id="mnmdAdd">이 약 알림 추가</button>'+
       '<div class="mnmd-two" style="margin-top:12px"><div class="mnmd-fld"><label for="mnmdQ1">조용한 시간 시작</label><input type="time" id="mnmdQ1" value="'+esc(sc.quiet.from)+'"></div><div class="mnmd-fld"><label for="mnmdQ2">끝</label><input type="time" id="mnmdQ2" value="'+esc(sc.quiet.to)+'"></div></div>'+
@@ -2344,7 +2344,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       '<div id="mnlg-cur"></div>'+
       '<div id="mnlg-forms">'+
         '<div class="mnlg-tabs"><button id="mnlg-tab-login" class="on">로그인</button><button id="mnlg-tab-signup">회원가입</button></div>'+
-        '<input id="mnlg-name" placeholder="이름" autocomplete="name" style="display:none">'+
+        '<input id="mnlg-name" type="text" placeholder="이름" autocomplete="name" style="display:none">'+
         '<input id="mnlg-email" type="email" placeholder="이메일" autocomplete="email">'+
         '<input id="mnlg-pw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">'+
         '<button id="mnlg-submit">로그인</button>'+
@@ -2352,7 +2352,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         '<div class="mnlg-or">간편 로그인</div>'+
         '<button class="mnlg-g" id="mnlg-google"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Google로 계속</button>'+
         '<button id="mnlg-quicktoggle" class="mnlg-link">이메일 없이 아이디로 빠른 체험</button>'+
-        '<div id="mnlg-quick" style="display:none"><input id="mnlg-id" placeholder="아이디 (예: hjshin)" autocomplete="off"><button id="mnlg-start" class="mnlg-2nd">이 아이디로 시작</button></div>'+
+        '<div id="mnlg-quick" style="display:none"><input id="mnlg-id" type="text" placeholder="아이디 (예: hjshin)" autocomplete="off" aria-label="아이디"><button id="mnlg-start" class="mnlg-2nd">이 아이디로 시작</button></div>'+
       '</div>'+
       '<button id="mnlg-out">로그아웃</button>'+
       '<div id="mnlg-gerr"></div>'+

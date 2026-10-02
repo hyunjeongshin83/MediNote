@@ -1,0 +1,39 @@
+# 문구·바깥 주소·화면 사본 검사 — 경로 필터 없이 모든 push·PR 에서 돕니다
+#
+# 왜 따로 두나
+#   「안드로이드 APK」 작업은 비싸서 경로 필터가 있고, 그 필터에 README.md · PRIVACY.md ·
+#   docs/STORE-LISTING.md · HEALTH_SETUP.md 가 없었습니다. 그래서 스토어 문구 파일만 고친 PR 은
+#   phrase-check 가 돌지 않은 채 병합될 수 있었습니다 (PR #54 Sourcery · PR #58 Codex 지적).
+#   세 검사는 파이썬 하나로 몇 초면 끝나므로 필터 없이 매번 돕니다. APK 작업의 같은 단계는 그대로 둡니다 —
+#   APK 를 만들기 전 마지막 문턱이기 때문입니다.
+
+name: 문구·주소 검사
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # 7월 사본이 두 달 넘게 웹앱과 달랐던 적이 있습니다 (#12)
+      - name: 앱 화면이 웹앱과 같은지
+        run: python3 tools/build-packaged-app.py --check
+
+      # 「서버로 보내지 않습니다」류 · 사용목적을 뒤집는 낱말 (#49 MN-49-1 · #57 MN-57-2)
+      - name: 사실이 아닌 문구가 없는지
+        run: python3 tools/phrase-check.py
+
+      # 앱이 바깥으로 접속하는 주소가 장부와 같은지 · 이어 붙인 주소 꼴을 잡는지 (#51 MN-51-2 · #54)
+      - name: 바깥 주소가 장부와 같은지
+        run: |
+          python3 tools/egress-check.py --selftest
+          python3 tools/egress-check.py
