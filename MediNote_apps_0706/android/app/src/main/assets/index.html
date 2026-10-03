@@ -1381,7 +1381,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     var hr=(r.heartRate||[]); if(hr.length){ var last=hr[hr.length-1]; addRead(ICON_HEALTH,"심박 ("+hkName+")",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
     var sl=(r.sleep||[]), mins=0, slEnd=null; sl.forEach(function(x){ mins+=(x.minutes||0); if(!slEnd||x.end>slEnd) slEnd=x.end; });
     if(sl.length) addRead(ICON_SLEEP,"수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
-    st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?hkName+" 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":hkName+" 값을 읽었습니다.") : "지난 24시간에 "+hkName+" 기록이 없습니다.");
+    st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?hkName+" 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":hkName+" 값을 읽었습니다.") : "지난 24시간에 "+hkName+" 기록이 없습니다."+(hkName==="HealthKit"?" 읽기를 허용하지 않으셨다면 건강 앱 › 프로필 › 앱 › 메디노트 에서 켤 수 있습니다. (iOS 는 거절해도 앱에 알려 주지 않습니다)":""));
   };
   var LOCAL_KEY="medinote:hw:local";
   function keepLocal(rows){
