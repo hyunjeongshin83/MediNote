@@ -6,10 +6,12 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.request.AggregateGroupByDurationRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -47,17 +49,26 @@ class HealthConnectManager(private val context: Context) {
     suspend fun hasAllPermissions(): Boolean =
         client.permissionController.getGrantedPermissions().containsAll(permissions)
 
-    /** 지난 24시간 걸음 — 레코드별 구간 · 시간대 오프셋 · 개수 */
+    /** 지난 24시간 걸음 — 한 시간 단위 합계 (구간 · 시간대 오프셋 · 개수)
+     *
+     *  readRecords 로 원본 레코드를 받아 더하면 폰(삼성 헬스·Google Fit)과 시계가 같은 걸음을 각자 써서 두 배로 세고,
+     *  한 번에 1,000건까지만 와서 하루치가 조용히 잘립니다. aggregateGroupByDuration 은 Health Connect 가 앱 우선순위로
+     *  겹친 것을 걸러 준 합계라 둘 다 없습니다 (#63 MN-63-1). JSON 모양은 그대로 — 레코드 대신 한 시간 칸입니다. */
     suspend fun readSteps24h(): JSONArray {
         val now = Instant.now()
-        val r = client.readRecords(ReadRecordsRequest(StepsRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
+        val groups = client.aggregateGroupByDuration(AggregateGroupByDurationRequest(
+            metrics = setOf(StepsRecord.COUNT_TOTAL),
+            timeRangeFilter = TimeRangeFilter.between(now.minusSeconds(86_400), now),
+            timeRangeSlicer = Duration.ofHours(1)))
         val arr = JSONArray()
-        r.records.forEach { rec ->
+        groups.forEach { g ->
+            val count = g.result[StepsRecord.COUNT_TOTAL] ?: 0L
+            if (count <= 0L) return@forEach
             arr.put(JSONObject()
-                .put("start", rec.startTime.toEpochMilli())
-                .put("end", rec.endTime.toEpochMilli())
-                .put("zoneOffsetMin", rec.startZoneOffset?.totalSeconds?.div(60) ?: JSONObject.NULL)
-                .put("count", rec.count))
+                .put("start", g.startTime.toEpochMilli())
+                .put("end", g.endTime.toEpochMilli())
+                .put("zoneOffsetMin", g.zoneOffset.totalSeconds / 60)
+                .put("count", count))
         }
         return arr
     }
@@ -79,17 +90,26 @@ class HealthConnectManager(private val context: Context) {
         return arr
     }
 
-    /** 지난 24시간 수면 세션 — 시작 · 끝 · 분 */
+    /** 수면 단계 중 「잠든」 것 — iOS HealthKitManager 가 asleep* 만 세는 것과 같은 기준 (#63 MN-63-3) */
+    private val asleepStages = setOf(
+        SleepSessionRecord.STAGE_TYPE_SLEEPING, SleepSessionRecord.STAGE_TYPE_LIGHT,
+        SleepSessionRecord.STAGE_TYPE_DEEP, SleepSessionRecord.STAGE_TYPE_REM)
+
+    /** 지난 24시간 수면 세션 — 시작 · 끝 · 잠든 분
+     *  단계가 있으면 잠든 단계만 더하고(깨어 있던 시간·침대에 있던 시간 제외), 단계가 없는 세션은 세션 길이 그대로. */
     suspend fun readSleep24h(): JSONArray {
         val now = Instant.now()
         val r = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
         val arr = JSONArray()
         r.records.forEach { rec ->
+            val asleepSec = rec.stages.filter { it.stage in asleepStages }
+                .sumOf { it.endTime.epochSecond - it.startTime.epochSecond }
+            val minutes = if (rec.stages.isEmpty()) (rec.endTime.epochSecond - rec.startTime.epochSecond) / 60 else asleepSec / 60
             arr.put(JSONObject()
                 .put("start", rec.startTime.toEpochMilli())
                 .put("end", rec.endTime.toEpochMilli())
                 .put("zoneOffsetMin", rec.startZoneOffset?.totalSeconds?.div(60) ?: JSONObject.NULL)
-                .put("minutes", (rec.endTime.epochSecond - rec.startTime.epochSecond) / 60))
+                .put("minutes", minutes))
         }
         return arr
     }

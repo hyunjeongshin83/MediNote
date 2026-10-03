@@ -40,16 +40,27 @@ final class HealthKitManager {
     private var zoneOffsetMin: Int { TimeZone.current.secondsFromGMT() / 60 }
     private func ms(_ d: Date) -> Int64 { Int64(d.timeIntervalSince1970 * 1000) }
 
-    /// 지난 24시간 걸음 — 레코드별 구간 · 개수
+    /// 지난 24시간 걸음 — 한 시간 단위 합계 (구간 · 개수)
+    ///
+    /// HKSampleQuery 로 원본 표본을 더하면 아이폰과 Apple Watch 가 같은 걸음을 각자 써서 두 배로 세고, limit 500 에서 잘립니다.
+    /// HKStatisticsCollectionQuery(.cumulativeSum) 은 건강 앱과 같은 방식으로 겹친 출처를 걸러 준 합계입니다 (#63 MN-63-2).
+    /// JSON 모양은 그대로 — 표본 대신 한 시간 칸입니다.
     private func readSteps24h(completion: @escaping ([[String: Any]]) -> Void) {
         guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { completion([]); return }
-        let pred = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-86_400), end: Date())
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-        let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 500, sortDescriptors: [sort]) { _, samples, _ in
-            let rows = (samples as? [HKQuantitySample] ?? []).map { s -> [String: Any] in
-                ["start": self.ms(s.startDate), "end": self.ms(s.endDate),
-                 "zoneOffsetMin": self.zoneOffsetMin,
-                 "count": Int(s.quantity.doubleValue(for: .count()))]
+        let end = Date(), start = end.addingTimeInterval(-86_400)
+        let pred = HKQuery.predicateForSamples(withStart: start, end: end)
+        let cal = Calendar.current
+        let anchor = cal.date(from: cal.dateComponents([.year, .month, .day, .hour], from: start)) ?? start
+        let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: pred,
+                                            options: .cumulativeSum, anchorDate: anchor, intervalComponents: DateComponents(hour: 1))
+        q.initialResultsHandler = { _, results, _ in
+            var rows: [[String: Any]] = []
+            results?.enumerateStatistics(from: start, to: end) { stat, _ in
+                let count = Int((stat.sumQuantity()?.doubleValue(for: .count()) ?? 0).rounded())
+                if count > 0 {
+                    rows.append(["start": self.ms(stat.startDate), "end": self.ms(stat.endDate),
+                                 "zoneOffsetMin": self.zoneOffsetMin, "count": count])
+                }
             }
             completion(rows)
         }
