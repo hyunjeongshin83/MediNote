@@ -1371,7 +1371,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       }
     }
   }
-  // 앱 셸(window.Native)이 Health Connect 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 레코드마다 시각이 붙어 옴)
+  // 앱 셸(window.Native)이 Health Connect·HealthKit 값을 돌려주는 자리 (MN-14-2 · MN-18-4: 항목마다 시각이 붙어 옴 — 걸음은 #63 뒤로 한 시간 칸 합계, 심박은 표본, 수면은 세션)
   var hkName="Health Connect"; try{ if(window.Native&&typeof window.Native.platform==="function"&&window.Native.platform()==="ios") hkName="HealthKit"; }catch(e){} // iOS 는 건강 앱(HealthKit)에서 읽습니다 (#47 MN-47-5)
   window.onNativeHealth=function(r){
     if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":hkName+" 에서 읽지 못했습니다."); return; }
@@ -2088,7 +2088,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
      Esc 는 그 시트의 닫기 단추를 누릅니다(각 레이어의 close() 가 하던 정리를 그대로 태우려고). */
   var WATCH=".mnhw-ov,#mncardOv,#mnsy-sheet,#mnrp-wrap,#mnlg-sheet,#mnin-ios";
   var CLOSE="#mnhwX,#mnmdX,#mncardX,#mnsy-x,#mnrp-x,#mnlg-x,#mnin-iosok,.cl,.x";
-  var FOCUS='button:not([disabled]),[href],input:not([type="hidden"]):not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"]),[role="button"]';
+  var FOCUS='button:not([disabled]),[href],input:not([type="hidden"]):not([disabled]),select,textarea,iframe,[tabindex]:not([tabindex="-1"]),[role="button"]'; /* iframe: 리포트 시트(#mnrp-frame)로 Tab 이 들어가게 (PR #62 Codex) */
   var last=null;
   function dialogOf(el){ return el.querySelector(".mnhw-sheet,.mncard,.sh")||el; }
   function opened(el){
@@ -2109,7 +2109,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function closed(){ var l=last; last=null; if(l&&l.focus&&document.contains(l)){ try{ l.focus({preventScroll:true}); }catch(e){} } }
   /* 닫힌 시트는 화면 아래로 밀어 둘 뿐이라 그 안의 단추·입력칸이 Tab 순서에 남습니다(첫 화면에서 8칸) — 닫혀 있는 동안 inert (#61 MN-61-2).
      inert 가 없는 오래된 WebView 는 aria-hidden 으로만. */
-  function sleep(el,off){ if("inert" in el) el.inert=!!off; else if(off) el.setAttribute("aria-hidden","true"); else el.removeAttribute("aria-hidden"); }
+  function sleep(el,off){
+    if("inert" in el){ el.inert=!!off; return; }
+    /* inert 가 없는 오래된 WebView: aria-hidden 은 읽기만 막고 Tab 은 못 막으므로 자손의 tabindex 를 -1 로 내리고 열릴 때 되살립니다 (PR #62 Codex) */
+    if(off){
+      el.setAttribute("aria-hidden","true");
+      el.querySelectorAll(FOCUS).forEach(function(x){ if(x.hasAttribute("data-mn-ti")) return; x.setAttribute("data-mn-ti", x.hasAttribute("tabindex")?x.getAttribute("tabindex"):""); x.tabIndex=-1; });
+    }else{
+      el.removeAttribute("aria-hidden");
+      el.querySelectorAll("[data-mn-ti]").forEach(function(x){ var t=x.getAttribute("data-mn-ti"); if(t==="") x.removeAttribute("tabindex"); else x.setAttribute("tabindex",t); x.removeAttribute("data-mn-ti"); });
+    }
+  }
   function sync(el){
     var on=el.classList.contains("on");
     if(on&&!el.__mnOpen){ el.__mnOpen=true; sleep(el,false); opened(el); }
