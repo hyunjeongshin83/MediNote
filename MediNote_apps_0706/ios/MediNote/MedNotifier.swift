@@ -37,32 +37,46 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     // MARK: 일정
 
     func schedule(json: String) {
-        center.removeAllPendingNotificationRequests()
-        guard let data = json.data(using: .utf8),
-              let sc = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              sc["on"] as? Bool == true,
-              let items = sc["items"] as? [[String: Any]] else { return }
-        let quiet = sc["quiet"] as? [String: String] ?? [:]
-        UserDefaults.standard.set(quiet, forKey: quietKey)
-
-        center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
-            guard ok else {
-                self.js("window.onNativeMeds && window.onNativeMeds({granted:false})")
-                return
-            }
+        // 일정에 남아 있는 약·시각 목록 — 꺼져 있거나 형식이 틀리면 빈 목록(= 전부 지움)
+        var slots: [(id: String, name: String, time: String)] = []
+        var quiet: [String: String] = [:]
+        if let data = json.data(using: .utf8),
+           let sc = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           sc["on"] as? Bool == true,
+           let items = sc["items"] as? [[String: Any]] {
+            quiet = sc["quiet"] as? [String: String] ?? [:]
+            UserDefaults.standard.set(quiet, forKey: quietKey)
             for it in items {
-                let id = it["id"] as? String ?? ""
-                let name = it["name"] as? String ?? ""
-                for t in it["times"] as? [String] ?? [] {
-                    guard let hm = Self.hm(t), !Self.inQuiet(minutes: hm.0 * 60 + hm.1, quiet: quiet) else { continue }
+                let id = it["id"] as? String ?? "", name = it["name"] as? String ?? ""
+                for t in it["times"] as? [String] ?? [] where Self.hm(t) != nil { slots.append((id, name, t)) }
+            }
+        }
+        let keep = Set(slots.map { "mnmd-\($0.id)-\($0.time)" })
+        // 매일 알림(mnmd-<id>-<time>)은 전부 지우고 다시 걸되, 대기 중인 「10분 뒤」(…-later)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
+        // 약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-3). 안드로이드 MedScheduler.reschedule 과 같은 규칙.
+        center.getPendingNotificationRequests { reqs in
+            let gone = reqs.map { $0.identifier }.filter { id in
+                guard id.hasPrefix("mnmd-") else { return false }
+                if id.hasSuffix("-later") { return !keep.contains(String(id.dropLast(6))) }
+                return true
+            }
+            self.center.removePendingNotificationRequests(withIdentifiers: gone)
+            guard !slots.isEmpty else { return }
+            self.center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
+                guard ok else {
+                    self.js("window.onNativeMeds && window.onNativeMeds({granted:false})")
+                    return
+                }
+                for s in slots {
+                    guard let hm = Self.hm(s.time), !Self.inQuiet(minutes: hm.0 * 60 + hm.1, quiet: quiet) else { continue }
                     var dc = DateComponents()
                     dc.hour = hm.0
                     dc.minute = hm.1
-                    self.add(id: id, name: name, time: t,
+                    self.add(id: s.id, name: s.name, time: s.time,
                              trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: true), suffix: "")
                 }
+                self.js("window.onNativeMeds && window.onNativeMeds({granted:true})")
             }
-            self.js("window.onNativeMeds && window.onNativeMeds({granted:true})")
         }
     }
 

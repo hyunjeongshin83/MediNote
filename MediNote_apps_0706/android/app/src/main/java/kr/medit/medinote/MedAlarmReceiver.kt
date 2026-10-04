@@ -7,14 +7,11 @@ import android.content.Intent
 import java.util.Calendar
 
 /**
- * 복약 알림 수신기 (MedScheduler 참고)
+ * 복약 알림 수신기 — 앱 전용 (MedScheduler 참고). 매니페스트에서 exported=false 라 이 앱의 PendingIntent 만 닿습니다 (#66 MN-66-1).
  *  MED_FIRE        정한 시각 — 조용한 시간이 아니면 알림을 띄우고, 다음 날 같은 시각을 다시 겁니다
  *  MED_TAKEN       알림의 「복용했어요」 — 기록에 남기고 알림을 닫습니다
  *  MED_LATER       알림의 「10분 뒤」 — 10분 뒤 한 번 더 울리게 하고 알림을 닫습니다
- *  BOOT_COMPLETED  재부팅 — 저장된 일정으로 알람을 다시 겁니다 (알람은 재부팅하면 사라집니다)
- *  MY_PACKAGE_REPLACED · TIMEZONE_CHANGED · TIME_CHANGED · SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
- *                  앱 업데이트(알람이 지워짐) · 시간대/시계 변경(옛 시각에 울림) · 정확 알람 권한 변경(부정확한 채 남음)
- *                  — 모두 저장된 일정으로 다시 겁니다 (#36 MN-36-1)
+ *  재부팅 · 앱 업데이트 · 시간대/시계 변경 · 정확 알람 권한 변경은 MedSystemReceiver 가 받습니다 (#36 MN-36-1)
  */
 class MedAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) {
@@ -22,9 +19,6 @@ class MedAlarmReceiver : BroadcastReceiver() {
         val name = i.getStringExtra("name") ?: ""
         val time = i.getStringExtra("time") ?: ""
         when (i.action) {
-            Intent.ACTION_BOOT_COMPLETED, "android.intent.action.QUICKBOOT_POWERON",
-            Intent.ACTION_MY_PACKAGE_REPLACED, Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_TIME_CHANGED,
-            "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" -> MedScheduler.reschedule(c)
             MedScheduler.ACT_FIRE -> {
                 val now = Calendar.getInstance()
                 val min = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)

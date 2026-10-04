@@ -53,26 +53,36 @@ object MedScheduler {
         prefs(c).getString(KEY_SCHED, null)?.let { JSONObject(it) }
     } catch (_: Exception) { null }
 
-    /** 저장된 일정으로 알람을 전부 다시 겁니다 (이전 것은 지우고). */
+    /** 저장된 일정으로 알람을 전부 다시 겁니다.
+     *  매일 알람은 전부 지우고 다시 걸지만, 걸려 있던 「10분 뒤」(code+1)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
+     *  약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-2). 일정에서 빠진 약의 「10분 뒤」는 지웁니다. */
     fun reschedule(c: Context) {
         ensureChannel(c)
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        cancelAll(c, am)
-        val sc = schedule(c) ?: return
-        if (!sc.optBoolean("on", false)) return
-        val items = sc.optJSONArray("items") ?: return
-        val codes = JSONArray()
-        for (i in 0 until items.length()) {
-            val it = items.optJSONObject(i) ?: continue
-            val times = it.optJSONArray("times") ?: continue
-            for (j in 0 until times.length()) {
-                val t = times.optString(j)
-                if (!t.matches(Regex("\\d\\d:\\d\\d"))) continue
-                val code = requestCode(it.optString("id"), t)
-                setAlarm(c, am, code, it.optString("id"), it.optString("name"), t, nextOccurrence(t))
-                codes.put(code)
+        val sc = schedule(c)
+        data class Slot(val code: Int, val id: String, val name: String, val time: String)
+        val slots = ArrayList<Slot>()
+        if (sc != null && sc.optBoolean("on", false)) {
+            val items = sc.optJSONArray("items") ?: JSONArray()
+            for (i in 0 until items.length()) {
+                val it = items.optJSONObject(i) ?: continue
+                val times = it.optJSONArray("times") ?: continue
+                for (j in 0 until times.length()) {
+                    val t = times.optString(j)
+                    if (!t.matches(Regex("\\d\\d:\\d\\d"))) continue
+                    slots.add(Slot(requestCode(it.optString("id"), t), it.optString("id"), it.optString("name"), t))
+                }
             }
         }
+        val keep = slots.map { it.code }.toSet()
+        val old = try { JSONArray(prefs(c).getString(KEY_CODES, "[]") ?: "[]") } catch (_: Exception) { JSONArray() }
+        for (i in 0 until old.length()) {
+            val code = old.optInt(i)
+            cancel(c, am, code)
+            if (code !in keep) cancel(c, am, code + 1)
+        }
+        val codes = JSONArray()
+        for (s in slots) { setAlarm(c, am, s.code, s.id, s.name, s.time, nextOccurrence(s.time)); codes.put(s.code) }
         prefs(c).edit().putString(KEY_CODES, codes.toString()).apply()
     }
 
@@ -101,16 +111,10 @@ object MedScheduler {
         }
     }
 
-    private fun cancelAll(c: Context, am: AlarmManager) {
-        val codes = try { JSONArray(prefs(c).getString(KEY_CODES, "[]") ?: "[]") } catch (_: Exception) { JSONArray() }
-        for (i in 0 until codes.length()) {
-            val code = codes.optInt(i)
-            for (k in 0..1) {
-                val i2 = Intent(c, MedAlarmReceiver::class.java).setAction(ACT_FIRE)
-                val pi = PendingIntent.getBroadcast(c, code + k, i2, PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
-                if (pi != null) { am.cancel(pi); pi.cancel() }
-            }
-        }
+    private fun cancel(c: Context, am: AlarmManager, code: Int) {
+        val i2 = Intent(c, MedAlarmReceiver::class.java).setAction(ACT_FIRE)
+        val pi = PendingIntent.getBroadcast(c, code, i2, PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
+        if (pi != null) { am.cancel(pi); pi.cancel() }
     }
 
     /** 같은 약·같은 시각은 늘 같은 번호 — 다시 걸면 이전 것을 덮습니다. 짝수만 써서 +1 은 10분 뒤용으로 남깁니다. */
