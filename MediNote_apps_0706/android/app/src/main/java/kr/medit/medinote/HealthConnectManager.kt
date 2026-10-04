@@ -90,21 +90,23 @@ class HealthConnectManager(private val context: Context) {
         return arr
     }
 
-    /** 수면 단계 중 「잠든」 것 — iOS HealthKitManager 가 asleep* 만 세는 것과 같은 기준 (#63 MN-63-3) */
-    private val asleepStages = setOf(
-        SleepSessionRecord.STAGE_TYPE_SLEEPING, SleepSessionRecord.STAGE_TYPE_LIGHT,
-        SleepSessionRecord.STAGE_TYPE_DEEP, SleepSessionRecord.STAGE_TYPE_REM)
+    /** 「깨어 있던」 단계 — 세션 길이에서 이것만 뺍니다 (#63 MN-63-3 · PR #64 Codex).
+     *  잠든 단계만 더하면 단계 사이의 빈 구간(앱이 적지 않은 시간)이 통째로 빠져, 8시간 세션에 AWAKE 5분만 적혀 있으면 0분이 됩니다.
+     *  iOS 는 asleep* 표본만 세지만 HealthKit 표본은 구간이 이어져 있어 같은 결과입니다. */
+    private val awakeStages = setOf(
+        SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
+        SleepSessionRecord.STAGE_TYPE_OUT_OF_BED)
 
-    /** 지난 24시간 수면 세션 — 시작 · 끝 · 잠든 분
-     *  단계가 있으면 잠든 단계만 더하고(깨어 있던 시간·침대에 있던 시간 제외), 단계가 없는 세션은 세션 길이 그대로. */
+    /** 지난 24시간 수면 세션 — 시작 · 끝 · 잠든 분 (= 세션 길이 − 깨어 있던 단계) */
     suspend fun readSleep24h(): JSONArray {
         val now = Instant.now()
         val r = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
         val arr = JSONArray()
         r.records.forEach { rec ->
-            val asleepSec = rec.stages.filter { it.stage in asleepStages }
+            val sessionSec = rec.endTime.epochSecond - rec.startTime.epochSecond
+            val awakeSec = rec.stages.filter { it.stage in awakeStages }
                 .sumOf { it.endTime.epochSecond - it.startTime.epochSecond }
-            val minutes = if (rec.stages.isEmpty()) (rec.endTime.epochSecond - rec.startTime.epochSecond) / 60 else asleepSec / 60
+            val minutes = maxOf(0L, sessionSec - awakeSec) / 60
             arr.put(JSONObject()
                 .put("start", rec.startTime.toEpochMilli())
                 .put("end", rec.endTime.toEpochMilli())
