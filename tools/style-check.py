@@ -18,10 +18,10 @@ import re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP = ROOT / "MediNote_app.html"
-BAD_TEXT = r"color: C\.(?:g4|g5|d4|d5)\b"   # #12BDB0(2.35) · #0DA298(3.16) · #7E9497(3.20) · #C0D3CF(1.56) — 흰 바탕 기준
+BAD_TEXT = r"color:\s*C\.(?:g4|g5|d4|d5)\b"   # #12BDB0(2.35) · #0DA298(3.16) · #7E9497(3.20) · #C0D3CF(1.56) — 흰 바탕 기준
 RULES = [
-    ("fontSize px",      r"fontSize: \d"),
-    ("borderRadius 숫자", r"borderRadius: \d"),
+    ("fontSize px",      r"fontSize:\s*\d"),
+    ("borderRadius 숫자", r"borderRadius:\s*\d"),
     ("글자색 AA 미달",    BAD_TEXT),
 ]
 
@@ -46,9 +46,10 @@ def main():
         src = APP.read_text(encoding="utf-8")
         assert not check(src), "지금 파일이 깨끗해야 자가검사를 할 수 있습니다"
         blk = react_block(src)
-        bad = src.replace(blk, blk + '\nvar __t = { fontSize: 12, borderRadius: 16, color: C.g5 };', 1)
+        # 띄어 쓴 꼴과 붙여 쓴 꼴(fontSize:12) 둘 다 걸려야 한다 — 콜론 뒤 공백을 요구하면 붙여 쓴 번들 편집이 새어 나간다 (PR #75 Codex P2)
+        bad = src.replace(blk, blk + '\nvar __t = { fontSize: 12, borderRadius: 16, color: C.g5 };\nvar __u = {fontSize:12,borderRadius:16,color:C.g5};', 1)
         got = sorted(n for n, _, _ in check(bad))
-        exp = sorted(n for n, _ in RULES)
+        exp = sorted([n for n, _ in RULES] * 2)
         print("selftest", "OK" if got == exp else "FAIL", got)
         return 0 if got == exp else 1
     hits = check(APP.read_text(encoding="utf-8"))
