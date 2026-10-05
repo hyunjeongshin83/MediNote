@@ -1167,8 +1167,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   // 같은 기기의 다음 사람(다른 계정·비로그인)이 앞사람의 이름·질환을 물려받아 AI 도우미로 보내게 되던 것 (PR #71 Codex P1)
   var OWNER = LOCAL + ":owner";
   function currentUid(){ try{ return localStorage.getItem("medinote:uid") || "guest"; }catch(e){ return "guest"; } }
-  function saveLocal(p){
-    try{ localStorage.setItem(LOCAL, JSON.stringify(p)); localStorage.setItem(OWNER, currentUid()); }catch(e){}
+  // owner 를 넘기면 그 계정 것으로 적는다 — pull() 처럼 요청을 보낸 계정과 끝났을 때의 계정이 다를 수 있는 곳에서 쓴다 (PR #72 Codex P1)
+  function saveLocal(p, owner){
+    try{ localStorage.setItem(LOCAL, JSON.stringify(p)); localStorage.setItem(OWNER, owner || currentUid()); }catch(e){}
   }
   // 지금 계정이 저장한 프로필인가. 주인 표시가 없는 옛 저장본은 아니라고 본다 (다시 저장되거나 로그인 때 pull 되면 붙는다).
   function ownedByCurrent(){
@@ -1207,6 +1208,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   async function pull(){
     var kv = window.MediNoteKV, uid = kv && kv.userId && kv.userId();
     if(!uid) return null;
+    var who = currentUid();   // 요청을 보낸 계정(medinote:uid · kv.userId 와는 다른 표기) — 끝났을 때와 비교한다
     try{
       var r = await fetch(kv.url + "/rest/v1/health_profiles?id=eq." + uid + "&select=name,birth,conditions",
         { headers: kv.headers() });
@@ -1219,7 +1221,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         birth: String(row.birth).slice(0,10),
         conditions: row.conditions ? String(row.conditions).split(/\s*,\s*/).filter(Boolean) : []
       };
-      saveLocal(p);
+      // 기다리는 동안 계정이 바뀌었으면(로그아웃·다른 계정 로그인) 앞 계정의 프로필을 버린다 — 지금 계정 것으로 적히면 AI 도우미로 나간다 (PR #72 Codex P1)
+      if(currentUid() !== who) return null;
+      saveLocal(p, who);
       try{ window.dispatchEvent(new CustomEvent("medinote:profile", { detail: p })); }catch(e){}
       return p;
     }catch(e){ return null; }
