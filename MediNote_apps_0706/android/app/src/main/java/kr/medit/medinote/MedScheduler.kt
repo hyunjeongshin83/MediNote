@@ -56,7 +56,8 @@ object MedScheduler {
     /** 저장된 일정으로 알람을 전부 다시 겁니다.
      *  매일 알람은 전부 지우고 다시 걸지만, 걸려 있던 「10분 뒤」(code+1)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
      *  약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-2). 일정에서 빠진 약의 「10분 뒤」는 지웁니다. */
-    fun reschedule(c: Context) {
+    /** keepSnooze=false: 시계·시간대가 바뀐 뒤에는 「10분 뒤」(RTC 벽시계 기준)가 엉뚱한 때 울리므로 지웁니다 (PR #67 Codex) */
+    fun reschedule(c: Context, keepSnooze: Boolean = true) {
         ensureChannel(c)
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val sc = schedule(c)
@@ -79,7 +80,7 @@ object MedScheduler {
         for (i in 0 until old.length()) {
             val code = old.optInt(i)
             cancel(c, am, code)
-            if (code !in keep) cancel(c, am, code + 1)
+            if (!keepSnooze || code !in keep) cancel(c, am, code + 1)
         }
         val codes = JSONArray()
         for (s in slots) { setAlarm(c, am, s.code, s.id, s.name, s.time, nextOccurrence(s.time)); codes.put(s.code) }
