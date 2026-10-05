@@ -1540,7 +1540,17 @@ button,input,select,textarea{font-family:inherit}</style>
       if(rs.length) out.symptoms = rs;
       if(meds && meds.length) out.meds = meds.slice(0, 20);
     }catch(e){}
-    try{ var u = localStorage.getItem("medinote:uid"); if(u && u !== "guest") out.profile = "계정 " + u; }catch(e){}
+    // 프로필(이름·나이대·질환)은 첫 사용 때 확인받는 항목이고 서버 지시문(contextBlock)이 「나이대·성별 등 프로필」로 받습니다 — 계정만 보내던 것을 채웁니다 (PR #45 Codex)
+    try{
+      var u = localStorage.getItem("medinote:uid"); var pf = {};
+      try{ pf = JSON.parse(localStorage.getItem("medinote:profile")||"{}")||{}; }catch(e){}
+      var prof = {};
+      if(u && u !== "guest") prof.account = u;
+      if(pf.name) prof.name = String(pf.name).slice(0,40);
+      if(pf.ageGroup) prof.ageGroup = pf.ageGroup;
+      if(Array.isArray(pf.conditions) && pf.conditions.length) prof.conditions = pf.conditions.slice(0,20);
+      if(Object.keys(prof).length) out.profile = prof;
+    }catch(e){}
     return out;
   };
 })();
@@ -1776,6 +1786,26 @@ button,input,select,textarea{font-family:inherit}</style>
     if(!d.hasAttribute("tabindex")) d.tabIndex=-1;
     last=document.activeElement;
     setTimeout(function(){ var f=d.querySelector(FOCUS); (f||d).focus({preventScroll:true}); },40);
+    el.querySelectorAll("iframe").forEach(hookFrame);
+  }
+  /* 리포트 시트의 iframe(srcdoc · 같은 출처) 안에서 누른 Tab 은 바깥 문서로 안 올라와 초점 가두기가 깨졌습니다 (PR #65 Codex).
+     iframe 문서에 같은 규칙을 심어, 안의 마지막 칸에서 Tab · 첫 칸에서 Shift+Tab 이면 바깥 시트의 첫 초점(닫기)으로 돌립니다. */
+  function hookFrame(fr){
+    function hook(){
+      var doc; try{ doc=fr.contentDocument; }catch(e){ return; }
+      if(!doc||doc.__mnHooked) return; doc.__mnHooked=true;
+      doc.addEventListener("keydown",function(e){
+        if(e.key!=="Tab") return;
+        var fs=Array.prototype.filter.call(doc.querySelectorAll(FOCUS),function(x){ return x.getClientRects().length>0; });
+        var a=doc.activeElement, atEnd=!fs.length||(!e.shiftKey&&a===fs[fs.length-1]), atStart=!fs.length||(e.shiftKey&&a===fs[0]);
+        if(!atEnd&&!atStart) return;
+        var o=topOpen(); if(!o||!o.contains(fr)) return;
+        var outer=Array.prototype.filter.call(dialogOf(o).querySelectorAll(FOCUS),function(x){ return x!==fr&&x.getClientRects().length>0; });
+        if(!outer.length) return;
+        e.preventDefault(); (e.shiftKey?outer[outer.length-1]:outer[0]).focus();
+      });
+    }
+    fr.addEventListener("load",hook); hook();
   }
   function closed(){ var l=last; last=null; if(l&&l.focus&&document.contains(l)){ try{ l.focus({preventScroll:true}); }catch(e){} } }
   /* 닫힌 시트는 화면 아래로 밀어 둘 뿐이라 그 안의 단추·입력칸이 Tab 순서에 남습니다(첫 화면에서 8칸) — 닫혀 있는 동안 inert (#61 MN-61-2).

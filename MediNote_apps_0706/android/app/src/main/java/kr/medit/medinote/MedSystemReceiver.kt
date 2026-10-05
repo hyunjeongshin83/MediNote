@@ -20,6 +20,9 @@ class MedSystemReceiver : BroadcastReceiver() {
         "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED")
 
     override fun onReceive(c: Context, i: Intent) {
-        if (i.action in actions) MedScheduler.reschedule(c)
+        if (i.action !in actions) return
+        // 시계·시간대가 바뀌면 벽시계로 걸어 둔 「10분 뒤」는 뜻을 잃습니다 — 그때만 지웁니다 (PR #67 Codex)
+        val clockMoved = i.action == Intent.ACTION_TIME_CHANGED || i.action == Intent.ACTION_TIMEZONE_CHANGED
+        MedScheduler.reschedule(c, keepSnooze = !clockMoved)
     }
 }

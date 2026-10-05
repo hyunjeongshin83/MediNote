@@ -14,6 +14,12 @@ import re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FILES = ["MediNote_app.html", "MediNote.sw.js", "medinote.config.js"]
+# 네이티브 껍데기(Kotlin · Swift)도 봅니다 — 안드로이드 셸이 play.google.com 을 여는 것처럼 바깥 주소가 들어갈 수 있습니다 (PR #52 Codex)
+GLOBS = ["MediNote_apps_0706/android/app/src/main/java/**/*.kt", "MediNote_apps_0706/ios/**/*.swift"]
+def files():
+    out = [ROOT / f for f in FILES]
+    for g in GLOBS: out += sorted(ROOT.glob(g))
+    return [p for p in out if p.exists()]
 
 # 호스트 → 무엇이 가는가. 「건강 데이터」가 가는 곳은 ★.
 ALLOWED = {
@@ -29,6 +35,7 @@ ALLOWED = {
     "play.google.com":           "Health Connect 설치 안내 링크 (안드로이드 셸)",
     "nip.kdca.go.kr":            "질병관리청 안내 링크",
     "www.w3.org":                "SVG 네임스페이스 — 요청 없음",
+    "appassets.androidplatform.net": "안드로이드 WebView 자산 로더의 가상 주소 — 앱 안의 파일을 읽을 뿐 바깥으로 나가지 않음",
 }
 FORBIDDEN = {
     "api.anthropic.com": "앱에서 직접 부르면 건강 데이터가 서버 규칙 없이 미국으로 나갑니다 — 반드시 ai-helper 경유 (#44 MN-44-1 · #51 MN-51-1)",
@@ -48,6 +55,12 @@ def hosts_in(text):
     hosts |= set(re.findall(r'https?://' + Q + r'\s*\+\s*' + Q + HOST, text))
     # 4) 템플릿 문자열: `https://${ref}.supabase.co`
     hosts |= set(re.findall(r'https?://\$\{[^}]*\}\.' + HOST, text))
+    # 5) 금지 호스트의 꼬리가 따옴표 안에 홀로 있어도 잡습니다: const suffix = ".anthropic.com"; fetch("https://api" + suffix)  (PR #60 Codex)
+    #    허용 호스트는 2)·3) 으로 충분하고, 금지 호스트만은 조각이 어디 있든 보여야 합니다.
+    for f in FORBIDDEN:
+        tail = f.split('.', 1)[1] if f.count('.') >= 2 else f
+        if any(h == tail or h.endswith('.' + tail) for h in hosts): continue   # 온전한 호스트가 이미 잡혔으면 꼬리는 따로 안 더함
+        if re.search(Q + r'\.?(?:[a-z0-9-]+\.)*' + re.escape(tail) + Q, text): hosts.add(tail)
     return hosts
 
 SELFTEST = [   # (코드 조각, 잡혀야 하는 호스트)
@@ -56,6 +69,7 @@ SELFTEST = [   # (코드 조각, 잡혀야 하는 호스트)
     ('"https://" + "api.anthropic.com" + "/v1"',         {"api.anthropic.com"}),
     ("'https://' + 'api.anthropic.com'",                 {"api.anthropic.com"}),
     ('`https://${ref}.functions.supabase.co/ai-helper`', {"functions.supabase.co"}),
+    ('const suffix = ".anthropic.com"; fetch("https://api" + suffix)', {"anthropic.com"}),
     ('document.querySelector(".modal.open")',            set()),
     ('el.classList.add("is.open")',                      set()),
 ]
@@ -68,9 +82,8 @@ def selftest():
 def main():
     if "--selftest" in sys.argv: return selftest()
     found = {}
-    for f in FILES:
-        p = ROOT / f
-        if not p.exists(): continue
+    for p in files():
+        f = str(p.relative_to(ROOT))
         for h in hosts_in(p.read_text(encoding="utf-8")):
             found.setdefault(h, set()).add(f)
     if "--list" in sys.argv:
@@ -78,8 +91,9 @@ def main():
         return 0
     bad = 0
     for h in sorted(found):
-        if h in FORBIDDEN:
-            bad += 1; print(f"금지: {h} ({', '.join(sorted(found[h]))}) — {FORBIDDEN[h]}")
+        fb = next((f for f in FORBIDDEN if h == f or f.endswith('.' + h) or h.endswith('.' + f)), None)   # 꼬리(anthropic.com)도 금지로 (PR #60 Codex)
+        if fb:
+            bad += 1; print(f"금지: {h} ({', '.join(sorted(found[h]))}) — {FORBIDDEN[fb]}")
             continue
         if not any(h == a or h.endswith("." + a) for a in ALLOWED):
             bad += 1; print(f"장부에 없음: {h} ({', '.join(sorted(found[h]))}) — tools/egress-check.py 의 ALLOWED 에 「왜」와 함께 적으세요")

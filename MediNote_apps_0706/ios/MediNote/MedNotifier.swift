@@ -55,11 +55,20 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         // 매일 알림(mnmd-<id>-<time>)은 전부 지우고 다시 걸되, 대기 중인 「10분 뒤」(…-later)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
         // 약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-3). 안드로이드 MedScheduler.reschedule 과 같은 규칙.
         center.getPendingNotificationRequests { reqs in
-            let gone = reqs.map { $0.identifier }.filter { id in
+            let gone = reqs.filter { req in
+                let id = req.identifier
                 guard id.hasPrefix("mnmd-") else { return false }
-                if id.hasSuffix("-later") { return !keep.contains(String(id.dropLast(6))) }
+                if id.hasSuffix("-later") {
+                    if !keep.contains(String(id.dropLast(6))) { return true }
+                    // 조용한 시간이 바뀌어 대기 중인 「10분 뒤」가 그 안에 들어가면 지웁니다 — iOS 는 울릴 때 다시 보지 않습니다 (PR #67 Codex)
+                    if let t = (req.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate() {
+                        let c = Calendar.current.dateComponents([.hour, .minute], from: t)
+                        if Self.inQuiet(minutes: (c.hour ?? 0) * 60 + (c.minute ?? 0), quiet: quiet) { return true }
+                    }
+                    return false
+                }
                 return true
-            }
+            }.map { $0.identifier }
             self.center.removePendingNotificationRequests(withIdentifiers: gone)
             guard !slots.isEmpty else { return }
             self.center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
