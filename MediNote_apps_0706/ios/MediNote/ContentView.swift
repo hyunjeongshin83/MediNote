@@ -123,8 +123,8 @@ struct WebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            MedNotifier.shared.pageDidLoad()   // 화면이 뜨기 전에 보낸 JS(알림을 눌러 켠 앱의 복약 창 열기)를 이제 보냅니다 (#78 MN-78-3)
-            MedNotifier.shared.pushLogToWeb()
+            // 화면이 뜨기 전에 보낸 JS(알림을 눌러 켠 앱의 복약 창 열기)를 보내고, 기록을 한 번 올립니다 (#78 MN-78-3 · PR #79 Codex P1)
+            MedNotifier.shared.pageDidLoad()
         }
     }
 }

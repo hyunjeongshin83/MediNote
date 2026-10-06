@@ -161,6 +161,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     /// 웹의 Native.medsLogTake() 가 읽어 갈 자리에 기록을 올려 둡니다
     func pushLogToWeb() {
+        guard ready, web != nil else { return }   // 화면이 뜨기 전 — pageDidLoad() 가 한 번 올립니다
         let arr = UserDefaults.standard.array(forKey: logKey) as? [[String: Any]] ?? []
         guard let data = try? JSONSerialization.data(withJSONObject: arr),
               let s = String(data: data, encoding: .utf8),
@@ -177,6 +178,9 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             self.ready = true
             let queued = self.pending; self.pending = []
             queued.forEach { self.web?.evaluateJavaScript($0, completionHandler: nil) }
+            // 기록은 여기서 한 번만 올립니다 — 화면 전에 온 pushLogToWeb() 는 아래 guard 로 아무것도 하지 않으므로,
+            // 알림으로 켠 앱에서 같은 기록이 두 번 들어가지 않습니다 (PR #79 Codex P1)
+            self.pushLogToWeb()
         }
     }
 
