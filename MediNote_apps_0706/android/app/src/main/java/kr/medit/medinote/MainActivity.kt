@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var web: WebView
     private lateinit var health: HealthConnectManager
     private var pageReady = false
-    private var pendingJs: String? = null
+    private val pendingJs = mutableListOf<String>()   // 화면이 뜨기 전에 온 JS — 한 칸이면 둘째가 첫째를 덮습니다 (#78 MN-78-4)
 
     private val askHealth = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
@@ -96,8 +96,8 @@ class MainActivity : ComponentActivity() {
 
                 override fun onPageFinished(view: WebView, url: String?) {
                     pageReady = true
-                    pendingJs?.let { view.evaluateJavascript(it, null) }
-                    pendingJs = null
+                    pendingJs.forEach { view.evaluateJavascript(it, null) }
+                    pendingJs.clear()
                 }
             }
             addJavascriptInterface(Bridge(), "Native")
@@ -138,7 +138,7 @@ class MainActivity : ComponentActivity() {
 
     private fun js(code: String) {
         runOnUiThread {
-            if (pageReady) web.evaluateJavascript(code, null) else pendingJs = code
+            if (pageReady) web.evaluateJavascript(code, null) else pendingJs.add(code)
         }
     }
 
