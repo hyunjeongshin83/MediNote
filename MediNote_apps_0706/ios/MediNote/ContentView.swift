@@ -46,6 +46,7 @@ struct WebView: UIViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator          // target="_blank" 링크 (#78 MN-78-2)
         webView.scrollView.bounces = false
         context.coordinator.web = webView
         MedNotifier.shared.web = webView
@@ -59,7 +60,7 @@ struct WebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
         weak var web: WKWebView?
         private let health = HealthKitManager()
 
@@ -111,8 +112,19 @@ struct WebView: UIViewRepresentable {
             decisionHandler(.allow)
         }
 
+        // target="_blank" 링크 — UIDelegate 가 없으면 WKWebView 는 아무 일도 하지 않습니다. 「웹 주소에서 해 주세요」 링크가
+        // 눌러도 안 열리던 것 (#78 MN-78-2). 안드로이드(shouldOverrideUrlLoading)처럼 바깥 브라우저로 넘깁니다.
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                     for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            if navigationAction.targetFrame == nil, let url = navigationAction.request.url, url.scheme != "file" {
+                UIApplication.shared.open(url)
+            }
+            return nil
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            MedNotifier.shared.pushLogToWeb()
+            // 화면이 뜨기 전에 보낸 JS(알림을 눌러 켠 앱의 복약 창 열기)를 보내고, 기록을 한 번 올립니다 (#78 MN-78-3 · PR #79 Codex P1)
+            MedNotifier.shared.pageDidLoad()
         }
     }
 }
