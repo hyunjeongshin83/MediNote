@@ -95,7 +95,7 @@ HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽�
                        WKWebView 저장소에 백업 제외가 없어 iCloud 기기 백업 대상입니다 — 코드 기준이며 실기기에서는 확인하지 못했습니다 (#83 MN-83-2·3 · 결정 대기)
 잠금화면 알림          복약 알림 본문에 약 이름이 그대로 들어갑니다 (「<약 이름> 드실 시간이에요」) — 기기의 잠금화면 설정에 따라 남에게 보일 수 있습니다 (#83 MN-83-4)
 Google 토큰            Google 로그인은 access_type=offline 으로 refresh token 까지 받아 세션에 담아 기기에 저장합니다.
-                       앱은 provider_token 만 한 번 써 생년월일을 받고 refresh token 은 쓰지 않습니다 (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
+                       앱은 provider_token 만 써서 People API 로 생년월일을 받아 옵니다(프로필에 생년월일이 아직 없으면 세션 이벤트마다 되풀이). refresh token 은 쓰지 않습니다 (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
 ```
 
 **바깥으로 나가는 주소의 장부는 `tools/egress-check.py`** 입니다. 새 주소를 부르려면 거기에 「왜」를 적어야 CI 가 통과합니다.
