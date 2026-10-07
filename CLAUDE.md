@@ -90,12 +90,19 @@ HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽�
                        건강 데이터는 안 가지만 IP·기기 정보가 Google·jsDelivr 에 남습니다. 개인정보처리방침에 아직 없습니다 (#51)
 푸시 구독              「접종 시기 알림」을 켜면 브라우저의 푸시 서비스(Chrome 은 Google FCM · Safari 는 Apple) 주소와 열쇠가
                        → Supabase push_subscriptions (비로그인도 등록됨 · uid 없음). 보내는 쪽 소스는 저장소에 없습니다 (#16 MN-16-5)
+기기 백업 (앱 셸)      안드로이드 앱은 allowBackup="true" 에 제외 규칙이 없어, WebView localStorage(복약 일정·복용 기록·증상 기록 사본)와
+                       SharedPreferences(약 이름·시각·복용 기록)가 구글 계정 자동 백업 대상입니다. iOS 앱은 UserDefaults(복용 기록)와
+                       WKWebView 저장소에 백업 제외가 없어 iCloud 기기 백업 대상입니다 — 코드 기준이며 실기기에서는 확인하지 못했습니다 (#83 MN-83-2·3 · 결정 대기)
+잠금화면 알림          복약 알림 본문에 약 이름이 그대로 들어갑니다 (「<약 이름> 드실 시간이에요」) — 기기의 잠금화면 설정에 따라 남에게 보일 수 있습니다 (#83 MN-83-4)
+Google 토큰            Google 로그인은 access_type=offline 으로 refresh token 까지 받아 세션에 담아 기기에 저장합니다.
+                       앱은 provider_token 만 한 번 써 생년월일을 받고 refresh token 은 쓰지 않습니다 (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
 ```
 
 **바깥으로 나가는 주소의 장부는 `tools/egress-check.py`** 입니다. 새 주소를 부르려면 거기에 「왜」를 적어야 CI 가 통과합니다.
 앱은 `api.anthropic.com` 을 직접 부르지 않습니다 — 엣지 함수 `ai-helper` 만 부릅니다 (#44 · #51).
 
 세 줄(증상 기록 · AI 도우미 · 생년월일)은 2026-09-24 에 확인해 더한 것입니다 (#22).
+기기 백업 · 잠금화면 알림 · Google 토큰 세 줄은 2026-10-08 에 코드를 읽고 더했습니다 (#83) — 서버 밖의 길입니다.
 Health Connect 줄은 2026-09-28 에 `onNativeHealth` · `toRows` 를 읽고 고쳤고, 09-29 에 앱에는 저장 단추가 없다는 것(#46 Codex)을 반영했습니다.
 HealthKit 줄은 2026-09-30 에 `ContentView.swift` 를 읽고 고쳤습니다 — 「불리지 않습니다」는 09-25 (#30) 뒤로 사실이 아니었습니다 (#47 MN-47-4).
 **AI 도우미 경로는 개인정보처리방침(PRIVACY.md)에 아직 없습니다** — MN-22-2.
