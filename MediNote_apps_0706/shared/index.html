@@ -2520,6 +2520,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // 앱 셸은 file:// 이거나(iOS) https://appassets.androidplatform.net(안드로이드 · WebViewAssetLoader)라 protocol 만으로는 못 가립니다 —
     // 안드로이드에서는 OAuth 가 Chrome 으로 튕겨 나가 돌아오지 못합니다 (#78 MN-78-1). window.Native 가 있으면 셸입니다
     if(location.protocol==="file:"||(window.Native&&typeof window.Native.platform==="function")){ gerr("이 앱에서는 Google 로그인이 안 됩니다. 웹 주소 <a href=\"https://hyunjeongshin83.github.io/MediNote/\" target=\"_blank\" rel=\"noopener\">hyunjeongshin83.github.io/MediNote</a> 에서 해 주세요."); return; }
+    // 카카오톡·네이버·인스타그램 등 앱 안 브라우저(웹뷰, 안드로이드 기본 웹뷰의 "; wv)" 포함)에서는 구글이 로그인을 403 disallowed_useragent 로 막습니다 — 누르기 전에 알립니다 (#81 MN-81-2)
+    if(/KAKAOTALK|NAVER\(|FBAN|FBAV|FB_IAB|Instagram|DaumApps|Line\/|; wv\)/i.test(navigator.userAgent||"")){ gerr("카카오톡·네이버 같은 앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 메뉴에서 <b>다른 브라우저로 열기</b>를 누르거나, 웹 주소 <a href=\"https://hyunjeongshin83.github.io/MediNote/\" target=\"_blank\" rel=\"noopener\">hyunjeongshin83.github.io/MediNote</a> 를 Chrome·Safari 에서 열어 주세요."); return; }
     if(location.protocol!=="https:" && location.hostname!=="localhost"){ gerr("Google 로그인은 <b>https</b> 주소에서만 됩니다."); return; }
     if(!sb){ gerr("로그인 모듈을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."); return; }
     try{
