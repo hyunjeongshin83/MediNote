@@ -32,6 +32,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -82,13 +83,35 @@ def _get(url, token):
         return json.load(r)
 
 
+def _list_open(repo, token, tries=3, wait=2):
+    """열린 이슈 목록. 방금 올린 이슈가 목록에 아직 안 뜨면(몇 초 늦게 나타남) 잠깐 기다려 다시 받습니다.
+
+    2026-10-07 에 이슈를 올린 직후 --report 를 돌리면 새 이슈가 빠진 FIXES.md 가 두 번 만들어졌습니다 (#83).
+    가장 최근 이슈·PR 다섯 건 중 열린 이슈(PR 아님)가 목록에 없으면 늦은 것으로 보고 다시 받습니다.
+    """
+    base = 'https://api.github.com/repos/%s/issues' % repo
+    for i in range(tries):
+        out = _get(base + '?state=open&per_page=100', token)
+        have = {x['number'] for x in out}
+        recent = _get(base + '?state=all&per_page=5&sort=created&direction=desc', token)
+        missing = [x['number'] for x in recent
+                   if 'pull_request' not in x and x.get('state') == 'open' and x['number'] not in have]
+        if not missing or i == tries - 1:
+            if missing:
+                print('⚠ 이슈 #%s 가 목록에 아직 안 보입니다 — 한 번 더 돌려 보세요'
+                      % ', #'.join(map(str, missing)), file=sys.stderr)
+            return out
+        time.sleep(wait)
+    return out
+
+
 def fetch(repo, token):
     """열려 있는 이슈와 그 댓글을 함께 받아 옵니다.
 
     fix 칸은 이슈 본문에 두는 것이 원칙이지만, 이미 올라간 이슈에 나중에 붙일 때는
     댓글로도 답니다. 본문을 고쳐 쓰면 조사한 사람이 적은 글이 바뀌기 때문입니다.
     """
-    out = _get('https://api.github.com/repos/%s/issues?state=open&per_page=100' % repo, token)
+    out = _list_open(repo, token)
     for iss in out:
         if 'pull_request' in iss:
             continue
