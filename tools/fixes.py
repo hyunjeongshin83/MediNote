@@ -83,21 +83,28 @@ def _get(url, token):
         return json.load(r)
 
 
+_STALE = []     # 재시도 뒤에도 안 보인 이슈 번호 — --report 가 덮어쓰지 않게 하는 데 씁니다
+
+
 def _list_open(repo, token, tries=3, wait=2):
     """열린 이슈 목록. 방금 올린 이슈가 목록에 아직 안 뜨면(몇 초 늦게 나타남) 잠깐 기다려 다시 받습니다.
 
     2026-10-07 에 이슈를 올린 직후 --report 를 돌리면 새 이슈가 빠진 FIXES.md 가 두 번 만들어졌습니다 (#83).
-    가장 최근 이슈·PR 다섯 건 중 열린 이슈(PR 아님)가 목록에 없으면 늦은 것으로 보고 다시 받습니다.
+    가장 최근 이슈·PR 열다섯 건 중 열린 이슈(PR 아님)가 목록에 없으면 늦은 것으로 보고 다시 받습니다.
     """
     base = 'https://api.github.com/repos/%s/issues' % repo
     for i in range(tries):
         out = _get(base + '?state=open&per_page=100', token)
         have = {x['number'] for x in out}
-        recent = _get(base + '?state=all&per_page=5&sort=created&direction=desc', token)
+        try:
+            recent = _get(base + '?state=all&per_page=15&sort=created&direction=desc', token)
+        except urllib.error.URLError:      # 늦음 점검이 안 되면 받은 목록을 그대로 씁니다
+            return out
         missing = [x['number'] for x in recent
                    if 'pull_request' not in x and x.get('state') == 'open' and x['number'] not in have]
         if not missing or i == tries - 1:
             if missing:
+                _STALE[:] = missing
                 print('⚠ 이슈 #%s 가 목록에 아직 안 보입니다 — 한 번 더 돌려 보세요'
                       % ', #'.join(map(str, missing)), file=sys.stderr)
             return out
@@ -266,6 +273,9 @@ def main():
     a = p.parse_args()
 
     items = collect(a.repo, a.from_file)
+    if a.report and _STALE:     # 빠진 채로 FIXES.md 를 덮어쓰지 않습니다
+        sys.exit('이슈 #%s 가 아직 목록에 없어 FIXES.md 를 다시 만들지 않았습니다. 잠시 뒤 다시 돌려 주세요.'
+                 % ', #'.join(map(str, _STALE)))
 
     if a.report:
         out = ROOT / 'docs' / 'FIXES.md'
