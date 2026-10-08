@@ -13,7 +13,7 @@
 # Gradle 래퍼(gradlew · gradle-wrapper.jar)는 일부러 안 넣었습니다.
 #   래퍼 jar 는 저장소에 넣는 바이너리라 무엇이 들었는지 눈으로 볼 수 없습니다.
 #   여기서는 setup-gradle 이 판본을 박아 설치하므로 래퍼가 필요 없습니다.
-#   판본은 gradle/wrapper/gradle-wrapper.properties 와 같은 8.9 로 맞춰 둡니다.
+#   판본은 gradle/wrapper/gradle-wrapper.properties 와 같은 8.11.1 로 맞춰 둡니다.
 #
 # 첫 실행 결과 (2026-09-20 05:26 UTC) — **성공**했습니다.
 #   빌드 1분 43초 · APK 10.2MB · 판본은 그대로 받아졌습니다.
@@ -78,7 +78,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'       # gradle-wrapper.properties 와 같게
+          gradle-version: '8.11.1'       # gradle-wrapper.properties 와 같게
 
       - name: 빌드
         working-directory: MediNote_apps_0706/android
