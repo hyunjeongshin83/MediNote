@@ -10,7 +10,7 @@
 
 | | 오전 | 지금 |
 |---|---|---|
-| ① Gradle 래퍼 | `gradlew` · `gradle-wrapper.jar` 없음 | **필요 없게 했습니다** — Actions 가 8.9 를 박아 설치합니다 |
+| ① Gradle 래퍼 | `gradlew` · `gradle-wrapper.jar` 없음 | **필요 없게 했습니다** — Actions 가 8.11.1 을 박아 설치합니다 |
 | ② 앱 아이콘 | `res/mipmap-*` 없음 | **만들었습니다** — 5개 밀도 · 둥근 아이콘 포함 |
 | ③ 건강 연동 의존성 | `app/build.gradle` 에 없음 | **넣었습니다** — `connect-client:1.1.0-alpha07` |
 | ④ 워크플로 | 없음 | **`.github/workflows/android-build.yml`** |
@@ -21,7 +21,7 @@
 
 ```
 앱 화면이 웹앱과 같은지   통과   sha256 16ffc6786e12
-Java 17 · Gradle 8.9      통과   래퍼 없이 설치됩니다
+Java 17 · Gradle 8.11.1      통과   래퍼 없이 설치됩니다
 gradle assembleDebug      통과   1분 43초
 APK                       10.2MB  medinote-debug-1
 ```
@@ -46,7 +46,7 @@ GitHub 저장소 → **Actions** 탭 → **「안드로이드 APK」** → 맨 �
 1  앱 화면이 웹앱과 같은지 본다   tools/build-packaged-app.py --check
    7월 사본이 두 달 넘게 웹앱과 달랐던 적이 있습니다 (issues #12).
    손으로 옮기면 또 벌어지므로 여기서 먼저 막습니다.
-2  Java 17 · Gradle 8.9 설치
+2  Java 17 · Gradle 8.11.1 설치
 3  gradle assembleDebug
 4  나온 APK 를 Artifacts 에 올린다 (30일 보관)
    실패하면 대신 build/reports 를 올린다 — 무엇이 막혔는지 보려고
@@ -55,10 +55,10 @@ GitHub 저장소 → **Actions** 탭 → **「안드로이드 APK」** → 맨 �
 ### Gradle 래퍼를 왜 안 넣었나
 
 `gradle-wrapper.jar` 는 저장소에 넣는 **바이너리**라 무엇이 들었는지 눈으로 볼 수
-없습니다. 여기서는 Actions 가 Gradle 8.9 를 박아 설치하므로 래퍼가 필요 없습니다.
+없습니다. 여기서는 Actions 가 Gradle 8.11.1 를 박아 설치하므로 래퍼가 필요 없습니다.
 판본은 `gradle/wrapper/gradle-wrapper.properties` 와 같게 맞춰 두었습니다.
 
-손 PC 에서 빌드하실 때는 Gradle 8.9 를 설치하고 `android/` 에서
+손 PC 에서 빌드하실 때는 Gradle 8.11.1 를 설치하고 `android/` 에서
 `gradle assembleDebug` 를 쓰시면 됩니다.
 
 ## 그때까지 아이폰·안드로이드에서 쓰는 법

@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (web.canGoBack()) web.goBack()
-                else { isEnabled = false; onBackPressedDispatcher.onBackPressed() }
+                else { isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true }  // 안드로이드 12+ 는 뒤로가기에 앱이 종료되지 않고 백그라운드로 가므로 다시 켭니다
             }
         })
         handleIntent(intent)
