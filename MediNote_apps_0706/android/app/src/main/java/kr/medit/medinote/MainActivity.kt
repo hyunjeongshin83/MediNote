@@ -14,6 +14,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.lifecycleScope
@@ -104,6 +105,13 @@ class MainActivity : ComponentActivity() {
             loadUrl("https://$APP_HOST/assets/index.html")
         }
         setContentView(web)
+        // targetSdk 36 부터는 예측 뒤로가기가 기본이라 onBackPressed() 가 불리지 않습니다 — 웹 화면의 뒤로가기는 여기서 (#87)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (web.canGoBack()) web.goBack()
+                else { isEnabled = false; onBackPressedDispatcher.onBackPressed() }
+            }
+        })
         handleIntent(intent)
     }
 
@@ -198,10 +206,5 @@ class MainActivity : ComponentActivity() {
                 try { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).setData(android.net.Uri.parse("package:$packageName"))) } catch (_: Exception) {}
             }
         }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (this::web.isInitialized && web.canGoBack()) web.goBack() else super.onBackPressed()
     }
 }

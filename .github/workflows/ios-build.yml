@@ -37,6 +37,12 @@ jobs:
       - name: 앱 화면이 웹앱과 같은지
         run: python3 tools/build-packaged-app.py --check
 
+      - name: Xcode 판본 기록 (App Store 업로드는 Xcode 26 이상, #87)
+        run: |
+          xcodebuild -version
+          v=$(xcodebuild -version | awk '/^Xcode/{print $2}' | cut -d. -f1)
+          if [ "${v:-0}" -lt 26 ]; then echo "::warning::Xcode $v — Apple 은 2026-04-28 부터 Xcode 26(iOS 26 SDK) 이상으로 만든 앱만 업로드를 받습니다"; fi
+
       - name: XcodeGen
         run: brew install xcodegen
 
