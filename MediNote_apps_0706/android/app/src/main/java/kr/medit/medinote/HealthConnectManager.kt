@@ -97,21 +97,43 @@ class HealthConnectManager(private val context: Context) {
         SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
         SleepSessionRecord.STAGE_TYPE_OUT_OF_BED)
 
-    /** 지난 24시간 수면 세션 — 시작 · 끝 · 잠든 분 (= 세션 길이 − 깨어 있던 단계) */
+    /** 잠든 구간 하나 — 세션에서 깨어 있던 단계를 뺀 조각 (시각은 epoch ms) */
+    private class Span(val start: Long, var end: Long, val zoneMin: Int?)
+
+    /** 지난 24시간 수면 — 잠든 구간 목록 (시작 · 끝 · 분).
+     *
+     *  세션마다 깨어 있던 단계를 뺀 조각으로 나눈 뒤, 앱이 달라 겹친 조각(삼성 헬스와 Fitbit 이 같은 밤을 각자 쓴 경우)은
+     *  하나로 합칩니다. 세션 길이를 하나씩 더하면 그 밤이 두 배가 됩니다 (#92). 합친 구간이라 웹 화면은 구간 길이(end − start)를 더합니다. */
     suspend fun readSleep24h(): JSONArray {
         val now = Instant.now()
         val r = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
-        val arr = JSONArray()
+        val spans = mutableListOf<Span>()
         r.records.forEach { rec ->
-            val sessionSec = rec.endTime.epochSecond - rec.startTime.epochSecond
-            val awakeSec = rec.stages.filter { it.stage in awakeStages }
-                .sumOf { it.endTime.epochSecond - it.startTime.epochSecond }
-            val minutes = maxOf(0L, sessionSec - awakeSec) / 60
+            val zone = rec.startZoneOffset?.totalSeconds?.div(60)
+            val sessionEnd = rec.endTime.toEpochMilli()
+            var cursor = rec.startTime.toEpochMilli()
+            rec.stages.filter { it.stage in awakeStages }.sortedBy { it.startTime }.forEach { st ->
+                val a = st.startTime.toEpochMilli()
+                val b = st.endTime.toEpochMilli()
+                val end = minOf(a, sessionEnd)
+                if (end > cursor) spans.add(Span(cursor, end, zone))
+                cursor = maxOf(cursor, b)
+            }
+            if (sessionEnd > cursor) spans.add(Span(cursor, sessionEnd, zone))
+        }
+        val merged = mutableListOf<Span>()
+        spans.sortedBy { it.start }.forEach { sp ->
+            val last = merged.lastOrNull()
+            if (last != null && sp.start <= last.end) { if (sp.end > last.end) last.end = sp.end }
+            else merged.add(sp)
+        }
+        val arr = JSONArray()
+        merged.forEach { sp ->
             arr.put(JSONObject()
-                .put("start", rec.startTime.toEpochMilli())
-                .put("end", rec.endTime.toEpochMilli())
-                .put("zoneOffsetMin", rec.startZoneOffset?.totalSeconds?.div(60) ?: JSONObject.NULL)
-                .put("minutes", minutes))
+                .put("start", sp.start)
+                .put("end", sp.end)
+                .put("zoneOffsetMin", sp.zoneMin ?: JSONObject.NULL)
+                .put("minutes", (sp.end - sp.start) / 60_000))
         }
         return arr
     }

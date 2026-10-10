@@ -37,7 +37,14 @@ final class HealthKitManager {
         }
     }
 
-    private var zoneOffsetMin: Int { TimeZone.current.secondsFromGMT() / 60 }
+    /// 표본이 적힌 시각의 시간대 오프셋(분). 표본에 시간대(HKMetadataKeyTimeZone)가 있으면 그것을, 없으면 지금 시간대의 그날 오프셋을 씁니다.
+    /// 지금 오프셋 하나를 24시간 전체에 붙이면 여행·서머타임 경계에서 어긋납니다 (#92).
+    private func zoneMin(_ s: HKSample?, at date: Date) -> Int {
+        if let id = s?.metadata?[HKMetadataKeyTimeZone] as? String, let tz = TimeZone(identifier: id) {
+            return tz.secondsFromGMT(for: date) / 60
+        }
+        return TimeZone.current.secondsFromGMT(for: date) / 60
+    }
     private func ms(_ d: Date) -> Int64 { Int64(d.timeIntervalSince1970 * 1000) }
 
     /// 지난 24시간 걸음 — 한 시간 단위 합계 (구간 · 개수)
@@ -59,7 +66,7 @@ final class HealthKitManager {
                 let count = Int((stat.sumQuantity()?.doubleValue(for: .count()) ?? 0).rounded())
                 if count > 0 {
                     rows.append(["start": self.ms(stat.startDate), "end": self.ms(stat.endDate),
-                                 "zoneOffsetMin": self.zoneOffsetMin, "count": count])
+                                 "zoneOffsetMin": self.zoneMin(nil, at: stat.startDate), "count": count])
                 }
             }
             completion(rows)
@@ -72,10 +79,12 @@ final class HealthKitManager {
         guard let type = HKObjectType.quantityType(forIdentifier: .heartRate) else { completion([]); return }
         let pred = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-6 * 3_600), end: Date())
         let unit = HKUnit.count().unitDivided(by: .minute())
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        // 최신부터 500개를 받아 오래된 순으로 뒤집습니다. 오래된 순으로 500개를 받으면 운동 중(초 단위 표본)이 있었던 날
+        // 6시간 앞쪽에서 500개가 차 버려 「가장 최근 심박」이 몇 시간 전 값이 됩니다 (#92).
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 500, sortDescriptors: [sort]) { _, samples, _ in
-            let rows = (samples as? [HKQuantitySample] ?? []).map { s -> [String: Any] in
-                ["time": self.ms(s.startDate), "zoneOffsetMin": self.zoneOffsetMin,
+            let rows = (samples as? [HKQuantitySample] ?? []).reversed().map { s -> [String: Any] in
+                ["time": self.ms(s.startDate), "zoneOffsetMin": self.zoneMin(s, at: s.startDate),
                  "bpm": Int(s.quantity.doubleValue(for: unit).rounded())]
             }
             completion(rows)
@@ -83,12 +92,16 @@ final class HealthKitManager {
         store.execute(q)
     }
 
-    /// 지난 24시간 수면 — 잠든 구간만 (inBed · awake 는 뺍니다)
+    /// 지난 24시간 수면 — 잠든 구간만 (inBed · awake 는 뺍니다). 출처가 달라 겹친 구간은 하나로 합칩니다.
+    ///
+    /// 아이폰의 수면 앱과 Apple Watch(또는 서드파티 수면 앱)가 같은 밤을 각자 쓰면 표본이 겹쳐 있는데, 하나씩 더하면 그 밤이 두 배가 됩니다.
+    /// 합계 API 가 없으니(수면은 HKStatisticsQuery 대상이 아님) 구간을 합집합으로 만듭니다 (#92).
+    /// 표본 수 제한도 뺐습니다 — 오래된 순 200개 제한은 단계가 많은 밤에 마지막 단계들을 조용히 자릅니다.
     private func readSleep24h(completion: @escaping ([[String: Any]]) -> Void) {
         guard let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { completion([]); return }
         let pred = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-86_400), end: Date())
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-        let q = HKSampleQuery(sampleType: type, predicate: pred, limit: 200, sortDescriptors: [sort]) { _, samples, _ in
+        let q = HKSampleQuery(sampleType: type, predicate: pred, limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, _ in
             let asleep: Set<Int> = {
                 var v: Set<Int> = [HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue]
                 if #available(iOS 16.0, *) {
@@ -98,13 +111,22 @@ final class HealthKitManager {
                 }
                 return v
             }()
-            let rows = (samples as? [HKCategorySample] ?? [])
-                .filter { asleep.contains($0.value) }
-                .map { s -> [String: Any] in
-                    ["start": self.ms(s.startDate), "end": self.ms(s.endDate),
-                     "zoneOffsetMin": self.zoneOffsetMin,
-                     "minutes": Int(s.endDate.timeIntervalSince(s.startDate) / 60)]
+            var spans: [(start: Date, end: Date, zone: Int)] = []
+            for s in (samples as? [HKCategorySample] ?? []) where asleep.contains(s.value) {
+                spans.append((start: s.startDate, end: s.endDate, zone: self.zoneMin(s, at: s.startDate)))
+            }
+            var merged: [(start: Date, end: Date, zone: Int)] = []
+            for s in spans.sorted(by: { $0.start < $1.start }) {
+                if let l = merged.last, s.start <= l.end {
+                    if s.end > l.end { merged[merged.count - 1].end = s.end }
+                } else {
+                    merged.append(s)
                 }
+            }
+            let rows = merged.map { s -> [String: Any] in
+                ["start": self.ms(s.start), "end": self.ms(s.end), "zoneOffsetMin": s.zone,
+                 "minutes": Int(s.end.timeIntervalSince(s.start) / 60)]
+            }
             completion(rows)
         }
         store.execute(q)
