@@ -1014,7 +1014,7 @@ button,input,select,textarea{font-family:inherit}</style>
     // metrics: metric_defs 의 표준 지표(LOINC·UCUM) — measurements 원장에 그대로 들어간다
     // devTs: 기기 시계가 준 잰 시각. 있으면 그것이 effective_time, 없으면 폰이 받은 시각
     // opts: {clock, channel} — Health Connect 에서 온 값은 clock "health_connect" · channel "health_connect"
-    readings[label]={value:val,ts:devTs||Date.now(),clock:(opts&&opts.clock)||(devTs?"device_clock":"phone"),channel:(opts&&opts.channel)||"device_ble",metrics:metrics||[]};
+    readings[label]={value:val,ts:devTs||Date.now(),zoneMin:(opts&&typeof opts.zoneOffsetMin==="number")?opts.zoneOffsetMin:null,clock:(opts&&opts.clock)||(devTs?"device_clock":"phone"),channel:(opts&&opts.channel)||"device_ble",metrics:metrics||[]};
     var out=document.getElementById("mnhwOut"); if(!out) return;
     var id="mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"");
     var html='<div class="mnhw-read" id="'+id+'"><div class="ic">'+icon+'</div><div><div class="t">'+label+'</div><div class="v">'+val+'</div></div></div>';
@@ -1063,7 +1063,7 @@ button,input,select,textarea{font-family:inherit}</style>
     var opts={clock:"health_connect",channel:"health_connect"};
     var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
     if(steps.length) addRead(ICON_STEPS,"걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
-    var hr=(r.heartRate||[]); if(hr.length){ var last=hr.reduce(function(a,b){ return !a||b.time>=a.time?b:a; },null); addRead(ICON_HEALTH,"심박 ("+hkName+")",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,opts); }
+    var hr=(r.heartRate||[]); if(hr.length){ var last=hr.reduce(function(a,b){ return !a||b.time>=a.time?b:a; },null); addRead(ICON_HEALTH,"심박 ("+hkName+")",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,{clock:opts.clock,channel:opts.channel,zoneOffsetMin:last.zoneOffsetMin}); }
     var sl=(r.sleep||[]), slMs=0, slEnd=null; sl.forEach(function(x){ slMs+=(x.end>x.start?x.end-x.start:(x.minutes||0)*60000); if(!slEnd||x.end>slEnd) slEnd=x.end; }); var mins=Math.round(slMs/60000);
     if(sl.length) addRead(ICON_SLEEP,"수면 (24시간)",Math.floor(mins/60)+"시간 "+(mins%60)+"분",[],slEnd,opts);
     st(steps.length||hr.length||sl.length ? (document.getElementById("mnhwSave")?hkName+" 값을 읽었습니다. 「읽은 값 클라우드에 저장」을 눌러야 서버에 저장됩니다.":hkName+" 값을 읽었습니다.") : "지난 24시간에 "+hkName+" 기록이 없습니다."+(hkName==="HealthKit"?" 읽기를 허용하지 않으셨다면 건강 앱 › 프로필 › 앱 › 메디노트 에서 켤 수 있습니다. (iOS 는 거절해도 앱에 알려 주지 않습니다)":""));
@@ -1087,7 +1087,7 @@ button,input,select,textarea{font-family:inherit}</style>
         out.push({user_id:uid,metric:m.metric,value_num:m.value_num,unit:m.unit,
           effective_time:(r.ts?new Date(r.ts).toISOString():now),client_ts:now,
           // MN-18-3: 순간값은 시작=끝. 시간대 오프셋(분)과 시계 출처를 함께 남긴다 — 수면·걸음 구간과 같은 축에 놓기 위해
-          effective_end:(r.ts?new Date(r.ts).toISOString():now),zone_offset_min:-new Date().getTimezoneOffset(),
+          effective_end:(r.ts?new Date(r.ts).toISOString():now),zone_offset_min:(r.zoneMin!=null?r.zoneMin:-new Date().getTimezoneOffset()),
           clock_source:(r.clock==="device_clock"?"device_clock":r.clock==="health_connect"?"health_connect":"phone_receive"),
           channel:r.channel||"device_ble",grade:"wellness",modality:"sensed",
           status:"final",performer_type:"patient",

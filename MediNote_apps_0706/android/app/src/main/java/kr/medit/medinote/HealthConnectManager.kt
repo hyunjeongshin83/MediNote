@@ -100,40 +100,53 @@ class HealthConnectManager(private val context: Context) {
     /** 잠든 구간 하나 — 세션에서 깨어 있던 단계를 뺀 조각 (시각은 epoch ms) */
     private class Span(val start: Long, var end: Long, val zoneMin: Int?)
 
+    /** 겹친 구간을 합집합으로 — 시작 순으로 훑으며 이어 붙입니다 */
+    private fun union(list: List<Span>): List<Span> {
+        val out = mutableListOf<Span>()
+        list.sortedBy { it.start }.forEach { sp ->
+            val last = out.lastOrNull()
+            if (last != null && sp.start <= last.end) { if (sp.end > last.end) last.end = sp.end }
+            else out.add(Span(sp.start, sp.end, sp.zoneMin))
+        }
+        return out
+    }
+
     /** 지난 24시간 수면 — 잠든 구간 목록 (시작 · 끝 · 분).
      *
-     *  세션마다 깨어 있던 단계를 뺀 조각으로 나눈 뒤, 앱이 달라 겹친 조각(삼성 헬스와 Fitbit 이 같은 밤을 각자 쓴 경우)은
-     *  하나로 합칩니다. 세션 길이를 하나씩 더하면 그 밤이 두 배가 됩니다 (#92). 합친 구간이라 웹 화면은 구간 길이(end − start)를 더합니다. */
+     *  앱이 달라 겹친 세션(삼성 헬스와 Fitbit 이 같은 밤을 각자 쓴 경우)은 합집합으로 합칩니다. 세션 길이를 하나씩 더하면
+     *  그 밤이 두 배가 됩니다 (#92). 그리고 어느 한 앱이라도 「깨어 있었다」고 적은 단계는 합친 구간에서 뺍니다 —
+     *  단계 없이 세션 전체만 적은 앱이 있어도 상세를 적은 앱의 깨어 있던 시간이 잠든 시간으로 되살아나지 않게 (#93 Codex).
+     *  합친 구간이라 웹 화면은 구간 길이(end − start)를 더합니다. */
     suspend fun readSleep24h(): JSONArray {
         val now = Instant.now()
         val r = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
-        val spans = mutableListOf<Span>()
+        val sessions = mutableListOf<Span>()
+        val awake = mutableListOf<Span>()
         r.records.forEach { rec ->
             val zone = rec.startZoneOffset?.totalSeconds?.div(60)
-            val sessionEnd = rec.endTime.toEpochMilli()
-            var cursor = rec.startTime.toEpochMilli()
-            rec.stages.filter { it.stage in awakeStages }.sortedBy { it.startTime }.forEach { st ->
-                val a = st.startTime.toEpochMilli()
-                val b = st.endTime.toEpochMilli()
-                val end = minOf(a, sessionEnd)
-                if (end > cursor) spans.add(Span(cursor, end, zone))
-                cursor = maxOf(cursor, b)
+            sessions.add(Span(rec.startTime.toEpochMilli(), rec.endTime.toEpochMilli(), zone))
+            rec.stages.filter { it.stage in awakeStages }.forEach { st ->
+                awake.add(Span(st.startTime.toEpochMilli(), st.endTime.toEpochMilli(), zone))
             }
-            if (sessionEnd > cursor) spans.add(Span(cursor, sessionEnd, zone))
         }
-        val merged = mutableListOf<Span>()
-        spans.sortedBy { it.start }.forEach { sp ->
-            val last = merged.lastOrNull()
-            if (last != null && sp.start <= last.end) { if (sp.end > last.end) last.end = sp.end }
-            else merged.add(sp)
-        }
+        val awakeUnion = union(awake)
         val arr = JSONArray()
-        merged.forEach { sp ->
-            arr.put(JSONObject()
-                .put("start", sp.start)
-                .put("end", sp.end)
-                .put("zoneOffsetMin", sp.zoneMin ?: JSONObject.NULL)
-                .put("minutes", (sp.end - sp.start) / 60_000))
+        union(sessions).forEach { sp ->
+            var cursor = sp.start
+            fun emit(from: Long, to: Long) {
+                if (to > from) arr.put(JSONObject()
+                    .put("start", from)
+                    .put("end", to)
+                    .put("zoneOffsetMin", sp.zoneMin ?: JSONObject.NULL)
+                    .put("minutes", (to - from) / 60_000))
+            }
+            awakeUnion.forEach { aw ->
+                if (aw.end > cursor && aw.start < sp.end) {
+                    emit(cursor, minOf(aw.start, sp.end))
+                    cursor = maxOf(cursor, aw.end)
+                }
+            }
+            emit(cursor, sp.end)
         }
         return arr
     }

@@ -92,7 +92,36 @@ final class HealthKitManager {
         store.execute(q)
     }
 
-    /// 지난 24시간 수면 — 잠든 구간만 (inBed · awake 는 뺍니다). 출처가 달라 겹친 구간은 하나로 합칩니다.
+    typealias Span = (start: Date, end: Date, zone: Int)
+
+    /// 겹친 구간을 합집합으로
+    private func union(_ spans: [Span]) -> [Span] {
+        var out: [Span] = []
+        for s in spans.sorted(by: { $0.start < $1.start }) {
+            if let l = out.last, s.start <= l.end {
+                if s.end > l.end { out[out.count - 1].end = s.end }
+            } else {
+                out.append(s)
+            }
+        }
+        return out
+    }
+
+    /// a 에서 b 구간을 뺍니다 (둘 다 union 을 거친 시작 순 목록)
+    private func subtract(_ a: [Span], _ b: [Span]) -> [Span] {
+        var out: [Span] = []
+        for s in a {
+            var cursor = s.start
+            for w in b where w.end > cursor && w.start < s.end {
+                if w.start > cursor { out.append((start: cursor, end: min(w.start, s.end), zone: s.zone)) }
+                cursor = max(cursor, w.end)
+            }
+            if s.end > cursor { out.append((start: cursor, end: s.end, zone: s.zone)) }
+        }
+        return out
+    }
+
+    /// 지난 24시간 수면 — 잠든 구간만 (inBed 는 세지 않고, awake 는 뺍니다). 출처가 달라 겹친 구간은 하나로 합칩니다.
     ///
     /// 아이폰의 수면 앱과 Apple Watch(또는 서드파티 수면 앱)가 같은 밤을 각자 쓰면 표본이 겹쳐 있는데, 하나씩 더하면 그 밤이 두 배가 됩니다.
     /// 합계 API 가 없으니(수면은 HKStatisticsQuery 대상이 아님) 구간을 합집합으로 만듭니다 (#92).
@@ -111,18 +140,16 @@ final class HealthKitManager {
                 }
                 return v
             }()
-            var spans: [(start: Date, end: Date, zone: Int)] = []
-            for s in (samples as? [HKCategorySample] ?? []) where asleep.contains(s.value) {
-                spans.append((start: s.startDate, end: s.endDate, zone: self.zoneMin(s, at: s.startDate)))
-            }
-            var merged: [(start: Date, end: Date, zone: Int)] = []
-            for s in spans.sorted(by: { $0.start < $1.start }) {
-                if let l = merged.last, s.start <= l.end {
-                    if s.end > l.end { merged[merged.count - 1].end = s.end }
-                } else {
-                    merged.append(s)
+            var spans: [Span] = [], awakeSpans: [Span] = []
+            for s in (samples as? [HKCategorySample] ?? []) {
+                if asleep.contains(s.value) {
+                    spans.append((start: s.startDate, end: s.endDate, zone: self.zoneMin(s, at: s.startDate)))
+                } else if s.value == HKCategoryValueSleepAnalysis.awake.rawValue {
+                    awakeSpans.append((start: s.startDate, end: s.endDate, zone: self.zoneMin(s, at: s.startDate)))
                 }
             }
+            // 어느 출처가 「깨어 있었다」고 적은 구간은 다른 출처의 잠든 구간에서도 뺍니다 (#93 Codex)
+            let merged = self.subtract(self.union(spans), self.union(awakeSpans))
             let rows = merged.map { s -> [String: Any] in
                 ["start": self.ms(s.start), "end": self.ms(s.end), "zoneOffsetMin": s.zone,
                  "minutes": Int(s.end.timeIntervalSince(s.start) / 60)]
