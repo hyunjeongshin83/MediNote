@@ -26,6 +26,9 @@ STORE_FAIL = [
     (re.compile(r"\bMARD\b"), "「MARD」 — 21 CFR 862.1355 에 없는 지표 (#15)"),
     (re.compile(r"임상\s*검증|정확하게\s*측정|이상\s*감지"), "「임상 검증 · 정확하게 측정 · 이상 감지」 — 의료기기 사용목적으로 읽힙니다 (STORE-LISTING)"),
 ]
+# 「기기에만 있습니다」류 — 걸림은 아니지만 기기 백업(안드로이드 구글 백업 · iOS iCloud)에 들어갈 수 있어 사실이 아닐 수 있습니다 (#83 MN-83-2·3 · #94).
+# 사용자에게 보이는 문장은 눈으로 다시 읽게 「주의」로만 보여 줍니다.
+DEVICE_ONLY = re.compile(r"기기에만\s*(?:있|저장됩|보관됩)")
 STORE_WARN = re.compile(r"진단|판정|판독|치료|처방|예측|응급|경보|정확도|정밀|의료기기")
 STORE_FILES = {"docs/STORE-LISTING.md", "README.md", "HEALTH_SETUP.md", "PRIVACY.md",
                "MediNote_apps_0706/android/app/src/main/res/values/strings.xml", "MediNote_apps_0706/ios/project.yml"}
@@ -56,6 +59,9 @@ def main():
                 if rx.search(line):
                     hits += 1
                     print(f"{rel}:{n}: {why}")
+            if DEVICE_ONLY.search(line):
+                warns += 1
+                print(f"주의 {rel}:{n}: 「{DEVICE_ONLY.search(line).group(0)}」 — 기기 백업에는 들어갈 수 있습니다. 「이 기기에 저장되고 기기 백업에 포함될 수 있어요」처럼 사실대로 (#83 · #94)")
             if rel in STORE_FILES and STORE_WARN.search(line):
                 warns += 1
                 print(f"주의 {rel}:{n}: 「{STORE_WARN.search(line).group(0)}」 — 스토어 문구에서는 부정문이라도 다시 읽어 보세요 (STORE-LISTING)")
