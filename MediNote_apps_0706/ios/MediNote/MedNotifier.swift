@@ -194,7 +194,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     /// 앱이 켜질 때(pageDidLoad · 앞으로 올 때)마다 다시 봅니다. 아직 묻지 않은 상태(.notDetermined)는 막힌 것이 아닙니다.
     func refreshNotifyState() {
         center.getNotificationSettings { s in
-            self.js("window.__mnNotifyOk = \(s.authorizationStatus != .denied ? "true" : "false");")
+            self.js("window.__mnNotifyOk = \(s.authorizationStatus != .denied ? "true" : "false"); window.__mnNotifyChanged && window.__mnNotifyChanged();")
         }
     }
 
