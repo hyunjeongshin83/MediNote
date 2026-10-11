@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import UserNotifications
 import WebKit
 
@@ -31,6 +32,10 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     private override init() {
         super.init()
         center.delegate = self
+        // 설정 앱에서 알림을 끄고 돌아오는 경우를 잡습니다 (#94)
+        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.refreshNotifyState()
+        }
         let taken = UNNotificationAction(identifier: "taken", title: "복용했어요", options: [])
         let later = UNNotificationAction(identifier: "later", title: "10분 뒤", options: [])
         center.setNotificationCategories([
@@ -181,6 +186,15 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             // 기록은 여기서 한 번만 올립니다 — 화면 전에 온 pushLogToWeb() 는 아래 guard 로 아무것도 하지 않으므로,
             // 알림으로 켠 앱에서 같은 기록이 두 번 들어가지 않습니다 (PR #79 Codex P1)
             self.pushLogToWeb()
+            self.refreshNotifyState()
+        }
+    }
+
+    /// 설정 앱에서 알림을 껐는지 웹에 알립니다 — 알림이 꺼져 있어도 앱은 모르고, 복약 창은 「켜짐」으로 보였습니다 (#94).
+    /// 앱이 켜질 때(pageDidLoad · 앞으로 올 때)마다 다시 봅니다. 아직 묻지 않은 상태(.notDetermined)는 막힌 것이 아닙니다.
+    func refreshNotifyState() {
+        center.getNotificationSettings { s in
+            self.js("window.__mnNotifyOk = \(s.authorizationStatus != .denied ? "true" : "false");")
         }
     }
 

@@ -43,6 +43,7 @@ import org.json.JSONObject
  *  scheduleMeds(json)  {on, quiet, items} 를 저장하고 알람을 다시 겁니다. 알림 권한이 없으면 먼저 묻습니다
  *  medsLogTake()       알림 단추로 남긴 기록(JSON 배열)을 돌려주고 비웁니다 — 웹이 자기 기록에 합칩니다
  *  exactAlarmAllowed() 정확한 시각 알람이 허용됐는지 (Android 12 이상)
+ *  notifyAllowed()     폰 설정에서 알림이 꺼져 있지 않은지 · openNotifySettings() 그 설정 화면 열기 (#94)
  *  openExactAlarmSettings() 그 허용 화면 열기
  *
  * 남은 것: Google 로그인(OAuth)은 WebView 안에서 완결되지 않습니다 — 폰 브라우저로 넘겨 돌아오게 하는 것은 #20 MN-20-2.
@@ -198,6 +199,21 @@ class MainActivity : ComponentActivity() {
             }
         }
         @JavascriptInterface fun medsLogTake(): String = MedScheduler.takeLog(this@MainActivity)
+        /* 폰 설정에서 메디노트 알림(또는 「복약 알림」 채널)이 꺼져 있으면 false — 알람은 울려도 알림이 조용히 버려집니다 (#94). */
+        @JavascriptInterface fun notifyAllowed(): Boolean {
+            val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (!nm.areNotificationsEnabled()) return false
+            if (Build.VERSION.SDK_INT >= 26) {
+                val ch = nm.getNotificationChannel(MedScheduler.CHANNEL)
+                if (ch != null && ch.importance == android.app.NotificationManager.IMPORTANCE_NONE) return false
+            }
+            return true
+        }
+        @JavascriptInterface fun openNotifySettings() {
+            runOnUiThread {
+                try { startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName)) } catch (_: Exception) {}
+            }
+        }
         @JavascriptInterface fun exactAlarmAllowed(): Boolean =
             Build.VERSION.SDK_INT < 31 ||
                 (getSystemService(ALARM_SERVICE) as android.app.AlarmManager).canScheduleExactAlarms()

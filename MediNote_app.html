@@ -1702,6 +1702,7 @@ button,input,select,textarea{font-family:inherit}</style>
     s.innerHTML='<div class="mnhw-h"><b>복약 알림</b><span class="x" id="mnmdX">×</span></div>'+
       '<div class="mnhw-sub">정한 시각에 알려 드리고, 알림의 「복용했어요」를 누르면 기록에 남아요. '+(NATIVE?'앱을 닫아도 폰이 정한 시각에 울립니다.':'앱을 열어 둔 동안 울립니다(닫혀 있을 때는 서버 푸시가 필요 · #16).')+' 조용한 시간에는 오지 않아요.</div>'+
       (NATIVE && typeof window.Native.exactAlarmAllowed==="function" && !window.Native.exactAlarmAllowed() ? '<div class="mnhw-note">정확한 시각에 울리려면 폰 설정에서 「알람 및 리마인더」를 허용해 주세요. <button type="button" class="mnhw-btn" id="mnmdExact" style="margin-top:6px">설정 열기</button></div>' : '')+
+      (NATIVE && sc.on && typeof window.Native.notifyAllowed==="function" && !window.Native.notifyAllowed() ? '<div class="mnhw-note">폰 설정에서 메디노트 알림이 꺼져 있어 알림이 오지 않아요. 켜 주세요. <button type="button" class="mnhw-btn" id="mnmdNotif" style="margin-top:6px">알림 설정 열기</button></div>' : '')+
       '<label class="mnmd-chk"><input type="checkbox" id="mnmdOn"'+(sc.on?" checked":"")+'> 복약 알림 켜기</label>'+
       '<div id="mnmdList"></div>'+
       '<div class="mnmd-fld"><label for="mnmdName">약 이름</label><input id="mnmdName" type="text" placeholder="예: 혈압약"></div>'+
@@ -1712,6 +1713,7 @@ button,input,select,textarea{font-family:inherit}</style>
       '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.</div><div class="mnhw-st" id="mnmdSt"></div>';
     document.getElementById("mnmdX").onclick=function(){ ov.classList.remove("on"); };
     var ex=document.getElementById("mnmdExact"); if(ex) ex.onclick=function(){ try{ window.Native.openExactAlarmSettings(); }catch(e){} };
+    var nf=document.getElementById("mnmdNotif"); if(nf) nf.onclick=function(){ try{ window.Native.openNotifySettings(); }catch(e){} };
     document.getElementById("mnmdOn").onchange=function(){
       var c=this; if(c.checked && "Notification" in window && Notification.permission!=="granted"){ Notification.requestPermission().then(function(p){ if(p!=="granted"){ c.checked=false; sc.on=false; save(); stt("알림 권한이 없어 켤 수 없어요."); } }); }
       sc.on=c.checked; save(); stt(sc.on?"알림을 켰어요":"알림을 껐어요");

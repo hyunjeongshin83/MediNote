@@ -78,6 +78,10 @@ struct WebView: UIViewRepresentable {
                 MedNotifier.shared.schedule(json: body["json"] as? String ?? "")
             case "medsLogAck":
                 MedNotifier.shared.clearLog()
+            case "openNotifySettings":
+                DispatchQueue.main.async {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                }
             default:
                 break
             }
@@ -151,7 +155,10 @@ enum NativeBridge {
             // 빈 가져가기에도 지우면 앱이 닫혀 있는 동안 누른 「복용했어요」가 올라오기 전에 사라집니다 (#47 MN-47-3)
             medsLogTake: function(){ var s = window.__mnMedsLog || "[]"; window.__mnMedsLog = "[]"; if (s !== "[]") post({fn:"medsLogAck"}); return s; },
             exactAlarmAllowed: function(){ return true; },
-            openExactAlarmSettings: function(){}
+            openExactAlarmSettings: function(){},
+            // 설정 앱에서 알림을 끈 것(.denied)만 false — 아직 묻지 않은 상태는 막힌 것이 아닙니다. 값은 MedNotifier 가 앱이 켜질 때마다 넣습니다 (#94)
+            notifyAllowed: function(){ return window.__mnNotifyOk !== false; },
+            openNotifySettings: function(){ post({fn:"openNotifySettings"}); }
           };
         })();
         """
