@@ -1670,7 +1670,7 @@ button,input,select,textarea{font-family:inherit}</style>
   var KEY="medinote:meds:sched", LOG="medinote:meds:log";
   var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); updateBadge(); }
   // 폰 설정에서 알림이 꺼져 있는데 「알림 켜기」가 켜져 있으면 알려 줍니다 — 열려 있는 복약 창에서도 켜고 끌 때·설정에서 돌아올 때 다시 그립니다 (#94 · PR #95 Codex P1 · Sourcery)
   function renderNotify(){
     var box=document.getElementById("mnmdNotifBox"); if(!box) return;
@@ -1686,7 +1686,7 @@ button,input,select,textarea{font-family:inherit}</style>
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
-  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); } });
+  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
   window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
   function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
@@ -1758,9 +1758,28 @@ button,input,select,textarea{font-family:inherit}</style>
   function record(action,data){
     addLog({action:action,id:data.id,name:data.name,time:data.time,at:Date.now()});
     if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
+    updateBadge();
+  }
+  // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
+  // medinote.config.js 의 appBadge 가 true 일 때만, 설치한 웹앱(PWA)에서만 켜집니다. 기본은 꺼짐 — 화면은 그대로입니다 (#97 MN-97-1).
+  // 숫자만 나가고 약 이름은 아이콘에 나가지 않습니다. 바깥 주소 없음. 앱 셸(WebView)에는 이 API 가 없어 건너뜁니다.
+  function overdueCount(){
+    var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=now.toDateString(), done={};
+    log().forEach(function(e){ if(e.action==="taken" && new Date(e.at).toDateString()===dk) done[e.id+"|"+e.time]=1; });
+    var n=0; sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){ if(hm(t)<=m && !done[it.id+"|"+t]) n++; }); });
+    return n;
+  }
+  function updateBadge(){
+    try{
+      if(NATIVE || !((window.MEDINOTE_CONFIG||{}).appBadge===true) || !("setAppBadge" in navigator)) return;
+      var n=sc.on ? overdueCount() : 0;
+      var p = n>0 ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+      if(p && p.catch) p.catch(function(){});
+    }catch(e){}
   }
   function tick(){
     if(NATIVE) return; // 폰이 맡습니다 (MedScheduler · iOS UNUserNotificationCenter)
+    updateBadge();
     if(!sc.on || !sc.items.length) return;
     if(!("Notification" in window) || Notification.permission!=="granted") return;
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();
