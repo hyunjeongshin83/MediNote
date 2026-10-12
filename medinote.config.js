@@ -19,6 +19,9 @@
     key: KEY,
     /* 「빠른 체험」을 기기 번호(g_) 대신 익명 계정(signInAnonymously)으로 — #55 MN-55-1.
        true 로 바꾸기 전에 MN-55-2 정책 적용 · 대시보드에서 Anonymous sign-ins · Manual linking · Turnstile (MN-55-3). */
-    anonAuth: false
+    anonAuth: false,
+    /* 설치한 웹앱(PWA) 아이콘에 「시간이 지났는데 안 먹은 복용 수」 숫자를 — Badging API 실험 (#97 MN-97-1).
+       기본 꺼짐. 켜기 전에 MN-97-2 (홈 화면에 숫자가 남에게 보임) 결정. */
+    appBadge: false
   };
 })();

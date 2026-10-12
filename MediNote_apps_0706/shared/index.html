@@ -175,7 +175,10 @@ button,input,select,textarea{font-family:inherit}</style>
     key: KEY,
     /* 「빠른 체험」을 기기 번호(g_) 대신 익명 계정(signInAnonymously)으로 — #55 MN-55-1.
        true 로 바꾸기 전에 MN-55-2 정책 적용 · 대시보드에서 Anonymous sign-ins · Manual linking · Turnstile (MN-55-3). */
-    anonAuth: false
+    anonAuth: false,
+    /* 설치한 웹앱(PWA) 아이콘에 「시간이 지났는데 안 먹은 복용 수」 숫자를 — Badging API 실험 (#97 MN-97-1).
+       기본 꺼짐. 켜기 전에 MN-97-2 (홈 화면에 숫자가 남에게 보임) 결정. */
+    appBadge: false
   };
 })();
 
@@ -2001,7 +2004,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var KEY="medinote:meds:sched", LOG="medinote:meds:log";
   var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); updateBadge(); }
   // 폰 설정에서 알림이 꺼져 있는데 「알림 켜기」가 켜져 있으면 알려 줍니다 — 열려 있는 복약 창에서도 켜고 끌 때·설정에서 돌아올 때 다시 그립니다 (#94 · PR #95 Codex P1 · Sourcery)
   function renderNotify(){
     var box=document.getElementById("mnmdNotifBox"); if(!box) return;
@@ -2017,7 +2020,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
-  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); } });
+  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
   window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
   function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
@@ -2089,9 +2092,34 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function record(action,data){
     addLog({action:action,id:data.id,name:data.name,time:data.time,at:Date.now()});
     if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
+    updateBadge();
+  }
+  // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
+  // medinote.config.js 의 appBadge 가 true 일 때만, 설치한 웹앱(PWA)에서만 켜집니다. 기본은 꺼짐 — 화면은 그대로입니다 (#97 MN-97-1).
+  // 숫자만 나가고 약 이름은 아이콘에 나가지 않습니다. 바깥 주소 없음. 앱 셸(WebView)에는 이 API 가 없어 건너뜁니다.
+  // 앱이 열려 있거나 되돌아올 때만 갱신됩니다 — 닫힌 동안 시각이 지나는 것을 알릴 서버·백그라운드 경로는 없습니다.
+  function overdueCount(){
+    var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=now.toDateString(), done={};
+    log().forEach(function(e){ if(e.action==="taken" && new Date(e.at).toDateString()===dk) done[e.id+"|"+e.time]=1; });
+    var n=0, seen={}; sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){ var k=it.id+"|"+t; if(seen[k]) return; seen[k]=1; if(hm(t)<=m && !done[k]) n++; }); });
+    return n;   // 같은 약·같은 시각이 두 번 들어 있어도 한 번만 셉니다 — 알림도 한 번만 울립니다
+  }
+  var BADGE_SET="medinote:badge:set";   // 숫자를 띄운 적이 있다는 표시 — 설정을 다시 끄면 남아 있는 숫자를 지우려고
+  function updateBadge(){
+    try{
+      if(NATIVE || !("setAppBadge" in navigator)) return;
+      if(!((window.MEDINOTE_CONFIG||{}).appBadge===true)){
+        if(localStorage.getItem(BADGE_SET)){ localStorage.removeItem(BADGE_SET); var c=navigator.clearAppBadge(); if(c && c.catch) c.catch(function(){}); }
+        return;
+      }
+      var n=sc.on ? overdueCount() : 0, p;
+      if(n>0){ localStorage.setItem(BADGE_SET,"1"); p=navigator.setAppBadge(n); } else p=navigator.clearAppBadge();
+      if(p && p.catch) p.catch(function(){});
+    }catch(e){}
   }
   function tick(){
     if(NATIVE) return; // 폰이 맡습니다 (MedScheduler · iOS UNUserNotificationCenter)
+    updateBadge();
     if(!sc.on || !sc.items.length) return;
     if(!("Notification" in window) || Notification.permission!=="granted") return;
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();
