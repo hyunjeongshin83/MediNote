@@ -1763,17 +1763,23 @@ button,input,select,textarea{font-family:inherit}</style>
   // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
   // medinote.config.js 의 appBadge 가 true 일 때만, 설치한 웹앱(PWA)에서만 켜집니다. 기본은 꺼짐 — 화면은 그대로입니다 (#97 MN-97-1).
   // 숫자만 나가고 약 이름은 아이콘에 나가지 않습니다. 바깥 주소 없음. 앱 셸(WebView)에는 이 API 가 없어 건너뜁니다.
+  // 앱이 열려 있거나 되돌아올 때만 갱신됩니다 — 닫힌 동안 시각이 지나는 것을 알릴 서버·백그라운드 경로는 없습니다.
   function overdueCount(){
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=now.toDateString(), done={};
     log().forEach(function(e){ if(e.action==="taken" && new Date(e.at).toDateString()===dk) done[e.id+"|"+e.time]=1; });
-    var n=0; sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){ if(hm(t)<=m && !done[it.id+"|"+t]) n++; }); });
-    return n;
+    var n=0, seen={}; sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){ var k=it.id+"|"+t; if(seen[k]) return; seen[k]=1; if(hm(t)<=m && !done[k]) n++; }); });
+    return n;   // 같은 약·같은 시각이 두 번 들어 있어도 한 번만 셉니다 — 알림도 한 번만 울립니다
   }
+  var BADGE_SET="medinote:badge:set";   // 숫자를 띄운 적이 있다는 표시 — 설정을 다시 끄면 남아 있는 숫자를 지우려고
   function updateBadge(){
     try{
-      if(NATIVE || !((window.MEDINOTE_CONFIG||{}).appBadge===true) || !("setAppBadge" in navigator)) return;
-      var n=sc.on ? overdueCount() : 0;
-      var p = n>0 ? navigator.setAppBadge(n) : navigator.clearAppBadge();
+      if(NATIVE || !("setAppBadge" in navigator)) return;
+      if(!((window.MEDINOTE_CONFIG||{}).appBadge===true)){
+        if(localStorage.getItem(BADGE_SET)){ localStorage.removeItem(BADGE_SET); var c=navigator.clearAppBadge(); if(c && c.catch) c.catch(function(){}); }
+        return;
+      }
+      var n=sc.on ? overdueCount() : 0, p;
+      if(n>0){ localStorage.setItem(BADGE_SET,"1"); p=navigator.setAppBadge(n); } else p=navigator.clearAppBadge();
       if(p && p.catch) p.catch(function(){});
     }catch(e){}
   }
