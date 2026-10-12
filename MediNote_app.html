@@ -2025,10 +2025,13 @@ button,input,select,textarea{font-family:inherit}</style>
 .mnlg-link{display:block;width:100%;margin-top:10px;background:none;border:none;color:var(--brand);font-family:inherit;font-weight:700;font-size:var(--fs-sub);cursor:pointer;text-decoration:underline;}
 .mnlg-2nd{width:100%;margin-top:8px;font-family:inherit;font-weight:700;font-size:var(--fs-body);color:var(--brand)!important;background:#fff!important;border:1.5px solid var(--brand-soft)!important;border-radius:var(--r-sm);padding:11px 0;cursor:pointer;box-shadow:none!important;}
 /* 터치 영역 44px — 보이는 크기는 그대로, ::after 로 안 보이는 여백만 (#24 · MN-24-1~3) */
-#mnin-bar .cl,#mnsy-sheet .hd .cl,#mnrp-bar .cl,.mnhw-h .x,.mncard-eb .x,.mnlg-tabs button,#mnlg-quicktoggle,#mnsy-sheet .sev button,.mn-ib{position:relative;}
+#mnin-bar .cl,#mnsy-sheet .hd .cl,#mnrp-bar .cl,.mnhw-h .x,.mncard-eb .x,.mnlg-tabs button,#mnlg-quicktoggle,#mnsy-sheet .sev button,.mn-ib,#mnin-bar .go{position:relative;}
 /* 닫기 단추 5곳 · #mnlg-x · .mn-ib 는 보이는 크기 자체를 44px 로 키워(MN-24-4) ::after 여백이 필요 없습니다 */
-#mnlg-pill::after{content:"";position:absolute;inset:-3px 0;}
-.mnlg-tabs button::after{content:"";position:absolute;inset:-2px 0;}
+#mnlg-pill::after{content:"";position:absolute;inset:-4px 0;}
+.mnlg-tabs button::after{content:"";position:absolute;inset:-3px 0;}
+/* 실측(2026-10-13)으로 빠진 둘 — 「AI 채움」 32px · 설치 막대 「설치」 38px (눌림 영역 44 미만) (#99 MN-99-1) */
+#mnsy-ai::after{content:"";position:absolute;inset:-6px 0;}
+#mnin-bar .go::after{content:"";position:absolute;inset:-3px 0;}
 #mnlg-quicktoggle::after{content:"";position:absolute;inset:-13px 0;}
 #mnsy-sheet .sev button::after{content:"";position:absolute;inset:-4px 0;}
 .mn-tg::after{content:"";position:absolute;inset:-8px 0;}
