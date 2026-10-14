@@ -23,6 +23,16 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
   });
 
+/** 프로필은 허용한 칸만 모델에 붙인다 — 이미 설치된 옛 앱이 계정 식별자(account) 같은 칸을 보내와도 거른다 (#104 MN-104-3). */
+const PROFILE_KEYS = ["name", "ageGroup", "conditions"];
+function safeProfile(p: unknown): Record<string, unknown> | undefined {
+  if (!p || typeof p !== "object" || Array.isArray(p)) return undefined;
+  const src = p as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of PROFILE_KEYS) if (src[k] != null) out[k] = src[k];
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** 앱이 보내온 사용자 데이터를 근거 블록으로 만든다. 없으면 빈 문자열. */
 function contextBlock(ctx: Record<string, unknown> | undefined): string {
   if (!ctx) return "";
@@ -32,7 +42,7 @@ function contextBlock(ctx: Record<string, unknown> | undefined): string {
     const s = typeof v === "string" ? v.trim() : JSON.stringify(v);
     if (s && s !== "{}" && s !== "[]") parts.push(`${label}: ${s}`);
   };
-  push("나이대·성별 등 프로필", ctx.profile);
+  push("나이대·성별 등 프로필", safeProfile(ctx.profile));
   push("복용 중인 약", ctx.meds);
   push("최근 기록한 증상", ctx.symptoms);
   push("지난 예방접종", ctx.vaccinations);
