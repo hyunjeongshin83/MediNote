@@ -24,7 +24,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 /** 프로필은 허용한 칸만 모델에 붙인다 — 이미 설치된 옛 앱이 계정 식별자(account) 같은 칸을 보내와도 거른다 (#104 MN-104-3). */
-const PROFILE_KEYS = ["name", "ageGroup", "gender", "conditions"];
+const PROFILE_KEYS = ["name", "ageGroup", "conditions"];
 function safeProfile(p: unknown): Record<string, unknown> | undefined {
   if (!p || typeof p !== "object" || Array.isArray(p)) return undefined;
   const src = p as Record<string, unknown>;
