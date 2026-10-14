@@ -23,13 +23,22 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
   });
 
-/** 프로필은 허용한 칸만 모델에 붙인다 — 이미 설치된 옛 앱이 계정 식별자(account) 같은 칸을 보내와도 거른다 (#104 MN-104-3). */
-const PROFILE_KEYS = ["name", "ageGroup", "conditions"];
+/** 프로필은 허용한 칸만, 그것도 문자열(·문자열 목록)로만 모델에 붙인다 — 이미 설치된 옛 앱이 계정 식별자(account) 같은 칸을 보내와도,
+ *  허용한 칸에 객체·중첩 배열을 넣어 보내도 거른다 (#104 MN-104-3). 길이 상한은 앱이 보내는 값(name 40자 · 질환 20개)과 같다. */
+const str = (v: unknown, max: number): string | undefined =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
 function safeProfile(p: unknown): Record<string, unknown> | undefined {
   if (!p || typeof p !== "object" || Array.isArray(p)) return undefined;
   const src = p as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  for (const k of PROFILE_KEYS) if (src[k] != null) out[k] = src[k];
+  const name = str(src.name, 40);
+  if (name) out.name = name;
+  const ageGroup = str(src.ageGroup, 20);
+  if (ageGroup) out.ageGroup = ageGroup;
+  if (Array.isArray(src.conditions)) {
+    const c = src.conditions.map((x) => str(x, 40)).filter((x): x is string => !!x).slice(0, 20);
+    if (c.length) out.conditions = c;
+  }
   return Object.keys(out).length ? out : undefined;
 }
 
