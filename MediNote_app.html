@@ -1556,11 +1556,11 @@ button,input,select,textarea{font-family:inherit}</style>
     }catch(e){}
     // 프로필(이름·나이대·질환)은 첫 사용 때 확인받는 항목이고 서버 지시문(contextBlock)이 「나이대·성별 등 프로필」로 받습니다 — 계정만 보내던 것을 채웁니다 (PR #45 Codex)
     try{
-      var u = localStorage.getItem("medinote:uid"); var pf = {};
+      var pf = {};
       // 지금 계정이 저장한 프로필만 — 로그아웃 뒤 남은 앞사람 프로필은 보내지 않는다 (PR #71 Codex P1)
       try{ if(window.MediNoteProfile && window.MediNoteProfile.ownedByCurrent()) pf = JSON.parse(localStorage.getItem("medinote:profile")||"{}")||{}; }catch(e){}
       var prof = {};
-      if(u && u !== "guest") prof.account = u;
+      // 계정 식별자(uid)는 보내지 않습니다 — 도우미 답에 필요 없고, 서버 지시문(contextBlock)이 프로필 JSON 을 통째로 모델에 붙이기 때문입니다 (#104 MN-104-1)
       if(pf.name) prof.name = String(pf.name).slice(0,40);
       if(pf.ageGroup) prof.ageGroup = pf.ageGroup;
       if(Array.isArray(pf.conditions) && pf.conditions.length) prof.conditions = pf.conditions.slice(0,20);
