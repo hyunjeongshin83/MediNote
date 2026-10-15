@@ -1610,8 +1610,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         var _qc=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}), _mc=_qc.messages||[], _lq="";
         for(var _i=_mc.length-1;_i>=0;_i--){ if(_mc[_i].role==="user"){ _lq=(typeof _mc[_i].content==="string")?_mc[_i].content:JSON.stringify(_mc[_i].content); break; } }
         var _fill=(typeof _qc.system==="string"&&_qc.system.indexOf("[[NOCARD]]")>-1);
-        var _raw=_lq.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g,"'"); if(_fill){ var _sm=_lq.match(/오늘 증상:\s*([\s\S]*?)\n복용 중인 약/); if(_sm) _raw=_sm[1].replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g,"'"); }   // 채움은 증상 글만 본다(한글 머리말·약 이름 제외)
-        if(/죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|살고\s*싶지\s*않|살\s*이유가?\s*없|사는\s*(게|것이?)\s*(의미\s*없|싫)|죽는\s*(게|것이)\s*(낫|나을)|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|overdos|better\s+off\s+dead|(don'?t|do\s+not)\s+want\s+to\s+(live|be\s+alive)|no\s+reason\s+to\s+live|take\s+my\s+own\s+life|wish\s+i\s+(was|were)\s+dead|end\s+it\s+all/i.test(_raw)){
+        var _full=_lq.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g,"'"), _raw=_full;   // 위기 판정은 전체 글에, 언어 판정만 증상 글에서 본다(증상 칸이 구분 문구를 흉내 내도 놓치지 않게)
+        if(_fill){ var _sm=_lq.match(/오늘 증상:\s*([\s\S]*?)\n복용 중인 약/); if(_sm) _raw=_sm[1]; }
+        if(/죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|살고\s*싶지\s*않|살\s*이유가?\s*없|사는\s*(게|것이?)\s*(의미\s*없|싫)|죽는\s*(게|것이)\s*(낫|나을)|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|overdos|better\s+off\s+dead|(don'?t|do\s+not)\s+want\s+to\s+(live|be\s+alive)|no\s+reason\s+to\s+live|take\s+my\s+own\s+life|wish\s+i\s+(was|were)\s+dead|end\s+it\s+all/i.test(_full)){
           var _ko=/[가-힣]/.test(_raw);
           var _txt=_fill
             ? JSON.stringify({med:"",crisis:true,note:_ko?"많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하거나 약을 이미 많이 드셨다면 바로 119에 연락해 주세요.":"I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger or have already taken too much medicine, call 119 right away."})
@@ -1629,7 +1630,12 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         // 정규식에 안 걸린 위기 말투가 예시 카드(백신 안내 등)에 먼저 붙어 모델을 건너뛰지 않게, 위기 주변 낱말이 보이면 카드를 건너뛰고 모델(위기 안내 지시문)로 보낸다. 오탐은 카드 대신 AI 답이 나갈 뿐이다.
         var _soft=/overdos|suicid|self[\s-]*harm|hurt\s+myself|end\s+(it|my\s+life)|die\b|dying|dead\b|kill|죽|자살|자해|목숨|극단|사라지|과다\s*복용|많이\s*먹|다\s*먹/i.test(lastQ.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g,"'"));
         // 낱말 목록은 끝이 없으므로, 긴 자유 문장(공백 뺀 20자 초과)은 예시 카드로 보내지 않고 모델(위기 안내 지시문)로 보낸다. 짧은 조회(「독감 접종 시기」)만 카드로 간다.
-        var pre=(_soft||lastQ.replace(/\s+/g,"").length>20)?null:matchCard(lastQ);
+        var pre=null;
+        if(!_soft){   // 짧은 조회만 카드로: 질문이 낱말과 거의 같을 때(낱말 길이+3자 이내)만. 그 밖의 글은 모델(위기 안내 지시문)로 간다.
+          var _s0=lastQ.toLowerCase().replace(/[\s.,!?~]+/g,"");
+          for(var _ci=0;_ci<DBCARDS.length&&!pre;_ci++){ var _cc=DBCARDS[_ci], _kw=_cc.keywords||[];
+            for(var _cj=0;_cj<_kw.length;_cj++){ var _k=String(_kw[_cj]||"").toLowerCase().replace(/\s+/g,""); if(_k&&_s0.indexOf(_k)>-1&&_s0.length<=_k.length+3){ pre=_cc.card||_cc; break; } } }
+        }
         if(pre){ try{ showCard(pre); }catch(e){} return new Response(JSON.stringify({content:[{type:"text",text:(pre.summary||pre.title||"카드로 안내해 드렸어요.")}]}),{status:200,headers:{"Content-Type":"application/json"}}); }
       }catch(e){}
       // ② 없으면 실시간 AI가 카드로 답하도록 요청
