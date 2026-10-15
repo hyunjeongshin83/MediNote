@@ -1631,10 +1631,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         var _soft=/overdos|suicid|self[\s-]*harm|hurt\s+myself|end\s+(it|my\s+life)|die\b|dying|dead\b|kill|죽|자살|자해|목숨|극단|사라지|과다\s*복용|많이\s*먹|다\s*먹/i.test(lastQ.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g,"'"));
         // 낱말 목록은 끝이 없으므로, 긴 자유 문장(공백 뺀 20자 초과)은 예시 카드로 보내지 않고 모델(위기 안내 지시문)로 보낸다. 짧은 조회(「독감 접종 시기」)만 카드로 간다.
         var pre=null;
-        if(!_soft){   // 짧은 조회만 카드로: 질문이 낱말과 거의 같을 때(낱말 길이+3자 이내)만. 그 밖의 글은 모델(위기 안내 지시문)로 간다.
+        if(!_soft){   // 카드는 질문이 낱말과 정확히 같을 때만(공백·문장부호·대소문자 제외). 덧붙인 글이 있으면 무엇이든 모델(위기 안내 지시문)로 간다.
           var _s0=lastQ.toLowerCase().replace(/[\s.,!?~]+/g,"");
           for(var _ci=0;_ci<DBCARDS.length&&!pre;_ci++){ var _cc=DBCARDS[_ci], _kw=_cc.keywords||[];
-            for(var _cj=0;_cj<_kw.length;_cj++){ var _k=String(_kw[_cj]||"").toLowerCase().replace(/\s+/g,""); if(_k&&_s0.indexOf(_k)>-1&&_s0.length<=_k.length+3){ pre=_cc.card||_cc; break; } } }
+            for(var _cj=0;_cj<_kw.length;_cj++){ var _k=String(_kw[_cj]||"").toLowerCase().replace(/\s+/g,""); if(_k&&_s0===_k){ pre=_cc.card||_cc; break; } } }
         }
         if(pre){ try{ showCard(pre); }catch(e){} return new Response(JSON.stringify({content:[{type:"text",text:(pre.summary||pre.title||"카드로 안내해 드렸어요.")}]}),{status:200,headers:{"Content-Type":"application/json"}}); }
       }catch(e){}
