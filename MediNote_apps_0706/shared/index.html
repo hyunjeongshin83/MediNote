@@ -1626,7 +1626,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
         var qb0=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{});
         var ms=qb0.messages||[], lastQ="";
         for(var mi=ms.length-1;mi>=0;mi--){ if(ms[mi].role==="user"){ lastQ=(typeof ms[mi].content==="string")?ms[mi].content:JSON.stringify(ms[mi].content); break; } }
-        var pre=matchCard(lastQ);
+        // 정규식에 안 걸린 위기 말투가 예시 카드(백신 안내 등)에 먼저 붙어 모델을 건너뛰지 않게, 위기 주변 낱말이 보이면 카드를 건너뛰고 모델(위기 안내 지시문)로 보낸다. 오탐은 카드 대신 AI 답이 나갈 뿐이다.
+        var _soft=/overdos|suicid|self[\s-]*harm|hurt\s+myself|end\s+(it|my\s+life)|die\b|dying|dead\b|kill|죽|자살|자해|목숨|극단|사라지|과다\s*복용|많이\s*먹|다\s*먹/i.test(lastQ);
+        var pre=_soft?null:matchCard(lastQ);
         if(pre){ try{ showCard(pre); }catch(e){} return new Response(JSON.stringify({content:[{type:"text",text:(pre.summary||pre.title||"카드로 안내해 드렸어요.")}]}),{status:200,headers:{"Content-Type":"application/json"}}); }
       }catch(e){}
       // ② 없으면 실시간 AI가 카드로 답하도록 요청
