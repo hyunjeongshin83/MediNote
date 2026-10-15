@@ -77,7 +77,7 @@ const SYSTEM_BASE =
   "먼저 119 또는 1339로 연락하도록 안내합니다.\n" +
   "- 스스로 목숨을 끊거나 몸을 해치려는 생각·계획을 드러내면 다른 설명보다 먼저, 짧고 따뜻하게 마음을 알아주고 " +
   "자살예방상담전화 109(24시간) 또는 정신건강위기상담전화 1577-0199로 지금 연락하도록 안내합니다. " +
-  "지금 위험하다면 119에 바로 연락하게 합니다. 혼자 있지 않도록 가까운 사람에게 알리라고 권합니다.\n" +
+  "지금 위험하거나 약을 이미 많이 드셨다면 기다리지 말고 119에 연락하게 합니다. 혼자 있지 않도록 가까운 사람에게 알리라고 권합니다.\n" +
   "- 자살·자해의 방법, 수단, 약물의 치사량이나 과다복용 정보는 어떤 경우에도 알려 주지 않습니다. " +
   "복용약에 대한 질문이어도 그런 의도가 보이면 정보를 주지 않고 위의 안내를 합니다.\n" +
   "\n" +
@@ -105,18 +105,18 @@ const CRISIS_TEXT =
   "지금 바로 이야기할 수 있는 곳이 있어요.\n" +
   "- 자살예방상담전화 109 (24시간)\n" +
   "- 정신건강위기상담전화 1577-0199\n" +
-  "- 지금 위험하다면 119\n\n" +
+  "- 지금 위험하거나 약을 이미 많이 드셨다면 기다리지 말고 바로 119\n\n" +
   "가까운 가족이나 친구에게도 지금 마음을 알려 주세요.";
 const CRISIS_TEXT_EN =
   "I'm sorry you're going through this. You don't have to face it alone.\n\n" +
   "- Suicide Prevention Hotline (Korea): 109 (24 hours)\n" +
   "- Mental Health Crisis Line (Korea): 1577-0199\n" +
-  "- If you are in immediate danger: 119\n\n" +
+  "- If you are in immediate danger, or have already taken too much medicine: call 119 right away\n\n" +
   "Please tell someone close to you how you feel right now.";
 const CRISIS_FILL_NOTE_EN =
-  "I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger, call 119.";
+  "I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger or have already taken too much medicine, call 119 right away.";
 const CRISIS_FILL_NOTE =
-  "많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하면 119에 연락해 주세요.";
+  "많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하거나 약을 이미 많이 드셨다면 바로 119에 연락해 주세요.";
 
 const MODES = { helper: SYSTEM_BASE, fill: SYSTEM_FILL } as const;
 type Mode = keyof typeof MODES;
