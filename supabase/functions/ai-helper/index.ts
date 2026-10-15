@@ -99,7 +99,7 @@ const SYSTEM_FILL =
 
 // 위기 표현은 모델에 맡기지 않고 서버가 직접 안내한다 — 모델이 거절하거나 지시를 놓쳐도, 일일 상한에 걸려도 안내는 나가야 한다.
 // 같은 패턴이 앱(MediNote_app.html 의 카드 우회)에도 있다. 걸림이 잦아도 안내가 한 번 더 나가는 쪽이 낫다.
-const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|살고\s*싶지\s*않|살\s*이유가?\s*없|사는\s*(게|것이?)\s*(의미\s*없|싫)|죽는\s*(게|것이)\s*(낫|나을)|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|better\s+off\s+dead|(don'?t|do\s+not)\s+want\s+to\s+(live|be\s+alive)|no\s+reason\s+to\s+live|take\s+my\s+own\s+life|wish\s+i\s+(was|were)\s+dead|end\s+it\s+all/i;
+const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|살고\s*싶지\s*않|살\s*이유가?\s*없|사는\s*(게|것이?)\s*(의미\s*없|싫)|죽는\s*(게|것이)\s*(낫|나을)|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|overdos|better\s+off\s+dead|(don'?t|do\s+not)\s+want\s+to\s+(live|be\s+alive)|no\s+reason\s+to\s+live|take\s+my\s+own\s+life|wish\s+i\s+(was|were)\s+dead|end\s+it\s+all/i;
 const CRISIS_TEXT =
   "많이 힘드시군요. 혼자 견디지 않으셔도 괜찮아요.\n\n" +
   "지금 바로 이야기할 수 있는 곳이 있어요.\n" +
