@@ -1,11 +1,11 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v7";   // v7: 공통 선 아이콘·알약 앱 아이콘 (2026-09-28)
+const CACHE="medinote-app-v8";   // v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "icon-192.png","icon-512.png","icon-512-maskable.png","apple-touch-icon.png","favicon-32.png"];
 
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith("medinote-")&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});
 
 self.addEventListener("fetch",e=>{
   const req=e.request; if(req.method!=="GET")return;
