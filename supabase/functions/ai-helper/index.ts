@@ -97,6 +97,19 @@ const SYSTEM_FILL =
   "반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). " +
   '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
 
+// 위기 표현은 모델에 맡기지 않고 서버가 직접 안내한다 — 모델이 거절하거나 지시를 놓쳐도, 일일 상한에 걸려도 안내는 나가야 한다.
+// 같은 패턴이 앱(MediNote_app.html 의 카드 우회)에도 있다. 걸림이 잦아도 안내가 한 번 더 나가는 쪽이 낫다.
+const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽/;
+const CRISIS_TEXT =
+  "많이 힘드시군요. 혼자 견디지 않으셔도 괜찮아요.\n\n" +
+  "지금 바로 이야기할 수 있는 곳이 있어요.\n" +
+  "- 자살예방상담전화 109 (24시간)\n" +
+  "- 정신건강위기상담전화 1577-0199\n" +
+  "- 지금 위험하다면 119\n\n" +
+  "가까운 가족이나 친구에게도 지금 마음을 알려 주세요.";
+const CRISIS_FILL_NOTE =
+  "많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하면 119에 연락해 주세요.";
+
 const MODES = { helper: SYSTEM_BASE, fill: SYSTEM_FILL } as const;
 type Mode = keyof typeof MODES;
 
@@ -126,21 +139,6 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "login_required", message: "도우미는 로그인 후 이용하실 수 있어요." }, 401);
   }
 
-  // 한 사람이 하루에 쓸 수 있는 횟수 — 우리 키로 나가므로 상한이 필요하다.
-  const limit = Number(Deno.env.get("AI_DAILY_LIMIT") ?? "30");
-  const { data: allowed, error: capErr } = await supabase.rpc("ai_usage_take", {
-    p_user: user.id,
-    p_limit: limit,
-  });
-  if (capErr) return json({ ok: false, error: "usage_check_failed", message: capErr.message }, 500);
-  if (allowed !== true) {
-    return json({
-      ok: false,
-      error: "daily_limit",
-      message: `오늘 도우미 이용 횟수(${limit}회)를 모두 쓰셨어요. 내일 다시 이용해 주세요.`,
-    }, 429);
-  }
-
   let body: {
     messages?: Array<{ role: "user" | "assistant"; content: string }>;
     context?: Record<string, unknown>;
@@ -159,6 +157,30 @@ Deno.serve(async (req: Request) => {
     (m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim(),
   );
   if (!messages.length) return json({ ok: false, error: "empty_messages" }, 400);
+
+  // 위기 표현이면 모델을 부르지 않고(그래서 거절·상한·지시 누락과 상관없이) 안내를 돌려준다. 사용 횟수도 세지 않는다.
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  if (lastUser && CRISIS.test(lastUser.content)) {
+    const crisisMode: Mode = body.mode === "fill" ? "fill" : "helper";
+    const text = crisisMode === "fill" ? JSON.stringify({ med: "", note: CRISIS_FILL_NOTE }) : CRISIS_TEXT;
+    return json({ ok: true, text, sources: [], model: "crisis-guard", served_by: "crisis-guard" });
+  }
+
+  // 한 사람이 하루에 쓸 수 있는 횟수 — 우리 키로 나가므로 상한이 필요하다.
+  const limit = Number(Deno.env.get("AI_DAILY_LIMIT") ?? "30");
+  const { data: allowed, error: capErr } = await supabase.rpc("ai_usage_take", {
+    p_user: user.id,
+    p_limit: limit,
+  });
+  if (capErr) return json({ ok: false, error: "usage_check_failed", message: capErr.message }, 500);
+  if (allowed !== true) {
+    return json({
+      ok: false,
+      error: "daily_limit",
+      message: `오늘 도우미 이용 횟수(${limit}회)를 모두 쓰셨어요. 내일 다시 이용해 주세요.`,
+    }, 429);
+  }
+
 
   // 지시문은 서버 것만 — 앱이 보낸 system 은 무시한다. 「진단·처방 안 함」이 제안이 아니라 규칙이려면 여기 있어야 한다.
   const mode: Mode = body.mode === "fill" ? "fill" : "helper";

@@ -1607,6 +1607,12 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       opts=opts||{};
       // 내부 자동채움 등 [[NOCARD]] 요청은 카드 처리 없이 통과
       try{ var _b=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}); if(_b&&typeof _b.system==="string"&&_b.system.indexOf("[[NOCARD]]")>-1) return _m(opts); }catch(e){}
+      // 위기 표현(자해 등)이 있으면 예시 카드·카드 형식 지시를 건너뛰고 서버 안내(ai-helper 의 위기 안내)로 바로 보낸다 — 패턴은 서버(CRISIS)와 같다.
+      try{
+        var _qc=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}), _mc=_qc.messages||[], _lq="";
+        for(var _i=_mc.length-1;_i>=0;_i--){ if(_mc[_i].role==="user"){ _lq=(typeof _mc[_i].content==="string")?_mc[_i].content:JSON.stringify(_mc[_i].content); break; } }
+        if(/죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽/.test(_lq)) return _m(opts);
+      }catch(e){}
       // ① DB에 미리 채운 예시 카드가 질문과 맞으면 AI 호출 없이 즉시 표시
       try{
         var qb0=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{});
