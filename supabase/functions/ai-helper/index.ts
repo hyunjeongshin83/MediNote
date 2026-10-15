@@ -168,9 +168,13 @@ Deno.serve(async (req: Request) => {
 
   // 위기 표현이면 모델을 부르지 않고(그래서 거절·상한·지시 누락과 상관없이) 안내를 돌려준다. 사용 횟수도 세지 않는다.
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
-  if (lastUser && CRISIS.test(lastUser.content)) {
-    const crisisMode: Mode = body.mode === "fill" ? "fill" : "helper";
-    const ko = /[가-힣]/.test(lastUser.content);   // 한글이 없으면 영어 안내(앱의 영어 화면)
+  const crisisMode: Mode = body.mode === "fill" ? "fill" : "helper";
+  // 채움은 앱이 「오늘 증상: …\n복용 중인 약 …」 꼴로 감싸 보내므로 증상 글만 본다(한글 머리말·약 이름 때문에 언어가 틀리지 않게).
+  const raw = crisisMode === "fill"
+    ? (lastUser?.content.match(/오늘 증상:\s*([\s\S]*?)\n복용 중인 약/)?.[1] ?? lastUser?.content ?? "")
+    : (lastUser?.content ?? "");
+  if (lastUser && CRISIS.test(raw)) {
+    const ko = /[가-힣]/.test(raw);   // 한글이 없으면 영어 안내(앱의 영어 화면)
     const text = crisisMode === "fill"
       ? JSON.stringify({ med: "", note: ko ? CRISIS_FILL_NOTE : CRISIS_FILL_NOTE_EN })
       : (ko ? CRISIS_TEXT : CRISIS_TEXT_EN);
