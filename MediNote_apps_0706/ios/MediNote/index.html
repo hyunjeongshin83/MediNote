@@ -1607,6 +1607,20 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       opts=opts||{};
       // 내부 자동채움 등 [[NOCARD]] 요청은 카드 처리 없이 통과
       try{ var _b=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}); if(_b&&typeof _b.system==="string"&&_b.system.indexOf("[[NOCARD]]")>-1) return _m(opts); }catch(e){}
+      // 위기 표현(자해 등)은 로그인·AI 동의·서버·예시 카드와 상관없이 기기에서 바로 안내한다 — 패턴은 서버(ai-helper 의 CRISIS)와 같다.
+      try{
+        var _qc=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}), _mc=_qc.messages||[], _lq="";
+        for(var _i=_mc.length-1;_i>=0;_i--){ if(_mc[_i].role==="user"){ _lq=(typeof _mc[_i].content==="string")?_mc[_i].content:JSON.stringify(_mc[_i].content); break; } }
+        if(/죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|better\s+off\s+dead/i.test(_lq)){
+          var _ko=/[가-힣]/.test(_lq), _fill=(typeof _qc.system==="string"&&_qc.system.indexOf("[[NOCARD]]")>-1);
+          var _txt=_fill
+            ? JSON.stringify({med:"",note:_ko?"많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하면 119에 연락해 주세요.":"I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger, call 119."})
+            : (_ko?"많이 힘드시군요. 혼자 견디지 않으셔도 괜찮아요.\n\n지금 바로 이야기할 수 있는 곳이 있어요.\n- 자살예방상담전화 109 (24시간)\n- 정신건강위기상담전화 1577-0199\n- 지금 위험하다면 119\n\n가까운 가족이나 친구에게도 지금 마음을 알려 주세요.":"I'm sorry you're going through this. You don't have to face it alone.\n\n- Suicide Prevention Hotline (Korea): 109 (24 hours)\n- Mental Health Crisis Line (Korea): 1577-0199\n- If you are in immediate danger: 119\n\nPlease tell someone close to you how you feel right now.");
+          return new Response(JSON.stringify({content:[{type:"text",text:_txt}]}),{status:200,headers:{"Content-Type":"application/json; charset=utf-8"}});
+        }
+      }catch(e){}
+      // 내부 자동채움 등 [[NOCARD]] 요청은 카드 처리 없이 통과
+      try{ var _b=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}); if(_b&&typeof _b.system==="string"&&_b.system.indexOf("[[NOCARD]]")>-1) return _m(opts); }catch(e){}
       // 위기 표현(자해 등)이 있으면 예시 카드·카드 형식 지시를 건너뛰고 서버 안내(ai-helper 의 위기 안내)로 바로 보낸다 — 패턴은 서버(CRISIS)와 같다.
       try{
         var _qc=(typeof opts.body==="string")?JSON.parse(opts.body):(opts.body||{}), _mc=_qc.messages||[], _lq="";

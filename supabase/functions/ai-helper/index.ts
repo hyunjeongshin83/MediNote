@@ -99,7 +99,7 @@ const SYSTEM_FILL =
 
 // 위기 표현은 모델에 맡기지 않고 서버가 직접 안내한다 — 모델이 거절하거나 지시를 놓쳐도, 일일 상한에 걸려도 안내는 나가야 한다.
 // 같은 패턴이 앱(MediNote_app.html 의 카드 우회)에도 있다. 걸림이 잦아도 안내가 한 번 더 나가는 쪽이 낫다.
-const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽/;
+const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|better\s+off\s+dead/i;
 const CRISIS_TEXT =
   "많이 힘드시군요. 혼자 견디지 않으셔도 괜찮아요.\n\n" +
   "지금 바로 이야기할 수 있는 곳이 있어요.\n" +
@@ -107,6 +107,14 @@ const CRISIS_TEXT =
   "- 정신건강위기상담전화 1577-0199\n" +
   "- 지금 위험하다면 119\n\n" +
   "가까운 가족이나 친구에게도 지금 마음을 알려 주세요.";
+const CRISIS_TEXT_EN =
+  "I'm sorry you're going through this. You don't have to face it alone.\n\n" +
+  "- Suicide Prevention Hotline (Korea): 109 (24 hours)\n" +
+  "- Mental Health Crisis Line (Korea): 1577-0199\n" +
+  "- If you are in immediate danger: 119\n\n" +
+  "Please tell someone close to you how you feel right now.";
+const CRISIS_FILL_NOTE_EN =
+  "I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger, call 119.";
 const CRISIS_FILL_NOTE =
   "많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하면 119에 연락해 주세요.";
 
@@ -162,7 +170,10 @@ Deno.serve(async (req: Request) => {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   if (lastUser && CRISIS.test(lastUser.content)) {
     const crisisMode: Mode = body.mode === "fill" ? "fill" : "helper";
-    const text = crisisMode === "fill" ? JSON.stringify({ med: "", note: CRISIS_FILL_NOTE }) : CRISIS_TEXT;
+    const ko = /[가-힣]/.test(lastUser.content);   // 한글이 없으면 영어 안내(앱의 영어 화면)
+    const text = crisisMode === "fill"
+      ? JSON.stringify({ med: "", note: ko ? CRISIS_FILL_NOTE : CRISIS_FILL_NOTE_EN })
+      : (ko ? CRISIS_TEXT : CRISIS_TEXT_EN);
     return json({ ok: true, text, sources: [], model: "crisis-guard", served_by: "crisis-guard" });
   }
 
