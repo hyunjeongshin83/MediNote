@@ -125,28 +125,6 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, error: "POST 로 호출해 주세요." }, 405);
 
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey) {
-    return json({
-      ok: false,
-      error: "not_configured",
-      message: "도우미가 아직 연결되지 않았습니다. 운영자가 ANTHROPIC_API_KEY 를 등록하면 바로 작동합니다.",
-    }, 503);
-  }
-
-  // verify_jwt 가 켜져 있어 여기까지 온 요청은 서명이 검증된 상태다. 사용자만 꺼낸다.
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-  const token = authHeader.replace(/^Bearer\s+/i, "");
-  const { data: userData } = await supabase.auth.getUser(token);
-  const user = userData?.user;
-  if (!user) {
-    return json({ ok: false, error: "login_required", message: "도우미는 로그인 후 이용하실 수 있어요." }, 401);
-  }
-
   let body: {
     messages?: Array<{ role: "user" | "assistant"; content: string }>;
     context?: Record<string, unknown>;
@@ -181,6 +159,28 @@ Deno.serve(async (req: Request) => {
       ? JSON.stringify({ med: "", crisis: true, note: ko ? CRISIS_FILL_NOTE : CRISIS_FILL_NOTE_EN })
       : (ko ? CRISIS_TEXT : CRISIS_TEXT_EN);
     return json({ ok: true, text, sources: [], model: "crisis-guard", served_by: "crisis-guard" });
+  }
+
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) {
+    return json({
+      ok: false,
+      error: "not_configured",
+      message: "도우미가 아직 연결되지 않았습니다. 운영자가 ANTHROPIC_API_KEY 를 등록하면 바로 작동합니다.",
+    }, 503);
+  }
+
+  // verify_jwt 가 켜져 있어 여기까지 온 요청은 서명이 검증된 상태다. 사용자만 꺼낸다.
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  const { data: userData } = await supabase.auth.getUser(token);
+  const user = userData?.user;
+  if (!user) {
+    return json({ ok: false, error: "login_required", message: "도우미는 로그인 후 이용하실 수 있어요." }, 401);
   }
 
   // 한 사람이 하루에 쓸 수 있는 횟수 — 우리 키로 나가므로 상한이 필요하다.
