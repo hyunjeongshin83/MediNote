@@ -75,6 +75,11 @@ const SYSTEM_BASE =
   "공식 지침의 내용을 출처와 함께 전하는 것까지입니다.\n" +
   "- 응급 징후(호흡곤란, 얼굴·입 부위 붓기, 의식 저하, 심한 어지러움, 반복 구토)가 보이면 " +
   "먼저 119 또는 1339로 연락하도록 안내합니다.\n" +
+  "- 스스로 목숨을 끊거나 몸을 해치려는 생각·계획을 드러내면 다른 설명보다 먼저, 짧고 따뜻하게 마음을 알아주고 " +
+  "자살예방상담전화 109(24시간) 또는 정신건강위기상담전화 1577-0199로 지금 연락하도록 안내합니다. " +
+  "지금 위험하거나 약을 이미 많이 드셨다면 기다리지 말고 119에 연락하게 합니다. 혼자 있지 않도록 가까운 사람에게 알리라고 권합니다.\n" +
+  "- 자살·자해의 방법, 수단, 약물의 치사량이나 과다복용 정보는 어떤 경우에도 알려 주지 않습니다. " +
+  "복용약에 대한 질문이어도 그런 의도가 보이면 정보를 주지 않고 위의 안내를 합니다.\n" +
   "\n" +
   "말투: 어르신이 읽기 쉬운 담백한 존댓말. 짧은 문단과 항목으로 나눕니다. " +
   "전문용어는 쉬운 말로 풀어 씁니다. 답변 끝에 근거 출처를 한 줄로 적습니다.";
@@ -86,8 +91,32 @@ const SYSTEM_FILL =
   "너는 복약 기록 정리 도우미다. 처방·진단은 하지 않는다. " +
   "사용자의 오늘 증상과 복용 약 목록을 보고, 그 증상과 관련 있을 만한 약만 골라 관련약으로 정리한다. " +
   "판정·처방 표현은 쓰지 않고, 증상의 원인을 추정하거나 복약을 바꾸라고 권하지 않는다. " +
+  "증상 글에 스스로 목숨을 끊거나 몸을 해치려는 생각이 보이면 관련 약을 고르지 말고 med 는 빈 문자열, crisis 는 true 로 두고, " +
+  "note 에 짧고 따뜻한 한두 문장으로 자살예방상담전화 109(24시간) 또는 정신건강위기상담전화 1577-0199, " +
+  "위급하면 119 연락을 안내한다. 자살·자해 방법이나 약물의 치사량·과다복용 정보는 절대 쓰지 않는다. " +
   "반드시 아래 JSON 하나만 출력한다(코드펜스·다른 말 없이). " +
-  '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)"}';
+  '스키마: {"med":"관련 약 이름들(쉼표로, 없으면 전체에서 대표 몇 개)","note":"참고용 한 문장(담백한 존댓말, 마지막은 약사·의사 상담 권유)","crisis":"위기 표현이 보일 때만 true, 아니면 생략"}';
+
+// 위기 표현은 모델에 맡기지 않고 서버가 직접 안내한다 — 모델이 거절하거나 지시를 놓쳐도, 일일 상한에 걸려도 안내는 나가야 한다.
+// 같은 패턴이 앱(MediNote_app.html 의 카드 우회)에도 있다. 걸림이 잦아도 안내가 한 번 더 나가는 쪽이 낫다.
+const CRISIS = /죽고\s*싶|죽을까|죽어\s*버리|자살|자해|목숨을?\s*끊|스스로\s*(목숨|생을|몸을)|극단적\s*선택|살기\s*싫|사라지고\s*싶|생을\s*마감|손목을?\s*(긋|그)|치사량|한꺼번에\s*다\s*(먹|삼)|약을?\s*다\s*먹고\s*죽|살고\s*싶지\s*않|살\s*이유가?\s*없|사는\s*(게|것이?)\s*(의미\s*없|싫)|죽는\s*(게|것이)\s*(낫|나을)|kill\s+myself|suicid|end\s+my\s+life|want\s+to\s+die|self[-\s]?harm|hurt\s+myself|lethal\s+dose|overdos|better\s+off\s+dead|(don'?t|do\s+not)\s+want\s+to\s+(live|be\s+alive)|no\s+reason\s+to\s+live|take\s+my\s+own\s+life|wish\s+i\s+(was|were)\s+dead|end\s+it\s+all/i;
+const CRISIS_TEXT =
+  "많이 힘드시군요. 혼자 견디지 않으셔도 괜찮아요.\n\n" +
+  "지금 바로 이야기할 수 있는 곳이 있어요.\n" +
+  "- 자살예방상담전화 109 (24시간)\n" +
+  "- 정신건강위기상담전화 1577-0199\n" +
+  "- 지금 위험하거나 약을 이미 많이 드셨다면 기다리지 말고 바로 119\n\n" +
+  "가까운 가족이나 친구에게도 지금 마음을 알려 주세요.";
+const CRISIS_TEXT_EN =
+  "I'm sorry you're going through this. You don't have to face it alone.\n\n" +
+  "- Suicide Prevention Hotline (Korea): 109 (24 hours)\n" +
+  "- Mental Health Crisis Line (Korea): 1577-0199\n" +
+  "- If you are in immediate danger, or have already taken too much medicine: call 119 right away\n\n" +
+  "Please tell someone close to you how you feel right now.";
+const CRISIS_FILL_NOTE_EN =
+  "I'm sorry you're going through this. Please call the Suicide Prevention Hotline 109 (24 hours) or the Mental Health Crisis Line 1577-0199 in Korea. If you are in immediate danger or have already taken too much medicine, call 119 right away.";
+const CRISIS_FILL_NOTE =
+  "많이 힘드시군요. 지금 바로 자살예방상담전화 109(24시간)나 정신건강위기상담전화 1577-0199로 이야기해 보세요. 위급하거나 약을 이미 많이 드셨다면 바로 119에 연락해 주세요.";
 
 const MODES = { helper: SYSTEM_BASE, fill: SYSTEM_FILL } as const;
 type Mode = keyof typeof MODES;
@@ -95,6 +124,43 @@ type Mode = keyof typeof MODES;
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, error: "POST 로 호출해 주세요." }, 405);
+
+  let body: {
+    messages?: Array<{ role: "user" | "assistant"; content: string }>;
+    context?: Record<string, unknown>;
+    mode?: string;          // "helper"(기본) | "fill" — 서버의 지시문 이름
+    system?: string;        // 받아도 쓰지 않는다 (MN-44-1)
+    max_tokens?: number;
+    web_search?: boolean;
+  };
+  try {
+    body = await req.json();
+  } catch {
+    return json({ ok: false, error: "bad_json" }, 400);
+  }
+
+  const messages = (body.messages ?? []).filter(
+    (m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim(),
+  );
+  if (!messages.length) return json({ ok: false, error: "empty_messages" }, 400);
+
+  // 위기 표현이면 모델을 부르지 않고(그래서 거절·상한·지시 누락과 상관없이) 안내를 돌려준다. 사용 횟수도 세지 않는다.
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const crisisMode: Mode = body.mode === "fill" ? "fill" : "helper";
+  // 채움은 앱이 「오늘 증상: …\n복용 중인 약 …」 꼴로 감싸 보내므로 증상 글만 본다(한글 머리말·약 이름 때문에 언어가 틀리지 않게).
+  const raw = crisisMode === "fill"
+    ? (lastUser?.content.match(/오늘 증상:\s*([\s\S]*?)\n복용 중인 약/)?.[1] ?? lastUser?.content ?? "")
+    : (lastUser?.content ?? "");
+  // 휴대폰 키보드의 둥근 따옴표(’)도 곧은 따옴표로 맞춘 뒤 본다(don’t want to live)
+  // 위기 판정은 전체 글에, 언어 판정만 증상 글(raw)에서 본다 — 증상 칸이 구분 문구를 흉내 내도 놓치지 않게.
+  const rawN = (lastUser?.content ?? "").replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
+  if (lastUser && CRISIS.test(rawN)) {
+    const ko = /[가-힣]/.test(raw);   // 한글이 없으면 영어 안내(앱의 영어 화면)
+    const text = crisisMode === "fill"
+      ? JSON.stringify({ med: "", crisis: true, note: ko ? CRISIS_FILL_NOTE : CRISIS_FILL_NOTE_EN })
+      : (ko ? CRISIS_TEXT : CRISIS_TEXT_EN);
+    return json({ ok: true, text, sources: [], model: "crisis-guard", served_by: "crisis-guard" });
+  }
 
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) {
@@ -133,24 +199,6 @@ Deno.serve(async (req: Request) => {
     }, 429);
   }
 
-  let body: {
-    messages?: Array<{ role: "user" | "assistant"; content: string }>;
-    context?: Record<string, unknown>;
-    mode?: string;          // "helper"(기본) | "fill" — 서버의 지시문 이름
-    system?: string;        // 받아도 쓰지 않는다 (MN-44-1)
-    max_tokens?: number;
-    web_search?: boolean;
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return json({ ok: false, error: "bad_json" }, 400);
-  }
-
-  const messages = (body.messages ?? []).filter(
-    (m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim(),
-  );
-  if (!messages.length) return json({ ok: false, error: "empty_messages" }, 400);
 
   // 지시문은 서버 것만 — 앱이 보낸 system 은 무시한다. 「진단·처방 안 함」이 제안이 아니라 규칙이려면 여기 있어야 한다.
   const mode: Mode = body.mode === "fill" ? "fill" : "helper";
