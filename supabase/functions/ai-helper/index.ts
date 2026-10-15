@@ -173,7 +173,9 @@ Deno.serve(async (req: Request) => {
   const raw = crisisMode === "fill"
     ? (lastUser?.content.match(/오늘 증상:\s*([\s\S]*?)\n복용 중인 약/)?.[1] ?? lastUser?.content ?? "")
     : (lastUser?.content ?? "");
-  if (lastUser && CRISIS.test(raw)) {
+  // 휴대폰 키보드의 둥근 따옴표(’)도 곧은 따옴표로 맞춘 뒤 본다(don’t want to live)
+  const rawN = raw.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
+  if (lastUser && CRISIS.test(rawN)) {
     const ko = /[가-힣]/.test(raw);   // 한글이 없으면 영어 안내(앱의 영어 화면)
     const text = crisisMode === "fill"
       ? JSON.stringify({ med: "", crisis: true, note: ko ? CRISIS_FILL_NOTE : CRISIS_FILL_NOTE_EN })
