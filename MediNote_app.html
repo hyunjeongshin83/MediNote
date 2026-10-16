@@ -140,6 +140,8 @@
    넘치므로(한 칸 85px < 91px) 폭과 상관없이 이름을 아래에 둡니다. */
 .mn-nav-below .mn-tab-in{flex-direction:column;gap:4px;padding:4px 6px;}
 .mn-nav-below .mn-tab svg{width:22px;height:22px;}
+/* 본문 스크롤 영역에 키보드 초점이 가도록 tabindex=0 을 줬다 — 초점 링이 화면 가장자리에서 잘리지 않게 안쪽으로 (MN-<이슈>-2) */
+.mn-frame > div[role=region]:focus-visible{outline-offset:-3px;}
 /* 글자를 키우면(iOS 텍스트 크기 · 브라우저 200%) 380px 이상에서도 이름이 칸을 넘습니다 (#46 Codex).
    폭 기준만으로는 못 잡으므로, 실제로 넘치는지 재서 html.mn-tabs-below 를 붙입니다(아래 스크립트).
    아래 배치에서도 넘치면 이름을 줄바꿈합니다. */
@@ -520,7 +522,7 @@ button,input,select,textarea{font-family:inherit}</style>
       setProfile(p);
       setPhase("app");
     } });
-    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, background: C.g7, minHeight: "100vh", display: "flex", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("style", null, `*{box-sizing:border-box;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent} ::-webkit-scrollbar{display:none} @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes drop{from{opacity:0;transform:translateY(-140%)}to{opacity:1;transform:translateY(0)}} @keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}} @keyframes pop{0%{transform:scale(.86);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}} button{font-family:inherit}`), /* @__PURE__ */ import_react.default.createElement("div", { className: "mn-frame", style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", background: `linear-gradient(180deg,${C.g0} 0%,${C.paper} 30%,${C.g0} 100%)`, position: "relative", overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement(AppBar, { title: t.title[tab], onBell: () => setTab("assist"), onUser: () => setTab("my") }), /* @__PURE__ */ import_react.default.createElement("div", { key: tab, style: { flex: 1, overflowY: "auto", animation: "fade .34s ease" } }, tab === "home" && /* @__PURE__ */ import_react.default.createElement(Home, { t, go: setTab, profile }), tab === "vaccine" && /* @__PURE__ */ import_react.default.createElement(Vaccine, { t, lang, profile }), tab === "assist" && /* @__PURE__ */ import_react.default.createElement(Assistant, { t, lang, profile }), tab === "report" && /* @__PURE__ */ import_react.default.createElement(Report, { t }), tab === "my" && /* @__PURE__ */ import_react.default.createElement(My, { t, lang, profile })), /* @__PURE__ */ import_react.default.createElement(Nav, { t, lang, tab, set: setTab })));
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { fontFamily: FONT, background: C.g7, minHeight: "100vh", display: "flex", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("style", null, `*{box-sizing:border-box;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent} ::-webkit-scrollbar{display:none} @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} @keyframes drop{from{opacity:0;transform:translateY(-140%)}to{opacity:1;transform:translateY(0)}} @keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}} @keyframes pop{0%{transform:scale(.86);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}} button{font-family:inherit}`), /* @__PURE__ */ import_react.default.createElement("div", { className: "mn-frame", style: { width: "100%", maxWidth: 430, height: "100dvh", display: "flex", flexDirection: "column", background: `linear-gradient(180deg,${C.g0} 0%,${C.paper} 30%,${C.g0} 100%)`, position: "relative", overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement(AppBar, { title: t.title[tab], onBell: () => setTab("assist"), onUser: () => setTab("my") }), /* @__PURE__ */ import_react.default.createElement("div", { key: tab, tabIndex: 0, role: "region", "aria-label": t.title[tab], style: { flex: 1, overflowY: "auto", animation: "fade .34s ease" } }, tab === "home" && /* @__PURE__ */ import_react.default.createElement(Home, { t, go: setTab, profile }), tab === "vaccine" && /* @__PURE__ */ import_react.default.createElement(Vaccine, { t, lang, profile }), tab === "assist" && /* @__PURE__ */ import_react.default.createElement(Assistant, { t, lang, profile }), tab === "report" && /* @__PURE__ */ import_react.default.createElement(Report, { t }), tab === "my" && /* @__PURE__ */ import_react.default.createElement(My, { t, lang, profile })), /* @__PURE__ */ import_react.default.createElement(Nav, { t, lang, tab, set: setTab })));
   }
   function Ico({ d, s = 22, c = C.d2, sw = 2, f = "none" }) {
     return /* @__PURE__ */ import_react.default.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: f, stroke: c, strokeWidth: sw, strokeLinecap: "round", strokeLinejoin: "round" }, d);
@@ -1675,7 +1677,7 @@ button,input,select,textarea{font-family:inherit}</style>
 <!-- ===== 복약 알림 레이어 (2026-09-25 · #16 MN-16-6 · 대표님 결정 C-21 · 금연노트 알림 규칙 재사용) ===== -->
 <style>
 /* z-index 는 로그인 알약(99990)과 같은 층 — 시트·배경(99998 이상)이 열리면 그 아래로 들어가 가리지 않습니다 */
-#mnmd-pill{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:99990;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:var(--r-full);border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:700;font-size:var(--fs-sub);box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
+#mnmd-pill{position:fixed;right:14px;bottom:max(calc(84px + env(safe-area-inset-bottom,0px)), calc(var(--mn-nav-h,0px) - 3px));z-index:99990;display:none;align-items:center;gap:6px;padding:10px 14px;border-radius:var(--r-full);border:1.5px solid var(--brand-soft,#E1F1EE);background:#fff;color:var(--brand,#0A7168);font-family:'Pretendard',-apple-system,sans-serif;font-weight:700;font-size:var(--fs-sub);box-shadow:0 8px 24px rgba(6,65,62,.18);cursor:pointer;min-height:44px;}
 #mnmd-pill.on{display:flex;}
 .mnmd-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #E6F1EE;font-size:var(--fs-sub);color:#0F2327;}
 .mnmd-row .t{flex:1;} .mnmd-row .t small{display:block;color:#577377;font-size:.9375rem;}
@@ -1720,6 +1722,21 @@ button,input,select,textarea{font-family:inherit}</style>
   var pill=document.getElementById("mnmd-pill");
   function showPill(){ pill.classList.add("on"); }
   setTimeout(showPill, 2500);
+  // 글자를 키우면 아래 탭 줄이 높아져 떠 있는 알약이 탭을 덮는다 (360×640 · 200%: 5칸 중 3칸). 탭 줄이 화면 아래에서 차지하는 높이를 재서 알약이 그 위로 오게 한다.
+  // 100% 에서는 기존 84px 이 더 커서 위치가 그대로다.
+  var navRaf=0, navEl=null, navRO=null;
+  function fitNav(){
+    navRaf=0;
+    var n=document.querySelector(".mn-nav"); if(!n) return;
+    if(n!==navEl){ navEl=n; try{ if(navRO) navRO.disconnect(); navRO=new ResizeObserver(queueFit); navRO.observe(n); }catch(e){} }   // 글자 크기가 앱을 연 뒤에 바뀌어도 탭 줄 높이를 다시 잰다
+    var h=Math.max(0, Math.round(window.innerHeight-n.getBoundingClientRect().top));
+    var root=document.documentElement.style;
+    if(root.getPropertyValue("--mn-nav-h")!==h+"px") root.setProperty("--mn-nav-h", h+"px");
+  }
+  function queueFit(){ if(!navRaf) navRaf=requestAnimationFrame(fitNav); }
+  window.addEventListener("resize", queueFit);
+  try{ new MutationObserver(queueFit).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  queueFit();
   pill.onclick=open; pill.onkeydown=function(e){ if(e.key==="Enter"||e.key===" ") open(); };
 
   function ensure(){
