@@ -427,7 +427,10 @@ create policy "hp self select" on public.health_profiles for select to public us
 create policy "hp self upsert" on public.health_profiles for insert to public with check (auth.uid() = id);
 create policy "hp self update" on public.health_profiles for update to public using (auth.uid() = id) with check (auth.uid() = id);
 
--- hub_state: 원본의 medit:% (CampusTownHub 팀 키) 정책은 뺐습니다. medinote:% 키만 허용합니다.
+-- hub_state: 원본의 medit:% (CampusTownHub 팀 키) 정책은 뺐습니다.
+-- 직접 쓰기(insert · update)는 「본인 보고서 키」(medinote:report:u_<내 uid> · medinote:reports_sent:u_<내 uid>)만 허용합니다 — kv_scope 가 그 모양을 가립니다.
+-- 원본은 medinote:% 로 시작하기만 하면 되어, 공개로 읽히는 키(medinote:cards · medinote:rx)를 가입한 누구나 먼저 만들어 모든 이용자에게 돌려줄 수 있었습니다
+-- (Codex P1 · 2026-10-17). 키 이름을 하나씩 빼는 대신 허용 목록으로 뒤집었습니다. 앱은 hub_state 에 직접 쓰지 않고 kv_put 함수로만 씁니다.
 drop policy if exists "hub_read_own" on public.hub_state;
 drop policy if exists "hub_read_public" on public.hub_state;
 drop policy if exists "hub_update_own" on public.hub_state;
@@ -436,9 +439,10 @@ drop policy if exists "hub_no_self_publish" on public.hub_state;
 create policy "hub_read_own" on public.hub_state as permissive for select to authenticated using ((select auth.uid()) = user_id);
 create policy "hub_read_public" on public.hub_state as permissive for select to anon, authenticated using (is_public = true);
 create policy "hub_update_own" on public.hub_state as permissive for update to authenticated
-  using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+  using (((select auth.uid()) = user_id) and (public.kv_scope(key) = 'u_' || (select auth.uid())::text))
+  with check (((select auth.uid()) = user_id) and (public.kv_scope(key) = 'u_' || (select auth.uid())::text) and (is_public = false));
 create policy "hub_write_own" on public.hub_state as permissive for insert to authenticated
-  with check (((select auth.uid()) = user_id) and (key like 'medinote:%'));
+  with check (((select auth.uid()) = user_id) and (public.kv_scope(key) = 'u_' || (select auth.uid())::text));
 create policy "hub_no_self_publish" on public.hub_state as restrictive for insert to authenticated with check (is_public = false);
 
 drop policy if exists "m_select_own" on public.measurements;
