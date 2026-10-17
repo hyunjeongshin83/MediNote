@@ -515,7 +515,12 @@ revoke all on function public.ai_usage_take(uuid, integer), public.ai_usage_reco
   from public, anon, authenticated;
 grant execute on function public.ai_usage_take(uuid, integer), public.ai_usage_record(uuid, bigint, bigint), public.ai_usage_self(uuid),
   public.handle_new_user(), public.measurements_guard() to service_role;
-grant execute on function public.get_prescription(text), public.kv_put_cards(jsonb) to authenticated, service_role;
+grant execute on function public.get_prescription(text) to authenticated, service_role;
+-- kv_put_cards 는 원본과 달리 service_role 에게만 줍니다 (Codex P1 · 2026-10-17).
+-- 원본은 authenticated 에게도 열려 있어, 이메일로 가입만 한 누구나 모든 이용자에게 공개되는 안내카드(medinote:cards)를 덮어쓸 수 있습니다.
+-- 함수 안의 검사는 「로그인했는가」뿐이라 관리자 확인이 아닙니다. 카드는 SQL Editor 또는 서비스 키로만 채웁니다.
+-- (seed_cards.html 의 「로그인한 계정으로 갱신」은 이 복사본에서는 동작하지 않습니다 — 관리자 확인 방식을 정한 뒤에.)
+grant execute on function public.kv_put_cards(jsonb) to service_role;
 grant execute on function public.kv_get(text), public.kv_get_many(text[]), public.kv_put(text, jsonb), public.push_subscribe(text, jsonb)
   to anon, authenticated, service_role;
 
