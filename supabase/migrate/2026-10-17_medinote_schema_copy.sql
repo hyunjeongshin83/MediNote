@@ -429,6 +429,9 @@ create policy "hp self upsert" on public.health_profiles for insert to public wi
 create policy "hp self update" on public.health_profiles for update to public using (auth.uid() = id) with check (auth.uid() = id);
 
 -- hub_state: 원본의 medit:% (CampusTownHub 팀 키) 정책은 뺐습니다.
+-- 주의: 앱의 MediNoteSaveRx(MediNote_app.boot.js · 병원·약국 연동이 부르는 입구, 저장소 안에서는 아무도 부르지 않음)는 hub_state 에 medit:rx 를 직접 씁니다.
+--       아래 허용 목록은 이 키를 허용하지 않으므로 복사본에서는 그 저장이 거부됩니다. 의도입니다 — kv_public 이 medit:rx 를 「누구나 읽기」로 두고 있어,
+--       가입한 누구나 먼저 만든 처방이 모든 이용자에게 돌려질 수 있기 때문입니다 (이슈 #22 MN-22-4). 연동이 필요해지면 서비스 키로 쓰게 하거나 키 설계를 먼저 정합니다.
 -- 직접 쓰기(insert · update)는 「본인 보고서 키」(medinote:report:u_<내 uid> · medinote:reports_sent:u_<내 uid>)만 허용합니다 — kv_scope 가 그 모양을 가립니다.
 -- 원본은 medinote:% 로 시작하기만 하면 되어, 공개로 읽히는 키(medinote:cards · medinote:rx)를 가입한 누구나 먼저 만들어 모든 이용자에게 돌려줄 수 있었습니다
 -- (Codex P1 · 2026-10-17). 키 이름을 하나씩 빼는 대신 허용 목록으로 뒤집었습니다. 앱은 hub_state 에 직접 쓰지 않고 kv_put 함수로만 씁니다.
@@ -520,6 +523,9 @@ revoke all on function public.ai_usage_take(uuid, integer), public.ai_usage_reco
   from public, anon, authenticated;
 grant execute on function public.ai_usage_take(uuid, integer), public.ai_usage_record(uuid, bigint, bigint), public.ai_usage_self(uuid),
   public.handle_new_user(), public.measurements_guard() to service_role;
+-- get_prescription 은 원본과 같이 anon 에게는 주지 않습니다(authenticated 만). 그래서 로그인하지 않은 사람이 ?rx=<처방ID> 링크를 열면 이 함수가 거부되고
+-- 앱은 조용히 내장 데모 처방으로 물러납니다(MediNote_app.boot.js loadRx) — 원본도 같은 상태입니다 (Codex P1 · 이슈 #117 MN-117-4 · 결정 대기).
+-- 처방 내용은 건강 정보라 익명에게 여는 것은 이 복사본에서 임의로 정하지 않습니다.
 grant execute on function public.get_prescription(text) to authenticated, service_role;
 -- kv_put_cards 는 원본과 달리 service_role 에게만 줍니다 (Codex P1 · 2026-10-17).
 -- 원본은 authenticated 에게도 열려 있어, 이메일로 가입만 한 누구나 모든 이용자에게 공개되는 안내카드(medinote:cards)를 덮어쓸 수 있습니다.
