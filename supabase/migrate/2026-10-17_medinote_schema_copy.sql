@@ -281,7 +281,8 @@ end $f$;
 create or replace function public.kv_put_cards(p_value jsonb) returns boolean
  language plpgsql security definer set search_path to '' as $f$
 begin
-  if (select auth.uid()) is null then return false; end if;
+  -- 원본에는 여기에 「로그인했는가」 검사(auth.uid() is null)가 있었습니다. 실행 권한을 service_role 에게만 주었으므로(아래 grant)
+  -- 호출자는 서비스 키·SQL Editor 뿐이고 이들은 사용자 uid 가 없어 그 검사가 항상 false 를 돌려줬습니다 (Codex P2). 권한이 문이므로 검사는 뺍니다.
   if p_value is null or pg_column_size(p_value) > 262144 then return false; end if;
   if jsonb_typeof(p_value -> 'cards') is distinct from 'array' then return false; end if;
   insert into public.hub_state (key, value, updated_at, is_public)
