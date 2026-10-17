@@ -576,6 +576,11 @@ create policy "health own delete" on storage.objects for delete to public using 
 --  2. Authentication → Providers → Google: 새 프로젝트의 콜백 주소(https://pczprqckynukavpeylbq.supabase.co/auth/v1/callback)를
 --     구글 콘솔 「승인된 리디렉션 URI」에 추가하고 클라이언트 ID·시크릿을 넣기 (시크릿은 여기·이슈·카톡에 적지 않습니다)
 --  3. 엣지 함수 ai-helper 배포 (supabase/functions/ai-helper) + 비밀값(ANTHROPIC 열쇠) 새 프로젝트에 따로 등록
---  4. medinote.config.js 의 REF · KEY 두 줄 → 새 프로젝트 것으로 (앱을 새 쪽으로 돌리는 순간입니다. 그 전까지는 원본을 씁니다)
+--  4. 앱을 새 쪽으로 돌리기 (이 순간부터 새 쪽을 씁니다. 그 전까지는 원본을 씁니다) — 웹과 앱이 따로 움직입니다
+--       a. medinote.config.js 의 REF · KEY 두 줄 → 새 프로젝트 것 (웹앱)
+--       b. python3 tools/build-packaged-app.py 로 안드로이드·iOS 용 화면 세 벌을 다시 만들기 — 빌드 도구가 medinote.config.js 를 화면 안에
+--          그대로 박아 넣으므로(MediNote_apps_0706/*/index.html 의 REF · KEY), 이걸 안 하면 앱은 계속 원본을 씁니다 (Codex P1)
+--       c. APK · iOS 앱을 다시 빌드해 배포하고 이용자가 업데이트 — 업데이트 전의 앱은 계속 원본에 로그인·저장합니다.
+--          그래서 원본은 앱이 모두 넘어올 때까지 살려 둡니다 (양쪽 유지). 웹과 앱이 한동안 다른 쪽을 쓰는 기간이 생기는 점도 감안
 --  5. 사용자 데이터를 옮길지는 대표님 결정 (건강 데이터 저장 위치 · 동의 · 방침 문구)
 -- =====================================================================
