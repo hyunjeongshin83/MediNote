@@ -532,7 +532,12 @@ grant select on public.hub_state to anon;
 grant select on public.hub_state to authenticated;
 grant insert (is_public, key, updated_at, user_id, value), update (is_public, key, updated_at, user_id, value) on public.hub_state to authenticated;
 grant select on public.measurements to authenticated;
-grant insert (channel, client_ts, device_firmware, device_maker, device_name, effective_time, grade, metric, modality, note, raw_hex, unit, user_id, value_num, value_text)
+-- 앱(toRows)이 보내는 열을 모두 허용합니다. 원본 프로젝트의 권한은 이 중 5개(effective_end · zone_offset_min · clock_source · status · performer_type)가
+-- 빠져 있어, MN-18-3 뒤의 앱이 보내는 「읽은 값 클라우드에 저장」은 거기서 거부됩니다 (2026-10-17 확인 · Codex 가 이 PR 에서 짚음).
+-- status · performer_type 은 위의 m_no_forged_provenance 정책이 'final' · 'patient' 가 아니면 막으므로 열어도 위조할 수 없습니다.
+-- 서버가 채우는 received_at · plausibility · created_at · id 와 source_ref 는 계속 클라이언트가 못 씁니다.
+grant insert (channel, client_ts, clock_source, device_firmware, device_maker, device_name, effective_end, effective_time, grade, metric, modality, note,
+              performer_type, raw_hex, status, unit, user_id, value_num, value_text, zone_offset_min)
   on public.measurements to authenticated;
 grant select on public.prescriptions to authenticated;
 grant insert (created_at, data, id, updated_at, user_id), update (created_at, data, id, updated_at, user_id) on public.prescriptions to authenticated;
