@@ -16,6 +16,10 @@
     ref: REF,
     url: "https://" + REF + ".supabase.co",
     functionsUrl: "https://" + REF + ".functions.supabase.co",
+    /* AI 도우미 엣지 함수의 주소 이름(slug). 대시보드에서 함수를 만들면 Supabase 가
+       bright-processor 같은 이름을 멋대로 붙이고 그 이름은 나중에 못 바꿉니다.
+       프로젝트를 옮길 때 실제로 올라간 이름을 여기에 적어 주세요. */
+    aiFunction: "ai-helper",
     key: KEY,
     /* 「빠른 체험」을 기기 번호(g_) 대신 익명 계정(signInAnonymously)으로 — #55 MN-55-1.
        true 로 바꾸기 전에 MN-55-2 정책 적용 · 대시보드에서 Anonymous sign-ins · Manual linking · Turnstile (MN-55-3). */
