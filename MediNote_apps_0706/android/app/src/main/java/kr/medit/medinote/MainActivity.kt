@@ -60,7 +60,8 @@ class MainActivity : ComponentActivity() {
     private val askHealth = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
-        if (granted.containsAll(health.permissions)) pushHealth()
+        // 권한 화면에서 종류별로 끌 수 있으니, 하나라도 허용됐으면 허용된 것만 읽습니다 (MN-120-1)
+        if (granted.any { it in health.permissions }) pushHealth()
         else callback("""{"error":"denied"}""")
     }
 
@@ -183,7 +184,7 @@ class MainActivity : ComponentActivity() {
         }
         @JavascriptInterface fun readHealth() {
             lifecycleScope.launch {
-                if (health.isAvailable() && health.hasAllPermissions()) pushHealth()
+                if (health.isAvailable() && health.hasAnyPermission()) pushHealth()
                 else callback("""{"error":"no-permission"}""")
             }
         }
