@@ -7,6 +7,10 @@
 // 필요한 시크릿: ANTHROPIC_API_KEY
 // 선택 시크릿:  AI_DAILY_LIMIT (기본 30), AI_EFFORT (기본 medium)
 
+// zod 를 먼저 적어 둡니다. 안 적으면 SDK 안쪽(helpers/zod.mjs)에서 zod 를 못 찾아
+// 함수가 아예 뜨지 못합니다 — Supabase 에서는 BOOT_ERROR 로만 보이고 원인이 안 나옵니다.
+// (2026-10-18 확인 · Deno 2.9 에서 재현)
+import "npm:zod@3.23.8";
 import Anthropic from "npm:@anthropic-ai/sdk@0.72.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
