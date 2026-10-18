@@ -1,5 +1,5 @@
 -- =====================================================================
--- MediNote 테이블 구조 복사본  (2026-10-17 · 대표님 요청)
+-- MediNote 테이블 구조 복사본  (2026-10-17 · 대표님 요청)  — 이 파일은 supabase/migrations/ 로 옮겨 GitHub 연동이 자동 적용합니다 (supabase/README.md)
 --
 -- 원본  : xaclqvveppvccdpebzsz (CampusTownHub 와 같이 쓰던 프로젝트)  — 이 파일은 거기서 「읽기만」 해서 만들었습니다.
 -- 대상  : pczprqckynukavpeylbq (새 프로젝트)
