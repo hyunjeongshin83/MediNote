@@ -49,6 +49,10 @@ class HealthConnectManager(private val context: Context) {
     suspend fun hasAllPermissions(): Boolean =
         client.permissionController.getGrantedPermissions().containsAll(permissions)
 
+    /** 셋 중 하나라도 허용돼 있으면 true — 사용자는 권한 화면에서 종류별로 끌 수 있습니다 (MN-120-1) */
+    suspend fun hasAnyPermission(): Boolean =
+        client.permissionController.getGrantedPermissions().any { it in permissions }
+
     /** 지난 24시간 걸음 — 한 시간 단위 합계 (구간 · 시간대 오프셋 · 개수)
      *
      *  readRecords 로 원본 레코드를 받아 더하면 폰(삼성 헬스·Google Fit)과 시계가 같은 걸음을 각자 써서 두 배로 세고,
@@ -151,11 +155,25 @@ class HealthConnectManager(private val context: Context) {
         return arr
     }
 
-    /** 웹 화면으로 넘길 요약 — {steps:[…], heartRate:[…], sleep:[…], at, clockSource:"health_connect"} */
-    suspend fun readSummary(): JSONObject = JSONObject()
-        .put("steps", readSteps24h())
-        .put("heartRate", readHeartRate6h())
-        .put("sleep", readSleep24h())
-        .put("at", Instant.now().toEpochMilli())
-        .put("clockSource", "health_connect")
+    /** 웹 화면으로 넘길 요약 — {steps:[…], heartRate:[…], sleep:[…], denied:[…], at, clockSource:"health_connect"}
+     *
+     *  허용된 종류만 읽습니다. 허용하지 않은 종류를 읽으면 SecurityException 이고, 그 종류는 빈 목록으로 두고
+     *  denied 에 이름(steps · heartRate · sleep)을 적어 돌려줍니다 (MN-120-1). */
+    suspend fun readSummary(): JSONObject {
+        val granted = client.permissionController.getGrantedPermissions()
+        val canSteps = HealthPermission.getReadPermission(StepsRecord::class) in granted
+        val canHeart = HealthPermission.getReadPermission(HeartRateRecord::class) in granted
+        val canSleep = HealthPermission.getReadPermission(SleepSessionRecord::class) in granted
+        val denied = JSONArray()
+        if (!canSteps) denied.put("steps")
+        if (!canHeart) denied.put("heartRate")
+        if (!canSleep) denied.put("sleep")
+        return JSONObject()
+            .put("steps", if (canSteps) readSteps24h() else JSONArray())
+            .put("heartRate", if (canHeart) readHeartRate6h() else JSONArray())
+            .put("sleep", if (canSleep) readSleep24h() else JSONArray())
+            .put("denied", denied)
+            .put("at", Instant.now().toEpochMilli())
+            .put("clockSource", "health_connect")
+    }
 }
