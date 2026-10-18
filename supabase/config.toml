@@ -1,0 +1,5 @@
+# Supabase GitHub 연동용 최소 설정 — 새 프로젝트(pczprq…)에 DB 변경만 자동 반영합니다.
+# 일부러 비워 둔 것: [auth] · [api] · [functions.*] · [storage.buckets.*]
+#   · Auth(Site URL · Google 콜백)는 대시보드에서 손으로 합니다 (migrations 파일 끝의 「이 파일 뒤에 할 일」).
+#   · 엣지 함수 ai-helper 는 비밀값(ANTHROPIC 열쇠)이 따로 필요해 여기서 배포하지 않습니다.
+project_id = "medinote"
