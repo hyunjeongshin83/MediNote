@@ -690,7 +690,7 @@ button,input,select,textarea{font-family:inherit}</style>
     const [loading, setLoading] = (0, import_react.useState)(false);
     const endRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
-      endRef.current?.scrollIntoView({ behavior: "smooth" });
+      endRef.current?.scrollIntoView({ behavior: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     }, [msgs, loading]);
     const SUG = {
       ko: {

@@ -1028,7 +1028,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     const [loading, setLoading] = (0, import_react.useState)(false);
     const endRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
-      endRef.current?.scrollIntoView({ behavior: "smooth" });
+      endRef.current?.scrollIntoView({ behavior: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     }, [msgs, loading]);
     const SUG = {
       ko: {
