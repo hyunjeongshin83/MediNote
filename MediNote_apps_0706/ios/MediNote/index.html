@@ -1361,6 +1361,11 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     var ex=document.getElementById(id); if(ex) ex.outerHTML=html; else out.insertAdjacentHTML("beforeend",html);
     var sv=document.getElementById("mnhwSave"); if(sv) sv.style.display="block";
   }
+  // 앱 셸(Health Connect·HealthKit)에서 읽은 줄을 지웁니다 — 새로 읽을 때 비어 온 종류(권한을 끈 것·기록이 없어진 것)의 옛 값이 남지 않게 (MN-120-1 · PR #121 Codex)
+  function removeRead(label){
+    delete readings[label];
+    var ex=document.getElementById("mnhwr_"+label.replace(/[^가-힣A-Za-z]/g,"")); if(ex&&ex.parentNode) ex.parentNode.removeChild(ex);
+  }
   async function connect(){
     if(!navigator.bluetooth){ st("이 브라우저는 Web Bluetooth 미지원입니다."); return; }
     try{
@@ -1401,6 +1406,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   window.onNativeHealth=function(r){
     if(!r||r.error){ st(r&&r.error==="denied"?"권한을 허락하지 않아 읽지 않았습니다.":r&&r.error==="unavailable"?"Health Connect 가 없거나 업데이트가 필요합니다. 위 단추로 설치·업데이트해 주세요.":hkName+" 에서 읽지 못했습니다."); return; }
     var opts={clock:"health_connect",channel:"health_connect"};
+    ["걸음 (24시간)","심박 ("+hkName+")","수면 (24시간)"].forEach(removeRead);
     var steps=(r.steps||[]), total=0, lastEnd=null; steps.forEach(function(x){ total+=(x.count||0); if(!lastEnd||x.end>lastEnd) lastEnd=x.end; });
     if(steps.length) addRead(ICON_STEPS,"걸음 (24시간)",total.toLocaleString("ko-KR")+" 걸음 · "+steps.length+"구간",[],lastEnd,opts);
     var hr=(r.heartRate||[]); if(hr.length){ var last=hr.reduce(function(a,b){ return !a||b.time>=a.time?b:a; },null); addRead(ICON_HEALTH,"심박 ("+hkName+")",last.bpm+" bpm · 표본 "+hr.length+"개",[{metric:"heart_rate",value_num:last.bpm,unit:"/min"}],last.time,{clock:opts.clock,channel:opts.channel,zoneOffsetMin:last.zoneOffsetMin}); }
