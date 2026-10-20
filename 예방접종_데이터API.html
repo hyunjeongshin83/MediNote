@@ -41,7 +41,7 @@ body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);l
 .card .ds{font-size:15px;color:var(--d3);line-height:1.6;margin-top:3px;}
 .card code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--mist);color:var(--g7);padding:1px 6px;border-radius:6px;word-break:break-all;}
 .card .ep{margin-top:8px;font-size:11.5px;}
-.card .lk{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:15px;font-weight:800;color:var(--g5);text-decoration:none;}
+.card .lk{display:inline-flex;align-items:center;gap:5px;margin-top:9px;font-size:15px;font-weight:800;color:var(--g6);text-decoration:none;}
 .card .lk svg{width:13px;height:13px;}
 
 /* live demo */
@@ -66,17 +66,17 @@ select:focus,input:focus{outline:none;border-color:var(--g4);}
 .iname{font-size:12.5px;color:var(--d2);margin-top:4px;font-weight:600;}
 .bars{margin-top:12px;display:flex;align-items:flex-end;gap:5px;height:66px;}
 .bars .b{flex:1;background:linear-gradient(180deg,var(--g4),var(--g6));border-radius:4px 4px 0 0;min-height:3px;position:relative;}
-.bars .b span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);}
-.bars .b em{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d4);font-style:normal;}
+.bars .b span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d3);}
+.bars .b em{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--d3);font-style:normal;}
 .st{font-size:15px;font-weight:700;color:var(--g6);margin-top:10px;min-height:16px;}
 .raw{margin-top:12px;font-size:11px;background:#06302e;color:#8fe9df;border-radius:11px;padding:11px 12px;max-height:150px;overflow:auto;white-space:pre;font-family:ui-monospace,Menlo,monospace;line-height:1.5;}
 
 .note{background:var(--mist);border-left:4px solid var(--g4);border-radius:11px;padding:12px 14px;font-size:15px;color:var(--d3);line-height:1.62;margin-top:8px;}
 .note b{color:var(--g6);}
-.foot{font-size:15px;color:var(--d4);text-align:center;margin-top:16px;line-height:1.6;}
+.foot{font-size:15px;color:var(--d3);text-align:center;margin-top:16px;line-height:1.6;}
 .foot b{color:var(--g6);}
-.src{font-size:13px;color:#A9BCB8;text-align:center;margin-top:8px;line-height:1.7;}
-.src a{color:#8FA6A2;}
+.src{font-size:13px;color:var(--d3);text-align:center;margin-top:8px;line-height:1.7;}
+.src a{color:var(--d3);}
 
 /* 어지럼증을 호소하는 분이 있어, 운영체제에서 「동작 줄이기」를 켜 두었으면 움직임을 멈춥니다. */
 @media (prefers-reduced-motion: reduce) {
@@ -85,6 +85,8 @@ select:focus,input:focus{outline:none;border-color:var(--g4);}
 
 /* 한글은 낱말 단위로 끊습니다 — 글자를 키우면 좁은 칸에서 "신 / 고" 처럼 낱말이 갈립니다 */
 .lead,.ds,.note,.ls,.st,.foot,.sec-h,.lk{word-break:keep-all;}
+/* 터치 목표 44px 이상 (MN-90-4 · 대표님 결정 2026-10-20) */
+.card .lk,#ind,#ctry{min-height:44px;}
 </style>
 </head>
 <body>
