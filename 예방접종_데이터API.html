@@ -14,6 +14,7 @@
   --g0:#EEFBF8;--g1:#D8F5EF;--g2:#AEEAE2;--g4:#12BDB0;--g5:#0DA298;--g6:#0A7168;--g7:#06413E;
   --ink:#122423;--d2:#324744;--d3:#5A716D;--d4:#8FA6A2;--line:#E6F1EE;--mist:#F0F7F5;
   --blue:#2B7DC9;--bluebg:#E9F2FB;--blueln:#CDE1F5;--amber:#F0A83C;--amberbg:#FFF7EC;
+  --info:#1F66A8;--info-bg:#E9F2FB;--ok-text:#2F7A3F;--warn:#8A5A00; /* 글자색 — APP-STYLE 3-1-1 (MN-125-3) */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);letter-spacing:-.01em;line-height:1.7;
@@ -36,7 +37,7 @@ body{font-family:'Pretendard','Inter',-apple-system,sans-serif;color:var(--d2);l
 .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;box-shadow:0 12px 34px rgba(6,65,62,.07);margin-bottom:12px;}
 .card .tp{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .card .tp .badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;}
-.badge.free{background:var(--g0);color:var(--g6);} .badge.key{background:var(--amberbg);color:var(--amber);} .badge.std{background:var(--bluebg);color:var(--blue);}
+.badge.free{background:var(--g0);color:var(--g6);} .badge.key{background:var(--amberbg);color:var(--warn);} .badge.std{background:var(--bluebg);color:var(--info);}
 .card .tt{font-size:15px;font-weight:800;color:var(--ink);}
 .card .ds{font-size:15px;color:var(--d3);line-height:1.6;margin-top:3px;}
 .card code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--mist);color:var(--g7);padding:1px 6px;border-radius:6px;word-break:break-all;}
