@@ -153,7 +153,10 @@ def collect(repo, from_file):
         text = iss.get('body') or ''
         for c in iss.get('_comments', []):
             text += '\n\n' + c
-        items.append(parse_blocks(text, iss.get('number'), iss.get('title', '')))
+        group = parse_blocks(text, iss.get('number'), iss.get('title', ''))
+        for g in group:
+            g['생성일'] = (iss.get('created_at') or '')[:10]      # 사람 대기 나이를 셀 때 씁니다
+        items.append(group)
 
     flat = [x for group in items for x in group]
 
@@ -182,6 +185,23 @@ def table(items):
     return '\n'.join(lines)
 
 
+def _age_line(blocked, today=None):
+    """사람 대기 항목이 며칠 묵었는지 — 가장 오래된 것과 중앙값. 이슈 생성일에서 오늘까지로 셉니다 (이슈 본문은 쓰지 않음)."""
+    import datetime, statistics
+    today = today or datetime.datetime.now(datetime.timezone.utc).date()
+    days = []
+    for x in blocked:
+        try:
+            days.append(((today - datetime.date.fromisoformat(x['생성일'])).days, x.get('id')))
+        except (KeyError, ValueError):
+            continue
+    if not days:
+        return ''
+    oldest = max(days)
+    med = statistics.median(d for d, _ in days)
+    return '사람 대기 나이   가장 오래된 %d일 (%s) · 중앙값 %g일 · 기준 %s' % (oldest[0], oldest[1], med, today.isoformat())
+
+
 def report(items, repo):
     t = [x for x in items if todo(x)]
     blocked = [x for x in items if not todo(x) and x.get('상태', '').startswith('대기')]
@@ -201,6 +221,9 @@ def report(items, repo):
     A('사람 대기    %d 건' % len(blocked))
     A('반영됨       %d 건' % len(done))
     A('보류         %d 건' % len(held))
+    age = _age_line(blocked)
+    if age:
+        A(age)
     A('```')
     A('')
 
