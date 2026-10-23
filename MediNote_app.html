@@ -2091,52 +2091,8 @@ button,input,select,textarea{font-family:inherit}</style>
   var SB_KEY=window.MEDINOTE_CONFIG.key;
   var sb=null, user=null, built=false, authMode="login";
   // 세션을 공용 계층과 나눠 쓴다 — RPC·measurements 쓰기가 익명 대신 본인으로 나간다
-  /* 구글이 내준 생년월일을 읽는다. 연도가 없으면(비공개로 둔 계정이 많다) 쓸 수 없으므로
-     null 을 돌려주고, 그러면 앱이 평소처럼 한 번 여쭙는다. */
-  async function googleBirthday(providerToken){
-    if(!providerToken) return null;
-    try{
-      var r = await fetch("https://people.googleapis.com/v1/people/me?personFields=birthdays",
-        { headers: { Authorization: "Bearer " + providerToken } });
-      if(!r.ok) return null;
-      var d = await r.json();
-      var list = (d && d.birthdays) || [];
-      var best = null;
-      for(var i=0;i<list.length;i++){
-        var b = list[i], dt = b && b.date;
-        if(!dt || !dt.year || !dt.month || !dt.day) continue;   // 연도 없으면 못 쓴다
-        var src = b.metadata && b.metadata.source && b.metadata.source.type;
-        if(src === "ACCOUNT"){ best = dt; break; }              // 계정에 등록된 값 우선
-        if(!best) best = dt;
-      }
-      if(!best) return null;
-      function p2(n){ return (n<10?"0":"")+n; }
-      return best.year + "-" + p2(best.month) + "-" + p2(best.day);
-    }catch(e){ return null; }
-  }
-
-  function adoptGoogleBirthday(s){
-    try{
-      var pt = s && s.provider_token;
-      if(!pt || !window.MediNoteProfile) return;
-      if(window.MediNoteProfile.cached()) return;   // 이미 있으면 덮어쓰지 않는다
-      googleBirthday(pt).then(function(birth){
-        if(!birth) return;
-        var u = s.user || {}, meta = u.user_metadata || {};
-        var prof = {
-          name: meta.name || meta.full_name || (u.email ? String(u.email).split("@")[0] : ""),
-          birth: birth,
-          conditions: []
-        };
-        window.MediNoteProfile.save(prof);
-        try{ window.dispatchEvent(new CustomEvent("medinote:profile",{ detail: prof })); }catch(e){}
-      });
-    }catch(e){}
-  }
-
   function share(s){
     try{ if(window.MediNoteKV) window.MediNoteKV.setSession(s||null); }catch(e){}
-    adoptGoogleBirthday(s);
     // 리포트 스코프를 같은 오리진의 다른 페이지(증상신고·오늘기록)와 공유한다
     try{
       var id=s&&s.user&&s.user.id;
@@ -2270,9 +2226,8 @@ button,input,select,textarea{font-family:inherit}</style>
     try{
       sb.auth.signInWithOAuth({provider:"google",options:{
         redirectTo:location.href.split("#")[0],
-        // 연령대 안내에 쓸 생년월일을 함께 요청한다. 민감 스코프라 구글 콘솔에서
-        // People API 사용 설정과 동의 화면 스코프 추가가 되어 있어야 한다.
-        scopes:"https://www.googleapis.com/auth/user.birthday.read",
+        // 생년월일 민감 스코프(user.birthday.read)는 요청하지 않는다 — 구글 동의 화면이 403 으로 막혔다 (#81 MN-81-1).
+        // 생년월일은 프로필 화면에서 직접 여쭙는다.
         queryParams:{ access_type:"offline", prompt:"consent" }
       }})
         .then(function(r){ if(r&&r.error){ gerr("Google 공급자 설정이 필요합니다 (관리자 1회): <b>"+esc(r.error.message||"provider not enabled")+"</b><br>Supabase → Authentication → Providers → <b>Google 켜기</b> + Redirect URL 등록이 필요합니다."); } })
