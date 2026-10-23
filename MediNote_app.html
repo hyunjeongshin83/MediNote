@@ -1880,7 +1880,7 @@ button,input,select,textarea{font-family:inherit}</style>
       if(!x.hasAttribute("tabindex")) x.tabIndex=0;
       if(!x.hasAttribute("aria-label")) x.setAttribute("aria-label","닫기");
     });
-    d.querySelectorAll(".mnhw-st,#mnmdSt,#mnsy-hint,#mnlg-gerr").forEach(function(s){ s.setAttribute("aria-live","polite"); });
+    d.querySelectorAll(".mnhw-st,#mnmdSt,#mnsy-hint,#mnlg-gerr,#mnlg-status").forEach(function(s){ s.setAttribute("aria-live","polite"); });
     if(!d.hasAttribute("tabindex")) d.tabIndex=-1;
     last=document.activeElement;
     setTimeout(function(){ var f=d.querySelector(FOCUS); (f||d).focus({preventScroll:true}); },40);
