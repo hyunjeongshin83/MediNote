@@ -106,7 +106,7 @@ QA-tool 에는 무엇을 알아냈는지만 적습니다.
                        → Supabase hub_state 키 medinote:report:u_<uid> (비로그인은 g_<난수>)
 AI 도우미 · AI 채움     묻는 순간 나갑니다 — 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
                        → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 서버에는 토큰 수만 남습니다
-생년월일               Google 로그인 때 Google People API 에서 받아 와 health_profiles 로
+생년월일               Google 에서 받지 않습니다 (2026-10-23 민감 스코프 user.birthday.read 요청을 뺐습니다 · #81 MN-81-1). 프로필 화면에서 직접 입력 → health_profiles
 Health Connect (안드로이드 앱만)  「건강기기 연결」 시트에서 걸음·수면(지난 24시간)·심박(지난 6시간)을 읽어 화면에 보여 줍니다
                        앱(WebView)에는 블루투스가 없어 「읽은 값 클라우드에 저장」 단추가 생기지 않습니다
                        → 지금은 서버로 가지 않고 화면 표시만 합니다 (저장 코드 toRows 는 블루투스 쪽과 공유)
@@ -122,7 +122,7 @@ HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽�
                        WKWebView 저장소에 백업 제외가 없어 iCloud 기기 백업 대상입니다 — 코드 기준이며 실기기에서는 확인하지 못했습니다 (#83 MN-83-2·3 · 결정 대기)
 잠금화면 알림          복약 알림 본문에 약 이름이 그대로 들어갑니다 (「<약 이름> 드실 시간이에요」) — 기기의 잠금화면 설정에 따라 남에게 보일 수 있습니다 (#83 MN-83-4)
 Google 토큰            Google 로그인은 access_type=offline 으로 refresh token 까지 받아 세션에 담아 기기에 저장합니다.
-                       앱은 provider_token 만 써서 People API 로 생년월일을 받아 옵니다(프로필에 생년월일이 아직 없으면 세션 이벤트마다 되풀이). refresh token 은 쓰지 않습니다 (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
+                       앱은 provider_token 도 refresh token 도 쓰지 않습니다(생년월일 요청을 뺐습니다) (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
 ```
 
 **바깥으로 나가는 주소의 장부는 `tools/egress-check.py`** 입니다. 새 주소를 부르려면 거기에 「왜」를 적어야 CI 가 통과합니다.

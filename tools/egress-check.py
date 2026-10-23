@@ -25,8 +25,6 @@ def files():
 ALLOWED = {
     "supabase.co":               "★ Supabase (도쿄) — 프로필·측정값·증상 기록·복약 hub_state. 사용자가 저장을 눌렀을 때 (CLAUDE.md §3)",
     "functions.supabase.co":     "★ 엣지 함수 ai-helper — 프로필·최근 증상·복용약·대화를 받아 Anthropic(미국)으로 넘김. 앱은 api.anthropic.com 을 직접 부르지 않음",
-    "people.googleapis.com":     "생년월일 — Google 로그인 때 People API 에서 받아 옴 (#22 ⑤)",
-    "www.googleapis.com":        "OAuth scope 문자열(user.birthday.read) — 요청 주소가 아니라 권한 이름",
     "accounts.google.com":       "Google 로그인",
     "fonts.googleapis.com":      "글꼴(Gaegu · Nanum Pen Script) — 앱을 열 때 Google 에 IP·기기 정보가 감. 건강 데이터 없음 (#51)",
     "fonts.gstatic.com":         "위 글꼴 파일",
