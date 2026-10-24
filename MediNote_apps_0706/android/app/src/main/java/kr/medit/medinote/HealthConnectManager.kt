@@ -28,6 +28,11 @@ import java.time.Instant
  */
 class HealthConnectManager(private val context: Context) {
 
+    private companion object {
+        /** 심박 쪽 수 상한 — 쪽당 최대 1,000건. 넘으면 오래된 쪽부터 빠집니다 */
+        const val MAX_HEART_PAGES = 20
+    }
+
     val client: HealthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
 
     val permissions = setOf(
@@ -77,20 +82,35 @@ class HealthConnectManager(private val context: Context) {
         return arr
     }
 
-    /** 지난 6시간 심박 — 샘플마다 시각(ms) · bpm */
+    /** 지난 6시간 심박 — 샘플마다 시각(ms) · bpm (오래된 순)
+     *
+     *  readRecords 는 한 번에 1,000건까지만 주고 나머지는 pageToken 으로 이어집니다. 첫 쪽만 읽으면 레코드 하나에 표본 하나씩 쓰는 앱
+     *  (초 단위로 기록하는 시계 등)에서는 6시간치가 조용히 잘리고, 기본 정렬이 오래된 순이라 잘리는 쪽이 가장 최근 심박입니다 —
+     *  웹 화면은 그중 가장 늦은 시각을 「최신」으로 보여 줍니다 (iOS 쪽 같은 문제는 #92 에서 고침 · #80 MN-80-4).
+     *  최신 순으로 쪽을 이어 받아 상한(20쪽)에서 멈추면 모자라더라도 오래된 쪽이 빠집니다. */
     suspend fun readHeartRate6h(): JSONArray {
         val now = Instant.now()
-        val r = client.readRecords(ReadRecordsRequest(HeartRateRecord::class, TimeRangeFilter.between(now.minusSeconds(6 * 3_600), now)))
-        val arr = JSONArray()
-        r.records.forEach { rec ->
-            val zone = rec.startZoneOffset?.totalSeconds?.div(60)
-            rec.samples.forEach { s ->
-                arr.put(JSONObject()
-                    .put("time", s.time.toEpochMilli())
-                    .put("zoneOffsetMin", zone ?: JSONObject.NULL)
-                    .put("bpm", s.beatsPerMinute))
+        val filter = TimeRangeFilter.between(now.minusSeconds(6 * 3_600), now)
+        val samples = mutableListOf<JSONObject>()
+        var token: String? = null
+        var pages = 0
+        do {
+            val r = client.readRecords(ReadRecordsRequest(
+                HeartRateRecord::class, filter, ascendingOrder = false, pageToken = token))
+            r.records.forEach { rec ->
+                val zone = rec.startZoneOffset?.totalSeconds?.div(60)
+                rec.samples.forEach { s ->
+                    samples.add(JSONObject()
+                        .put("time", s.time.toEpochMilli())
+                        .put("zoneOffsetMin", zone ?: JSONObject.NULL)
+                        .put("bpm", s.beatsPerMinute))
+                }
             }
-        }
+            token = r.pageToken
+            pages++
+        } while (token != null && pages < MAX_HEART_PAGES)
+        val arr = JSONArray()
+        samples.sortedBy { it.getLong("time") }.forEach { arr.put(it) }
         return arr
     }
 
