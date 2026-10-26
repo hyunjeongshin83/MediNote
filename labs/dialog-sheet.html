@@ -67,8 +67,14 @@
   if(!ok){ $("nosupport").style.display="block"; $("open1").disabled=true; $("open2").disabled=true; return; }
   function wire(btn, dlg){
     btn.addEventListener("click", function(){ dlg.returnValue=""; dlg.showModal(); log.textContent="열림: "+dlg.id; });
-    // 바깥(::backdrop) 누르면 닫기 — 시트 안쪽을 누른 것은 target 이 안쪽 요소라 닫히지 않습니다
-    dlg.addEventListener("click", function(e){ if(e.target===dlg) dlg.close("backdrop"); });
+    // 바깥(::backdrop) 누르면 닫기 — ::backdrop 을 눌러도, 시트의 안쪽 여백(padding)이나 자식 사이 틈을 눌러도 target 이 dialog 자신이라
+    // target 만으로는 가려지지 않습니다. 누른 자리가 시트 사각형 밖일 때만 바깥으로 셉니다 (Codex 지적)
+    dlg.addEventListener("click", function(e){
+      if(e.target!==dlg) return;
+      var r=dlg.getBoundingClientRect();
+      var inside=e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+      if(!inside) dlg.close("backdrop");
+    });
     dlg.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", function(){ dlg.close(b.getAttribute("data-close")); }); });
     // 닫힘 이유는 returnValue — Esc 로 닫으면 비어 있습니다
     dlg.addEventListener("close", function(){ log.textContent="닫힘: "+dlg.id+" ("+(dlg.returnValue||"Esc 또는 닫기")+")"; });
