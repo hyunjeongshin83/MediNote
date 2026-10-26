@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>메디노트 실험 — 시트를 브라우저 내장 dialog 로 (HTMLDialogElement)</title>
+<!-- 실험 화면입니다. 앱 본체에서 링크하지 않습니다 (labs/ 아래 별도 화면 규칙 · 앱 본체의 시트 7개는 그대로).
+     무엇을 실험하나: 지금 앱은 시트 7개의 초점 가두기 · Esc 닫기 · 닫힌 동안 inert · 열었던 곳으로 초점 되돌리기를
+     스크립트 약 100줄(접근성 보강 블록)로 직접 합니다. 브라우저 내장 <dialog> + showModal() 이 같은 일을 대신하는지 봅니다.
+     HTMLDialogElement — 브라우저 내장, 무료, 어떤 데이터도 밖으로 나가지 않고 저장도 하지 않습니다.
+     지원하지 않으면(아주 오래된 WebView) 안내만 보입니다. 새 색 · 새 글자 크기는 쓰지 않고 메디노트 토큰만 씁니다. -->
+<style>
+  :root{ --brand:#0A7168; --brand-soft:#E1F1EE; --brand-deep:#06413E; --n-200:#D8E5E7; --n-700:#274549; --danger:#A3231B;
+         --fs-body:1.0625rem; --fs-sub:.9375rem; --fs-title2:1.375rem; --sp-2:8px; --sp-4:16px; --sp-6:24px; --r-lg:16px; --r-md:12px; }
+  html{ font-size:100%; }
+  body{ margin:0; background:#fff; color:var(--n-700); font:var(--fs-body)/1.55 Pretendard,-apple-system,"Noto Sans KR",sans-serif; word-break:keep-all; }
+  main{ max-width:480px; margin:0 auto; padding:var(--sp-6) var(--sp-4); }
+  h1{ font-size:var(--fs-title2); margin:0 0 var(--sp-2); }
+  p{ margin:0 0 var(--sp-4); }
+  .sub{ font-size:var(--fs-sub); }
+  .btn{ display:block; width:100%; min-height:48px; border:0; border-radius:var(--r-md); background:var(--brand); color:#fff; font:inherit; font-weight:700; cursor:pointer; margin-bottom:var(--sp-2); }
+  .btn.ghost{ background:#fff; color:var(--brand-deep); border:2px solid var(--brand); }
+  .btn:focus-visible, input:focus-visible, a:focus-visible{ outline:3px solid var(--brand); outline-offset:2px; }
+  label{ display:block; font-size:var(--fs-sub); margin-bottom:4px; }
+  input[type=text]{ width:100%; box-sizing:border-box; min-height:48px; padding:0 12px; border:2px solid var(--n-200); border-radius:var(--r-md); font:inherit; margin-bottom:var(--sp-4); }
+  /* 아래에서 올라오는 시트 모양 — 바탕 어둡게는 ::backdrop 이 합니다 */
+  dialog{ margin:auto 0 0; width:100%; max-width:100%; box-sizing:border-box; border:0; border-radius:var(--r-lg) var(--r-lg) 0 0; padding:var(--sp-6) var(--sp-4); color:inherit; }
+  dialog::backdrop{ background:rgba(6,65,62,.45); }
+  dialog h2{ font-size:var(--fs-title2); margin:0 0 var(--sp-2); }
+  iframe{ width:100%; height:96px; border:2px solid var(--n-200); border-radius:var(--r-md); margin-bottom:var(--sp-4); }
+  #log{ font-size:var(--fs-sub); background:var(--brand-soft); border-radius:var(--r-md); padding:var(--sp-2) var(--sp-4); min-height:2.4em; }
+  #nosupport{ display:none; color:var(--danger); font-weight:700; }
+</style>
+</head>
+<body>
+<main id="page">
+  <h1>시트 · 브라우저 내장 dialog (실험)</h1>
+  <p class="sub">아래 단추로 시트를 열어 Tab · Shift+Tab · Esc · 바깥 누르기가 어떻게 되는지 보세요. 기록을 만들지 않고 어디에도 보내지 않습니다.</p>
+  <p id="nosupport" role="alert">이 브라우저는 dialog 를 지원하지 않아요. 앱에서는 지금 방식 그대로 쓰입니다.</p>
+  <button class="btn" id="open1" type="button">입력칸이 있는 시트 열기</button>
+  <button class="btn ghost" id="open2" type="button">안에 다른 화면(iframe)이 든 시트 열기</button>
+  <p class="sub">마지막 동작</p>
+  <div id="log" aria-live="polite">아직 없음</div>
+</main>
+
+<dialog id="d1" aria-labelledby="d1t">
+  <h2 id="d1t">복약 알림</h2>
+  <p class="sub">시트 안에서만 Tab 이 돌고, Esc 로 닫히고, 닫으면 열었던 단추로 돌아옵니다.</p>
+  <label for="nm">약 이름</label>
+  <input id="nm" type="text" autocomplete="off">
+  <button class="btn" type="button" data-close="saved">저장</button>
+  <button class="btn ghost" type="button" data-close="cancel">닫기</button>
+</dialog>
+
+<dialog id="d2" aria-labelledby="d2t">
+  <h2 id="d2t">보고서 미리보기</h2>
+  <iframe id="fr" title="보고서 미리보기" srcdoc="<!doctype html><meta charset=utf-8><body style='font:16px sans-serif;margin:8px'><label>메모 <input id='fin' type='text'></label></body>"></iframe>
+  <button class="btn ghost" type="button" data-close="cancel">닫기</button>
+</dialog>
+
+<script>
+(function(){
+  var $=function(i){ return document.getElementById(i); };
+  var log=$("log");
+  // 지원 확인 — showModal 이 없으면 안내만 (앱 본체는 이 화면과 무관하게 지금 방식)
+  var ok=typeof HTMLDialogElement==="function" && typeof $("d1").showModal==="function";
+  if(!ok){ $("nosupport").style.display="block"; $("open1").disabled=true; $("open2").disabled=true; return; }
+  function wire(btn, dlg){
+    btn.addEventListener("click", function(){ dlg.returnValue=""; dlg.showModal(); log.textContent="열림: "+dlg.id; });
+    // 바깥(::backdrop) 누르면 닫기 — 시트 안쪽을 누른 것은 target 이 안쪽 요소라 닫히지 않습니다
+    dlg.addEventListener("click", function(e){ if(e.target===dlg) dlg.close("backdrop"); });
+    dlg.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", function(){ dlg.close(b.getAttribute("data-close")); }); });
+    // 닫힘 이유는 returnValue — Esc 로 닫으면 비어 있습니다
+    dlg.addEventListener("close", function(){ log.textContent="닫힘: "+dlg.id+" ("+(dlg.returnValue||"Esc 또는 닫기")+")"; });
+  }
+  wire($("open1"), $("d1")); wire($("open2"), $("d2"));
+})();
+</script>
+</body>
+</html>
