@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- 개인정보 매니페스트 (#150 MN-150-1).
+     앱이 UserDefaults 를 씁니다(MedNotifier.swift: 복용 기록·방해금지 시각). Apple 은 이런 API 를 쓰는 앱에 분류와 사유를 선언하라고 합니다.
+     CA92.1 = 앱 자신만 읽고 쓰는 값. 광고 추적은 없습니다.
+     NSPrivacyCollectedDataTypes(수집 데이터 종류)는 일부러 적지 않았습니다 — App Store 「앱 개인정보」 답과 한 몸이라 대표님 결정이 먼저입니다(#111 · MN-150-2). -->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
