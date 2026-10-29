@@ -59,6 +59,15 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
+      - name: 개인정보 매니페스트가 앱 안에 들어갔는지 (#150 MN-150-1)
+        working-directory: MediNote_apps_0706/ios
+        run: |
+          app=build/Build/Products/Debug-iphonesimulator/MediNote.app
+          f=$(find "$app" -name PrivacyInfo.xcprivacy | head -1)
+          if [ -z "$f" ]; then echo "::error::앱 안에 PrivacyInfo.xcprivacy 가 없습니다 — UserDefaults 를 쓰므로 Apple 업로드에서 API 선언 누락 경고가 납니다"; exit 1; fi
+          plutil -lint "$f"
+          plutil -extract NSPrivacyAccessedAPITypes xml1 -o - "$f" | grep -q CA92.1 || { echo "::error::UserDefaults 사유(CA92.1) 선언이 없습니다"; exit 1; }
+
       - name: 시뮬레이터 앱 받아 두기
         if: success()
         uses: actions/upload-artifact@v4
