@@ -5,9 +5,9 @@
 
 ```
 저장소       hyunjeongshin83/MediNote
-바로 반영    3 건
+바로 반영    2 건
 사람 대기    90 건
-반영됨       127 건
+반영됨       128 건
 보류         0 건
 사람 대기 나이   가장 오래된 40일 (MN-12-4) · 중앙값 20.5일 · 기준 2026-10-29
 ```
@@ -15,15 +15,6 @@
 ## 바로 반영해도 되는 것
 
 `막는것: 없음` 이고 아직 `대기` 인 것입니다. **사람 확인 없이 고쳐도 됩니다.**
-
-### `MN-150-1` — 이슈 #150
-
-| | |
-|---|---|
-| 파일 | `MediNote_apps_0706/ios/MediNote/PrivacyInfo.xcprivacy (새 파일), .github/workflows/ios-build.yml` |
-| 무엇 | iOS 앱이 UserDefaults 를 쓰는데 개인정보 매니페스트가 없어 업로드 때 API 선언 누락 경고를 받을 수 있고, CI 가 이를 잡지 못함 |
-| 어떻게 | PrivacyInfo.xcprivacy 를 새로 만들어 NSPrivacyTracking=false · NSPrivacyTrackingDomains=[] · NSPrivacyAccessedAPITypes=[{UserDefaults, [CA92.1]}] 만 선언한다(수집 데이터 종류는 채우지 않음). ios-build.yml 에 「빌드한 .app 안에 PrivacyInfo.xcprivacy 가 들어 있고 plutil -lint 를 통과하는지」 단계를 더한다 |
-| 확인 | Actions 「iOS 빌드 확인」 통과 (새 단계가 .app 안의 PrivacyInfo.xcprivacy 를 찾음). python3 plistlib 로 파싱 가능 |
 
 ### `MN-140-1` — 이슈 #140
 
@@ -142,6 +133,7 @@
 
 | id | 이슈 | 무엇 | 커밋 |
 |---|---|---|---|
+| `MN-150-1` | #150 | iOS 앱이 UserDefaults 를 쓰는데 개인정보 매니페스트가 없어 업로드 때 API 선언 누락 경고를 받을 수 있고, CI 가 이를 잡지 못함 | `cbcdeb5` |
 | `MN-146-1` | #146 | 안 쓰는 BLUETOOTH_SCAN · BLUETOOTH_CONNECT 선언과 낡은 주석(위치 권한도 없음) — 셸에는 블루투스 코드가 없고 iOS 는 선언도 없음 | `b4caf32` |
 | `MN-143-1` | #143 | APP-STYLE 3-1 의 공통 토큰 여덟 개(--n-0 · --n-100 · --n-500 · --n-600 · --n-900 · --warn · --warn-bg · --danger-bg)가 메디노트 :root 에 없고, 같은 값이 <style> 안에 literal 68곳으로 박혀 있음 | `aff2f9c` |
 | `MN-141-1` | #141 | dialog 실험 화면 한 장 — 앱 본체는 그대로 | `7315017` |
