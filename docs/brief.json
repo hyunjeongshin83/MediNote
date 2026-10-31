@@ -1,6 +1,33 @@
 {
-  "updated": "2026-10-30T02:10:17Z",
+  "updated": "2026-10-30T21:40:00Z",
   "runs": [
+    {
+      "at": "2026-10-30T21:40:00Z",
+      "task": "메디노트 리서치",
+      "commits": [
+        {
+          "sha": "89db972",
+          "title": "접근성: 증상 기록 시트의 결과 줄(#mnsy-st)을 낭독 영역으로 (MN-154-1) (#155)"
+        }
+      ],
+      "issues": [
+        {
+          "n": 154,
+          "title": "[리서치] 접근성(고령 이용자) — 증상 기록 시트의 결과 줄(#mnsy-st)도 낭독 영역이 아님",
+          "research": true
+        }
+      ],
+      "prs": [
+        {
+          "n": 155,
+          "title": "접근성: 증상 기록 시트의 결과 줄(#mnsy-st)을 낭독 영역으로",
+          "state": "merged",
+          "opened": "2026-10-30"
+        }
+      ],
+      "decisions": [],
+      "note": "MN-154-1 반영됨 (#136 MN-136-1 의 짝). 속성이 붙는지만 Chromium 으로 확인했고 TalkBack·VoiceOver 로는 듣지 못함"
+    },
     {
       "at": "2026-10-30T02:10:17Z",
       "task": "MedIT 연구 (에이전트 하네스 · 사람을 대신하는 운영)",
@@ -202,33 +229,6 @@
       "prs": [],
       "decisions": [],
       "note": "오늘은 새로 알아낸 것이 없습니다 (복약 알림·일정: 조용한 시간 건너뜀 MN-66-4 · 일정 모양 MN-124 · 권한 안내 #94 · 재부팅/시간대 #36 이 이미 덮음)"
-    },
-    {
-      "at": "2026-10-24T21:25:00Z",
-      "task": "메디노트 리서치",
-      "commits": [
-        {
-          "sha": "77c72cd",
-          "title": "Health Connect: 6시간 심박을 pageToken 으로 끝까지 읽음 (MN-138-1) (#139)"
-        }
-      ],
-      "issues": [
-        {
-          "n": 138,
-          "title": "[리서치] Health Connect·HealthKit — 안드로이드 6시간 심박이 첫 쪽(1,000건)만 읽힘",
-          "research": true
-        }
-      ],
-      "prs": [
-        {
-          "n": 139,
-          "title": "Health Connect: 6시간 심박을 pageToken 으로 끝까지 읽음",
-          "state": "merged",
-          "opened": "2026-10-25"
-        }
-      ],
-      "decisions": [],
-      "note": "MN-80-4 (iOS는 #93 에서, 안드로이드는 이번에) 반영됨. 실기기·Gradle 로컬 확인은 못 함 — PR 의 apk 작업 통과로 대체"
     }
   ]
 }
