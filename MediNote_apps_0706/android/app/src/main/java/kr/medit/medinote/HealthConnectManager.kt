@@ -90,7 +90,8 @@ class HealthConnectManager(private val context: Context) {
      *  최신 순으로 쪽을 이어 받아 상한(20쪽)에서 멈추면 모자라더라도 오래된 쪽이 빠집니다. */
     suspend fun readHeartRate6h(): JSONArray {
         val now = Instant.now()
-        val filter = TimeRangeFilter.between(now.minusSeconds(6 * 3_600), now)
+        val from = now.minusSeconds(6 * 3_600)
+        val filter = TimeRangeFilter.between(from, now)
         val samples = mutableListOf<JSONObject>()
         var token: String? = null
         var pages = 0
@@ -100,6 +101,8 @@ class HealthConnectManager(private val context: Context) {
             r.records.forEach { rec ->
                 val zone = rec.startZoneOffset?.totalSeconds?.div(60)
                 rec.samples.forEach { s ->
+                    // 레코드가 창(6시간) 앞에서 시작했으면 그 앞쪽 표본도 딸려 옵니다 — 창 밖 표본은 버립니다
+                    if (s.time.isBefore(from) || s.time.isAfter(now)) return@forEach
                     samples.add(JSONObject()
                         .put("time", s.time.toEpochMilli())
                         .put("zoneOffsetMin", zone ?: JSONObject.NULL)
@@ -146,11 +149,19 @@ class HealthConnectManager(private val context: Context) {
         val r = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(now.minusSeconds(86_400), now)))
         val sessions = mutableListOf<Span>()
         val awake = mutableListOf<Span>()
+        // readRecords 는 창과 조금이라도 겹친 세션을 통째로 줍니다. 창(지난 24시간) 밖 부분은 잘라 냅니다 —
+        // 안 자르면 이른 아침(전날 밤 세션이 창 시작을 막 넘어 끝난 때)에 그 밤이 통째로 더해져 24시간 수면이 거의 두 배가 됩니다 (#156 MN-156-1)
+        val from = now.minusSeconds(86_400).toEpochMilli()
+        val to = now.toEpochMilli()
+        fun clipped(s: Long, e: Long, z: Int?): Span? {
+            val a = maxOf(s, from); val b = minOf(e, to)
+            return if (b > a) Span(a, b, z) else null
+        }
         r.records.forEach { rec ->
             val zone = rec.startZoneOffset?.totalSeconds?.div(60)
-            sessions.add(Span(rec.startTime.toEpochMilli(), rec.endTime.toEpochMilli(), zone))
+            clipped(rec.startTime.toEpochMilli(), rec.endTime.toEpochMilli(), zone)?.let { sessions.add(it) }
             rec.stages.filter { it.stage in awakeStages }.forEach { st ->
-                awake.add(Span(st.startTime.toEpochMilli(), st.endTime.toEpochMilli(), zone))
+                clipped(st.startTime.toEpochMilli(), st.endTime.toEpochMilli(), zone)?.let { awake.add(it) }
             }
         }
         val awakeUnion = union(awake)
