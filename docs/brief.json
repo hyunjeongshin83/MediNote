@@ -1,6 +1,33 @@
 {
-  "updated": "2026-10-30T21:40:00Z",
+  "updated": "2026-11-01T01:30:00Z",
   "runs": [
+    {
+      "at": "2026-11-01T01:30:00Z",
+      "task": "메디노트 리서치",
+      "commits": [
+        {
+          "sha": "63f7e9d",
+          "title": "Health Connect·HealthKit: 24시간 수면·6시간 심박을 창 안으로 자름 (MN-156-1) (#157)"
+        }
+      ],
+      "issues": [
+        {
+          "n": 156,
+          "title": "[리서치] Health Connect·HealthKit — 「지난 24시간 수면」이 창과 겹친 세션을 통째로 더해 이른 아침에 수면이 거의 두 배로 보임",
+          "research": true
+        }
+      ],
+      "prs": [
+        {
+          "n": 157,
+          "title": "Health Connect·HealthKit: 24시간 수면·6시간 심박을 창 안으로 자름",
+          "state": "merged",
+          "opened": "2026-11-01"
+        }
+      ],
+      "decisions": [],
+      "note": "MN-156-1 반영됨. 코드·API 규칙으로 읽었고 실기기에서 가짜 세션을 넣어 보지는 못함 — 컴파일은 PR 의 apk·ios 작업 통과로 확인"
+    },
     {
       "at": "2026-10-30T21:40:00Z",
       "task": "메디노트 리서치",
@@ -220,15 +247,6 @@
         "MN-141-2: 시트를 내장 dialog 로 한 곳부터 옮겨 볼까요 (예/아니오)"
       ],
       "note": "Chromium 하나로만 측정, TalkBack·VoiceOver·WKWebView 실기기 미확인. Tab 이 브라우저 화면으로 한 칸 빠지는 차이. Codex 지적(바깥 누르기 좌표) 반영"
-    },
-    {
-      "at": "2026-10-25T21:25:00Z",
-      "task": "메디노트 리서치",
-      "commits": [],
-      "issues": [],
-      "prs": [],
-      "decisions": [],
-      "note": "오늘은 새로 알아낸 것이 없습니다 (복약 알림·일정: 조용한 시간 건너뜀 MN-66-4 · 일정 모양 MN-124 · 권한 안내 #94 · 재부팅/시간대 #36 이 이미 덮음)"
     }
   ]
 }
