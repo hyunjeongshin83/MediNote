@@ -150,9 +150,13 @@ final class HealthKitManager {
             }
             // 어느 출처가 「깨어 있었다」고 적은 구간은 다른 출처의 잠든 구간에서도 뺍니다 (#93 Codex)
             let merged = self.subtract(self.union(spans), self.union(awakeSpans))
-            let rows = merged.map { s -> [String: Any] in
-                ["start": self.ms(s.start), "end": self.ms(s.end), "zoneOffsetMin": s.zone,
-                 "minutes": Int(s.end.timeIntervalSince(s.start) / 60)]
+            // 창(지난 24시간)과 겹친 표본은 통째로 오므로 창 밖 부분을 잘라 냅니다 — 이른 아침에 전날 밤이 통째로 더해지는 것을 막습니다
+            let to = Date(), from = to.addingTimeInterval(-86_400)
+            let rows = merged.compactMap { s -> [String: Any]? in
+                let a = max(s.start, from), b = min(s.end, to)
+                guard b > a else { return nil }
+                return ["start": self.ms(a), "end": self.ms(b), "zoneOffsetMin": s.zone,
+                        "minutes": Int(b.timeIntervalSince(a) / 60)]
             }
             completion(rows)
         }
