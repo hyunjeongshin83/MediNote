@@ -31,7 +31,7 @@ targets:
         CFBundleVersion: "2"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        NSHealthShareUsageDescription: "복약·접종 안내를 돕기 위해 걸음·심박·수면을 읽습니다. 값은 이 기기 안에서만 쓰며, 사용자가 「클라우드에 저장」을 눌렀을 때만 올라갑니다."
+        NSHealthShareUsageDescription: "복약·접종 안내를 돕기 위해 걸음·심박·수면을 읽어 이 화면에 보여 줍니다. 이 앱에서는 읽은 값을 서버에 올리지 않습니다."
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
