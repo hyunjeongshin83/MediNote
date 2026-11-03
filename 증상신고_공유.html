@@ -500,7 +500,12 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
 
   /* ── 보건소: GPS 자동 찾기 ── */
   function setBStat(m){ $("bogunStat").textContent=m||""; }
+  // 설치형 앱(안드로이드·iOS 셸)에는 위치 권한이 없어 GPS 찾기가 늘 실패합니다 — 위치 권한은 켜지 않고, 갈 곳을 알립니다
+  // (#132 MN-132-2 · 대표님 결정 2026-11-03 「웹앱 주소 중심 · 설치형은 시연용」). 웹은 그대로입니다
+  function inAppShell(){ try{ var n=window.Native||(window.parent&&window.parent!==window&&window.parent.Native); return !!(n&&typeof n.platform==="function"); }catch(e){ return false; } }
+  var APP_GPS_MSG="앱에서는 위치로 찾을 수 없어요. 아래에 보건소 이름을 직접 적거나, 웹 주소 https://hyunjeongshin83.github.io/MediNote/ 에서 찾아 주세요.";
   function findBogun(){
+    if(inAppShell()){ setBStat(APP_GPS_MSG); return; }
     if(!navigator.geolocation){ setBStat("이 브라우저는 위치를 지원하지 않아요."); return; }
     setBStat("위치 확인 중… (권한 허용 필요)");
     navigator.geolocation.getCurrentPosition(function(pos){
