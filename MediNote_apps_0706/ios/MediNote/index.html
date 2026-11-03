@@ -2155,8 +2155,6 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   window.addEventListener("resize", queueFit);
   try{ new MutationObserver(queueFit).observe(document.body,{childList:true,subtree:true}); }catch(e){}
   queueFit();
-  // 첫 화면 약 카드의 「복용했어요 / 아직」이 시트와 같은 기록(LOG)에 남깁니다 — 「아직」은 기록만, 판정 없음 (#69 MN-69-4)
-  window.MediNoteMeds={ open:function(){ open(); }, record:function(action,data){ record(action,data); } };
   pill.onclick=open; pill.onkeydown=function(e){ if(e.key==="Enter"||e.key===" ") open(); };
 
   function ensure(){
@@ -2269,7 +2267,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
   if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
   try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){ record(q.get("mnmd"),{id:q.get("id")||"",name:q.get("name")||"",time:q.get("time")||""}); history.replaceState(null,"",location.pathname); } }catch(e){}
-  window.MediNoteMeds={open:open,log:log,pull:pullNative}; // pull: iOS 셸이 기록을 올린 뒤 부릅니다 (#47 MN-47-3)
+  // record: 첫 화면 약 카드의 「복용했어요 / 아직」이 시트와 같은 기록(LOG)에 남깁니다 — 「아직」은 기록만, 판정 없음 (#69 MN-69-4)
+  window.MediNoteMeds={open:open,log:log,pull:pullNative,record:record}; // pull: iOS 셸이 기록을 올린 뒤 부릅니다 (#47 MN-47-3)
 })();
 </script>
 <!-- ===== /복약 알림 레이어 ===== -->
