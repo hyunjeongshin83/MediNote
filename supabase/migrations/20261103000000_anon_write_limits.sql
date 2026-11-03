@@ -25,13 +25,23 @@ grant execute on function public.kv_put_cards(jsonb) to service_role;
 -- 세는 기준은 user_id 가 아니라 키 모양입니다 — 로그인한 계정도 g_ 키를 쓸 수 있고(kv_allowed), 그때는 user_id 가 채워지기 때문입니다.
 -- 로그인 키(u_)는 본인 uid 와 맞아야 해 계정마다 두 행뿐이라 그대로 둡니다.
 -- 상한에 걸리면 false — 앱은 이미 「기기에 저장했어요(클라우드는 다음에 동기화)」로 다룹니다.
+-- 값 하나의 크기 — 압축과 상관없이 같은 값이면 같은 수, 실제 저장 크기보다 작지 않은 수.
+--   · 저장 크기(TOAST 압축 후)와 들어온 크기(압축 전)를 섞어 견주면 같은 기록 덮어쓰기가 「늘었다」로 잡히고 (#166 Codex 1),
+--   · 압축 전 글자 길이만 쓰면 잘 압축되는 값을 같은 길이의 압축 안 되는 값으로 바꿔 상한을 비켜 갑니다 (#166 Codex 2).
+--   압축 전 jsonb 크기는 압축 후 저장 크기 이상이고, 글자 길이와 큰 쪽을 잡아 어느 표현으로 재도 작게 나오지 않게 합니다.
+create or replace function public.kv_size(p jsonb) returns bigint
+ language sql immutable set search_path to '' as $f$
+  select greatest(octet_length(p::text), pg_column_size((p::text)::jsonb))::bigint
+$f$;
+revoke execute on function public.kv_size(jsonb) from public, anon, authenticated;
+
 create or replace function public.kv_put(p_key text, p_value jsonb) returns boolean
  language plpgsql security definer set search_path to '' as $f$
 declare
   u      uuid    := (select auth.uid());
   sz     integer;
-  new_len integer;
-  old_len integer;
+  new_len bigint;
+  old_len bigint;
   n      bigint;
   total  bigint;
 begin
@@ -43,20 +53,18 @@ begin
   if left(public.kv_scope(p_key), 2) = 'g_' then
     -- 동시에 여러 요청이 와도 상한을 함께 넘지 않도록 g_ 쓰기끼리만 차례로 (트랜잭션이 끝나면 풀림)
     perform pg_advisory_xact_lock(hashtext('medinote:kv_put:g_'));
-    -- 늘어난 양은 압축 전 글자 길이끼리 견줍니다. 저장된 값은 TOAST 로 압축돼 pg_column_size 가 작게 나오므로,
-    -- 들어온 값(압축 전)과 그대로 견주면 같은 기록을 덮어써도 「늘었다」로 잡힙니다 (#166 Codex).
-    new_len := octet_length(p_value::text);
-    select octet_length(h.value::text) into old_len from public.hub_state h where h.key = p_key;
+    -- 크기는 들어온 값·저장된 값·합계 모두 kv_size 한 기준으로만 셉니다 (#166 Codex 두 번 — 위 kv_size 설명).
+    new_len := public.kv_size(p_value);
+    select public.kv_size(h.value) into old_len from public.hub_state h where h.key = p_key;
     if not found then
       select count(*) into n from public.hub_state h
        where h.key ~ '^medinote:(report|reports_sent):g_';
       if n >= 20000 then return false; end if;
     end if;
     if new_len > coalesce(old_len, 0) then
-      -- 합계는 실제로 차지하는 크기(압축 후)로 셉니다. 여기에 압축 전 증가분을 더하므로 상한 쪽으로 넉넉하게 막습니다.
-      select coalesce(sum(pg_column_size(h.value)), 0) into total from public.hub_state h
+      select coalesce(sum(public.kv_size(h.value)), 0) into total from public.hub_state h
        where h.key ~ '^medinote:(report|reports_sent):g_';
-      if total + (new_len - coalesce(old_len, 0)) > 104857600 then return false; end if;  -- 100MB
+      if total - coalesce(old_len, 0) + new_len > 104857600 then return false; end if;  -- 100MB
     end if;
   end if;
 
