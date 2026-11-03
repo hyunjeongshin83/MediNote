@@ -36,6 +36,24 @@
 
   // 처방 데이터를 DB에서 불러온다.
   // 우선순위: URL ?rx=처방ID → get_prescription(id) / 없으면 kv_get('medit:rx') / 실패 시 앱 내장 데모 데이터 유지
+  // 단, 처방 링크(?rx=)는 로그인한 뒤에만 읽는다 (get_prescription 은 authenticated 전용). 로그인 전이나 읽지 못했을 때
+  // 내장 데모 처방을 소리 없이 보이지 않고 안내를 보인 뒤, 로그인하면 다시 불러온다 (#117 MN-117-4 · 대표님 결정 가)
+  function loggedIn() { var kv = window.MediNoteKV; return !!(kv && kv.token && kv.token()); }
+  function rxNotice(msg) {
+    var elMeds = document.querySelector("#rx-card .rx-meds");
+    if (elMeds) elMeds.textContent = msg;
+    var elDet = document.querySelector("#rx-card .rx-detail");
+    if (elDet) elDet.textContent = "";
+  }
+  var waitingLogin = false;
+  function retryAfterLogin() {
+    if (waitingLogin) return; waitingLogin = true;
+    window.addEventListener("medinote:uid", function on(e) {
+      if (!e || !e.detail || e.detail === "guest") return;
+      // 세션이 공용 계층(MediNoteKV)에 넘어간 뒤에 부르도록 한 박자 늦춘다
+      setTimeout(function () { if (!loggedIn()) return; window.removeEventListener("medinote:uid", on); waitingLogin = false; loadRx(); }, 0);
+    });
+  }
   async function loadRx() {
     try {
       var params = new URLSearchParams(location.search);
@@ -44,7 +62,9 @@
 
       if (rxId) {
         localStorage.setItem("medit:rxid", rxId);
+        if (!loggedIn()) { rxNotice("로그인하면 처방을 볼 수 있어요"); retryAfterLogin(); return; }
         try { data = await rpc("get_prescription", { p_id: rxId }); } catch (e) { data = null; }
+        if (!data || typeof data !== "object") { rxNotice("처방을 불러오지 못했어요. 잠시 후 다시 열어 주세요."); return; }
       }
       if (!data) {
         try { data = await rpc("kv_get", { p_key: "medit:rx" }); } catch (e) { data = null; }

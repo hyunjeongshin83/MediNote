@@ -30,8 +30,11 @@
 `--check` 는 다시 만든 결과가 지금 파일과 다르면 1 을 돌려줍니다.
 """
 
+import base64
 import filecmp
 import hashlib
+import importlib.util
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -57,6 +60,30 @@ COPY = [
     "icon-512-maskable.png",
 ]
 
+# 글꼴 (#51 MN-51-3) — 웹에서는 vendor/fonts/medinote-fonts.css 를 같은 출처에서 읽습니다.
+# 앱 셸에서는 그 CSS 를 화면 안에 붙이고, 글꼴 파일과 라이선스는 index.html **옆에 평평하게** 둡니다.
+# iOS 는 XcodeGen 이 하위 폴더를 Bundle 맨 위로 펴 넣으므로(그룹) 하위 폴더 주소가 깨집니다.
+FONT_CSS = "vendor/fonts/medinote-fonts.css"
+FONT_LINK = f'<link rel="stylesheet" href="{FONT_CSS}">'
+FONT_FILES = [
+    "vendor/fonts/Pretendard-Regular.subset.woff2",
+    "vendor/fonts/Pretendard-SemiBold.subset.woff2",
+    "vendor/fonts/Pretendard-Bold.subset.woff2",
+    "vendor/fonts/Pretendard-ExtraBold.subset.woff2",
+    "vendor/fonts/Gaegu-Regular.subset.woff2",
+    "vendor/fonts/Gaegu-Bold.subset.woff2",
+    "vendor/fonts/OFL-Pretendard.txt",
+    "vendor/fonts/OFL-Gaegu.txt",
+]
+
+# 앱 안 「증상 신고·공유」 사본(window.__MNRP_SRC)이 읽는 것 — 셸에는 vendor/ 가 없으므로 사본 안에 붙입니다 (#90 MN-90-1)
+REPORT_INLINE = [
+    "medinote.config.js",
+    "vendor/supabase-js-2.umd.js",
+    "vendor/qrcodejs-1.0.0.min.js",
+]
+MNRP = re.compile(r'(window\.__MNRP_SRC=")([A-Za-z0-9+/=]*)(")')
+
 TARGETS = [
     ROOT / "MediNote_apps_0706" / "shared",
     ROOT / "MediNote_apps_0706" / "android" / "app" / "src" / "main" / "assets",
@@ -70,20 +97,58 @@ BANNER = (
 )
 
 
+def inline_script(html: str, rel: str, where: str) -> str:
+    tag = f'<script src="{rel}"></script>'
+    if tag not in html:
+        raise SystemExit(
+            f"{where} 에서 {tag} 를 찾지 못했습니다.\n"
+            "원본이 바뀌었습니다. 이 스크립트의 목록을 맞춰 주세요."
+        )
+    body = (ROOT / rel).read_text(encoding="utf-8")
+    # 본문 안의 </script> 가 태그를 일찍 닫아 버리는 것을 막습니다.
+    body = body.replace("</script", "<\\/script")
+    return html.replace(tag, f"<script>/* {rel} */\n{body}\n</script>", 1)
+
+
+def inline_fonts(html: str, where: str) -> str:
+    if FONT_LINK not in html:
+        raise SystemExit(f"{where} 에서 {FONT_LINK} 를 찾지 못했습니다.")
+    css = (ROOT / FONT_CSS).read_text(encoding="utf-8")
+    return html.replace(FONT_LINK, f"<style>/* {FONT_CSS} — 글꼴은 index.html 옆 */\n{css}</style>", 1)
+
+
+def check_report_embed() -> None:
+    """앱 안 사본이 단독 파일과 같은지 — 다르면 멈춥니다 (tools/embed-report-screen.py)."""
+    spec = importlib.util.spec_from_file_location("embed_report_screen", ROOT / "tools" / "embed-report-screen.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if mod.embedded(SOURCE.read_text(encoding="utf-8")) != mod.encode(mod.SRC.read_text(encoding="utf-8")):
+        raise SystemExit(
+            "앱 안 「증상 신고·공유」 사본이 증상신고_공유.html 과 다릅니다.\n"
+            "먼저: python3 tools/embed-report-screen.py"
+        )
+
+
+def package_report(html: str) -> str:
+    m = MNRP.search(html)
+    if not m:
+        raise SystemExit("MediNote_app.html 에서 window.__MNRP_SRC 를 찾지 못했습니다.")
+    page = base64.b64decode(m.group(2)).decode("utf-8")
+    for rel in REPORT_INLINE:
+        page = inline_script(page, rel, "증상신고_공유.html")
+    page = inline_fonts(page, "증상신고_공유.html")
+    b64 = base64.b64encode(page.encode("utf-8")).decode("ascii")
+    return html[:m.start(2)] + b64 + html[m.end(2):]
+
+
 def build() -> str:
+    check_report_embed()
     html = SOURCE.read_text(encoding="utf-8")
+    html = package_report(html)
+    html = inline_fonts(html, "MediNote_app.html")
 
     for rel in INLINE:
-        tag = f'<script src="{rel}"></script>'
-        if tag not in html:
-            raise SystemExit(
-                f"MediNote_app.html 에서 {tag} 를 찾지 못했습니다.\n"
-                "원본이 바뀌었습니다. 이 스크립트의 INLINE 목록을 맞춰 주세요."
-            )
-        body = (ROOT / rel).read_text(encoding="utf-8")
-        # 본문 안의 </script> 가 태그를 일찍 닫아 버리는 것을 막습니다.
-        body = body.replace("</script", "<\\/script")
-        html = html.replace(tag, f"<script>/* {rel} */\n{body}\n</script>", 1)
+        html = inline_script(html, rel, "MediNote_app.html")
 
     # 서비스워커는 패키징본에서 뺍니다.
     #
@@ -133,6 +198,14 @@ def main() -> int:
                     drifted.append(f"{rel_target}/{name}")
             else:
                 shutil.copy2(ROOT / name, dest)
+
+        for rel in FONT_FILES:
+            dest = target / Path(rel).name
+            if check_only:
+                if not dest.exists() or not filecmp.cmp(ROOT / rel, dest, shallow=False):
+                    drifted.append(f"{rel_target}/{Path(rel).name}")
+            else:
+                shutil.copy2(ROOT / rel, dest)
 
         if not check_only:
             print(f"  {rel_target}/index.html  ({len(html):,} 바이트)")
