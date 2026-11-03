@@ -24,6 +24,8 @@ import java.util.Calendar
  *   웹 save()  → Native.scheduleMeds(json)  → 여기 save()+reschedule()
  *                json = {on, quiet:{from,to}, items:[{id,name,times:["08:00",…]}]}
  *   정한 시각  → MedAlarmReceiver(MED_FIRE) → 알림(복용했어요 · 10분 뒤) → 다음 날 같은 시각 다시 걺
+ *                알람·알림은 시각마다 하나 — 같은 시각의 약은 한 통으로 묶고 본문에 약 이름을 쓰지 않습니다
+ *                (「약 N가지 드실 시간이에요」 · 잠금화면에 약 이름이 보이지 않게 · #83 MN-83-4 · #123 MN-123-1 · #36 MN-36-4)
  *   단추       → MedAlarmReceiver(MED_TAKEN · MED_LATER) → 기록(log)에 남김 → 웹이 열리면 Native.medsLogTake() 로 가져감
  *   재부팅     → MedAlarmReceiver(BOOT_COMPLETED) → 저장된 일정으로 다시 걺
  *   앱 업데이트 · 시간대/시계 변경 · 정확 알람 권한 변경 → 같은 수신기 → 다시 걺 (#36 MN-36-1)
@@ -61,8 +63,7 @@ object MedScheduler {
         ensureChannel(c)
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val sc = schedule(c)
-        data class Slot(val code: Int, val id: String, val name: String, val time: String)
-        val slots = ArrayList<Slot>()
+        val slots = java.util.TreeSet<String>()   // 시각(HH:mm)마다 알람 하나
         if (sc != null && sc.optBoolean("on", false)) {
             val items = sc.optJSONArray("items") ?: JSONArray()
             for (i in 0 until items.length()) {
@@ -70,12 +71,11 @@ object MedScheduler {
                 val times = it.optJSONArray("times") ?: continue
                 for (j in 0 until times.length()) {
                     val t = times.optString(j)
-                    if (!t.matches(Regex("\\d\\d:\\d\\d"))) continue
-                    slots.add(Slot(requestCode(it.optString("id"), t), it.optString("id"), it.optString("name"), t))
+                    if (t.matches(Regex("\\d\\d:\\d\\d"))) slots.add(t)
                 }
             }
         }
-        val keep = slots.map { it.code }.toSet()
+        val keep = slots.map { requestCode(it) }.toSet()
         val old = try { JSONArray(prefs(c).getString(KEY_CODES, "[]") ?: "[]") } catch (_: Exception) { JSONArray() }
         for (i in 0 until old.length()) {
             val code = old.optInt(i)
@@ -83,25 +83,50 @@ object MedScheduler {
             if (!keepSnooze || code !in keep) cancel(c, am, code + 1)
         }
         val codes = JSONArray()
-        for (s in slots) { setAlarm(c, am, s.code, s.id, s.name, s.time, nextOccurrence(s.time)); codes.put(s.code) }
+        for (t in slots) { val code = requestCode(t); setAlarm(c, am, code, t, nextOccurrence(t), null); codes.put(code) }
         prefs(c).edit().putString(KEY_CODES, codes.toString()).apply()
+        // 이미 떠 있는 복약 알림 중 지금 일정에 없는 시각 것은 걷습니다 — 알림을 끄거나 기록을 지운 뒤 남은 알림의
+        // 「복용했어요」·「10분 뒤」가 기록을 다시 만들지 않게 (PR #168 Codex)
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            for (sbn in nm.activeNotifications) {
+                if (sbn.notification.channelId == CHANNEL && sbn.id !in keep) nm.cancel(sbn.tag, sbn.id)
+            }
+        } catch (_: Exception) {}
     }
 
     /** 다음 날 같은 시각 (알림이 울린 뒤 다시 겁니다) */
-    fun rescheduleOne(c: Context, id: String, name: String, time: String) {
+    fun rescheduleOne(c: Context, time: String) {
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        setAlarm(c, am, requestCode(id, time), id, name, time, nextOccurrence(time))
+        setAlarm(c, am, requestCode(time), time, nextOccurrence(time), null)
     }
 
-    /** 10분 뒤 한 번 더 */
-    fun snooze(c: Context, id: String, name: String, time: String) {
+    /** 10분 뒤 한 번 더 — 그 알림에 묶였던 약만 */
+    fun snooze(c: Context, time: String, ids: Array<String>) {
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        setAlarm(c, am, requestCode(id, time) + 1, id, name, time, System.currentTimeMillis() + 10 * 60_000L)
+        setAlarm(c, am, requestCode(time) + 1, time, System.currentTimeMillis() + 10 * 60_000L, ids)
     }
 
-    private fun setAlarm(c: Context, am: AlarmManager, code: Int, id: String, name: String, time: String, at: Long) {
-        val i = Intent(c, MedAlarmReceiver::class.java).setAction(ACT_FIRE)
-            .putExtra("id", id).putExtra("name", name).putExtra("time", time)
+    /** 지금 일정에서 그 시각에 먹는 약 (id, 이름) — 같은 약은 한 번만 */
+    fun itemsAt(c: Context, time: String): List<Pair<String, String>> {
+        val sc = schedule(c) ?: return emptyList()
+        if (!sc.optBoolean("on", false)) return emptyList()
+        val items = sc.optJSONArray("items") ?: return emptyList()
+        val out = ArrayList<Pair<String, String>>()
+        for (i in 0 until items.length()) {
+            val it = items.optJSONObject(i) ?: continue
+            val times = it.optJSONArray("times") ?: continue
+            val id = it.optString("id")
+            for (j in 0 until times.length()) {
+                if (times.optString(j) == time && out.none { p -> p.first == id }) { out.add(Pair(id, it.optString("name"))); break }
+            }
+        }
+        return out
+    }
+
+    private fun setAlarm(c: Context, am: AlarmManager, code: Int, time: String, at: Long, ids: Array<String>?) {
+        val i = Intent(c, MedAlarmReceiver::class.java).setAction(ACT_FIRE).putExtra("time", time)
+        if (ids != null) i.putExtra("ids", ids)
         val pi = PendingIntent.getBroadcast(c, code, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()
         try {
@@ -118,9 +143,9 @@ object MedScheduler {
         if (pi != null) { am.cancel(pi); pi.cancel() }
     }
 
-    /** 같은 약·같은 시각은 늘 같은 번호 — 다시 걸면 이전 것을 덮습니다. 짝수만 써서 +1 은 10분 뒤용으로 남깁니다. */
-    private fun requestCode(id: String, time: String): Int =
-        ((id + "|" + time).hashCode() and 0x3fffffff) * 2
+    /** 같은 시각은 늘 같은 번호 — 다시 걸면 이전 것을 덮습니다. 짝수만 써서 +1 은 10분 뒤용으로 남깁니다. */
+    private fun requestCode(time: String): Int =
+        (("t|" + time).hashCode() and 0x3fffffff) * 2
 
     private fun nextOccurrence(hhmm: String): Long {
         val (h, m) = hhmm.split(":").map { it.toInt() }
@@ -148,14 +173,16 @@ object MedScheduler {
         })
     }
 
-    fun notify(c: Context, id: String, name: String, time: String) {
+    fun notify(c: Context, time: String, meds: List<Pair<String, String>>) {
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = requestCode(id, time)
+        val nid = requestCode(time)
+        val ids = meds.map { it.first }.toTypedArray()
+        val names = meds.map { it.second }.toTypedArray()
         fun act(action: String, code: Int) = PendingIntent.getBroadcast(
             c, code,
             Intent(c, MedAlarmReceiver::class.java).setAction(action)
-                .putExtra("id", id).putExtra("name", name).putExtra("time", time).putExtra("nid", nid),
+                .putExtra("ids", ids).putExtra("names", names).putExtra("time", time).putExtra("nid", nid),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val open = PendingIntent.getActivity(c, nid,
             Intent(c, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("mnmd", "open"),
@@ -165,7 +192,7 @@ object MedScheduler {
             setSmallIcon(R.drawable.ic_stat_med)   // 단색 벡터 — 런처 아이콘을 쓰면 상태바에 흰 네모로 뜹니다 (#36 MN-36-2)
             setColor(0xFF0A7168.toInt())          // 기존 --brand 토큰
             setContentTitle("메디노트 복약 알림")
-            setContentText("$name 드실 시간이에요 ($time)")
+            setContentText("약 ${meds.size}가지 드실 시간이에요 ($time)")
             setContentIntent(open)
             setAutoCancel(true)
             setCategory(Notification.CATEGORY_REMINDER)

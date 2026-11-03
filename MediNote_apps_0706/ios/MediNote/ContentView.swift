@@ -77,7 +77,7 @@ struct WebView: UIViewRepresentable {
             case "scheduleMeds":
                 MedNotifier.shared.schedule(json: body["json"] as? String ?? "")
             case "medsLogAck":
-                MedNotifier.shared.clearLog()
+                MedNotifier.shared.clearLog(upTo: (body["upTo"] as? NSNumber)?.int64Value)
             case "openNotifySettings":
                 DispatchQueue.main.async {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
@@ -153,7 +153,8 @@ enum NativeBridge {
             scheduleMeds: function(j){ post({fn:"scheduleMeds", json:String(j)}); },
             // 빈 것을 가져갈 때는 지우라고 하지 않습니다 — 화면이 먼저 (빈 값을) 가져가고 그 뒤 didFinish 가 기록을 올리므로,
             // 빈 가져가기에도 지우면 앱이 닫혀 있는 동안 누른 「복용했어요」가 올라오기 전에 사라집니다 (#47 MN-47-3)
-            medsLogTake: function(){ var s = window.__mnMedsLog || "[]"; window.__mnMedsLog = "[]"; if (s !== "[]") post({fn:"medsLogAck"}); return s; },
+            // 받아 간 기록 중 가장 늦은 시각(at)까지만 지우라고 합니다 — 그 사이 단추로 더해진 기록은 남습니다 (PR #167 Sourcery)
+            medsLogTake: function(){ var s = window.__mnMedsLog || "[]"; window.__mnMedsLog = "[]"; if (s !== "[]") { var up = 0; try { JSON.parse(s).forEach(function(e){ if (e && e.at > up) up = e.at; }); } catch(e) {} post(up ? {fn:"medsLogAck", upTo:up} : {fn:"medsLogAck"}); } return s; },
             exactAlarmAllowed: function(){ return true; },
             openExactAlarmSettings: function(){},
             // 설정 앱에서 알림을 끈 것(.denied)만 false — 아직 묻지 않은 상태는 막힌 것이 아닙니다. 값은 MedNotifier 가 앱이 켜질 때마다 넣습니다 (#94)

@@ -1721,8 +1721,11 @@ button,input,select,textarea{font-family:inherit}</style>
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
-  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
-  window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
+  pullNative();
+  pushNative();   // 앱이 뜰 때 한 번 — 업데이트한 앱이 예전 약별 알림(본문에 약 이름)을 일정을 고칠 때까지 안고 있지 않게, 바로 시각별 묶음으로 다시 겁니다 (PR #167 Codex)
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
+  window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); }
+    if(r&&r.limit) stt("알림 시각이 너무 많아 일부 시각은 알림이 오지 않아요. 시각 수를 줄여 주세요.");   /* iPhone 은 걸어 둘 수 있는 알림이 64개까지입니다 (#36 MN-36-4) */ };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
   function quiet(m){ var a=hm(sc.quiet.from), b=hm(sc.quiet.to); return a<=b ? (m>=a&&m<b) : (m>=a||m<b); }
   function esc(x){ return String(x).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -1768,7 +1771,7 @@ button,input,select,textarea{font-family:inherit}</style>
       '<div class="mnmd-fld"><label for="mnmdCustom">직접 시각</label><input type="time" id="mnmdCustom"></div>'+
       '<button class="mnhw-btn" id="mnmdAdd">이 약 알림 추가</button>'+
       '<div class="mnmd-two" style="margin-top:12px"><div class="mnmd-fld"><label for="mnmdQ1">조용한 시간 시작</label><input type="time" id="mnmdQ1" value="'+esc(sc.quiet.from)+'"></div><div class="mnmd-fld"><label for="mnmdQ2">끝</label><input type="time" id="mnmdQ2" value="'+esc(sc.quiet.to)+'"></div></div>'+
-      '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.</div><div class="mnhw-st" id="mnmdSt"></div>';
+      '<div class="mnhw-note">지난 7일 「복용했어요」 '+taken7+'건. 기록은 이 기기에만 있습니다.'+(NATIVE?' 폰을 바꾸면 알림 일정과 기록은 옮겨지지 않아요.':'')+'</div><div class="mnhw-st" id="mnmdSt"></div>';
     document.getElementById("mnmdX").onclick=function(){ ov.classList.remove("on"); };
     var ex=document.getElementById("mnmdExact"); if(ex) ex.onclick=function(){ try{ window.Native.openExactAlarmSettings(); }catch(e){} };
     renderNotify();
@@ -1794,20 +1797,27 @@ button,input,select,textarea{font-family:inherit}</style>
   }
 
   // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
-  function notify(it,time){
-    var body=it.name+" 드실 시간이에요 ("+time+")";
-    var data={id:it.id,name:it.name,time:time};
+  // 같은 시각의 약은 알림 한 통으로 묶고, 본문에 약 이름을 쓰지 않습니다 — 잠금화면에 약 이름이 보이지 않게 (#83 MN-83-4 · #123 MN-123-1 · #36 MN-36-4)
+  function notify(list,time){
+    var body="약 "+list.length+"가지 드실 시간이에요 ("+time+")";
+    var data={time:time,items:list.map(function(it){ return {id:it.id,name:it.name}; })};
     try{
       if(navigator.serviceWorker && navigator.serviceWorker.controller){
-        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+it.id+"-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"}]}); });
+        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"}]}); });
       } else if("Notification" in window && Notification.permission==="granted"){
-        var n=new Notification("메디노트 복약 알림",{body:body,icon:"icon-192.png",tag:"mnmd-"+it.id+"-"+time}); n.onclick=function(){ record("taken",data); n.close(); };
+        // 본문을 누르면 앱만 엽니다 — 「복용했어요」는 단추로만 기록합니다 (#97 MN-97-3)
+        var n=new Notification("메디노트 복약 알림",{body:body,icon:"icon-192.png",tag:"mnmd-"+time}); n.onclick=function(){ try{ window.focus(); }catch(e){} n.close(); };
       }
     }catch(e){}
   }
   function record(action,data){
-    addLog({action:action,id:data.id,name:data.name,time:data.time,at:Date.now()});
-    if(action==="later") sc.snooze[data.id+"|"+data.time]=Date.now()+10*60000, save();
+    if(action!=="taken" && action!=="later") return;
+    var list=data.items || (data.id ? [{id:data.id,name:data.name}] : []);   // data.id: 묶기 전에 뜬 알림
+    list.forEach(function(it){
+      addLog({action:action,id:it.id,name:it.name,time:data.time,at:Date.now()});
+      if(action==="later") sc.snooze[it.id+"|"+data.time]=Date.now()+10*60000;
+    });
+    if(action==="later") save();
     updateBadge();
   }
   // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
@@ -1840,17 +1850,24 @@ button,input,select,textarea{font-family:inherit}</style>
     if(!("Notification" in window) || Notification.permission!=="granted") return;
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=dayKey();
     if(quiet(m)) return;
+    var due={}, any=false;
     sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){
       var k=it.id+"|"+t; var sn=sc.snooze[k];
-      var due = (Math.abs(m-hm(t))<=1 && sc.sent[k]!==dk) || (sn && Date.now()>=sn);
-      if(!due) return; sc.sent[k]=dk; delete sc.snooze[k]; save(); notify(it,t);
+      if(!((Math.abs(m-hm(t))<=1 && sc.sent[k]!==dk) || (sn && Date.now()>=sn))) return;
+      sc.sent[k]=dk; delete sc.snooze[k]; any=true;
+      var g=due[t]||(due[t]=[]); if(!g.some(function(x){ return x.id===it.id; })) g.push(it);
     }); });
+    if(!any) return;
+    save(); Object.keys(due).forEach(function(t){ notify(due[t],t); });
   }
   setInterval(tick,30000); tick();
 
   // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
   if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
-  try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){ record(q.get("mnmd"),{id:q.get("id")||"",name:q.get("name")||"",time:q.get("time")||""}); history.replaceState(null,"",location.pathname); } }catch(e){}
+  try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){
+    var ids=(q.get("ids")||q.get("id")||"").split(",").filter(Boolean);
+    record(q.get("mnmd"),{time:q.get("time")||"",items:ids.map(function(id){ var it=sc.items.filter(function(x){ return x.id===id; })[0]; return {id:id,name:it?it.name:(q.get("name")||"")}; })});
+    history.replaceState(null,"",location.pathname); } }catch(e){}
   window.MediNoteMeds={open:open,log:log,pull:pullNative}; // pull: iOS 셸이 기록을 올린 뒤 부릅니다 (#47 MN-47-3)
 })();
 </script>
@@ -1921,10 +1938,31 @@ button,input,select,textarea{font-family:inherit}</style>
       el.querySelectorAll("[data-mn-ti]").forEach(function(x){ var t=x.getAttribute("data-mn-ti"); if(t==="") x.removeAttribute("tabindex"); else x.setAttribute("tabindex",t); x.removeAttribute("data-mn-ti"); });
     }
   }
+  /* 뒤로 가기 = 열린 시트 닫기 (#78 MN-78-5). 안드로이드 셸은 web.canGoBack() 이 참이 되어 goBack() → popstate 로 같은 길을 탑니다.
+     기록은 시트 수와 상관없이 「열린 시트가 있다」는 표시 하나만 둡니다. 열고 닫을 때마다 reconcile() 이 그 하나를 화면에 맞춥니다 —
+     시트가 있는데 표시가 없으면 쌓고, 시트가 없는데 표시가 있으면 우리가 되돌립니다(selfBack 으로 세어 그 popstate 는 건너뜀).
+     사용자의 뒤로 가기는 맨 위 시트 하나만 닫고, 남은 시트가 있으면 표시를 다시 쌓습니다. 시트가 둘일 때 하나를 닫거나,
+     되돌리는 사이에 시트를 다시 열어도 다른 시트가 함께 닫히거나 표시가 어긋나지 않습니다 (PR #167 Codex · Sourcery) */
+  var selfBack=0;
+  function reconcile(){
+    var want=!!topOpen(), have=false;
+    try{ have=!!(history.state&&history.state.mnSheet); }catch(e){}
+    try{
+      if(want&&!have) history.pushState({mnSheet:1},"");
+      else if(!want&&have&&selfBack===0){ selfBack++; history.back(); }
+    }catch(e){}
+  }
+  window.addEventListener("popstate",function(){
+    if(selfBack>0){ selfBack--; reconcile(); return; }
+    var open=topOpen(); if(!open) return;
+    var c=dialogOf(open).querySelector(CLOSE)||open.querySelector(CLOSE);
+    if(c) c.click(); else open.classList.remove("on");
+    reconcile();
+  });
   function sync(el){
     var on=el.classList.contains("on");
-    if(on&&!el.__mnOpen){ el.__mnOpen=true; sleep(el,false); opened(el); }
-    else if(!on&&el.__mnOpen){ el.__mnOpen=false; sleep(el,true); closed(); }
+    if(on&&!el.__mnOpen){ el.__mnOpen=true; sleep(el,false); opened(el); reconcile(); }
+    else if(!on&&el.__mnOpen){ el.__mnOpen=false; sleep(el,true); closed(); reconcile(); }
     else if(!on&&!el.__mnOpen){ sleep(el,true); }
   }
   function topOpen(){ return Array.prototype.slice.call(document.querySelectorAll(WATCH)).filter(function(x){ return x.classList.contains("on"); }).pop(); }
