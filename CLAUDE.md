@@ -104,8 +104,14 @@ QA-tool 에는 무엇을 알아냈는지만 적습니다.
                        → Supabase health_profiles
 증상 기록               저장 단추를 누르면 올라갑니다 + 기기 localStorage 에도 사본
                        → Supabase hub_state 키 medinote:report:u_<uid> (비로그인은 g_<난수>)
-AI 도우미 · AI 채움     묻는 순간 나갑니다 — 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
-                       → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 서버에는 토큰 수만 남습니다
+AI 도우미 · AI 채움     묻는 순간 나갑니다 — 도우미: 프로필(이름·나이대·질환) + 대화 + 최근 증상 8건 + 복용약 20개
+                       AI 채움: 오늘 증상 + 복용 중인 약 (20개로 자름 · #111 MN-111-3)
+                       → Supabase 엣지 함수 ai-helper → api.anthropic.com (미국). 질문 본문은 남기지 않고,
+                       로그인 계정에 묶인 하루 호출 수와 토큰 수가 남습니다 (ai_usage · #111 MN-111-2)
+                       도우미는 웹 검색을 켠 채 답합니다 — 검색어는 모델이 만들고, 건강 맥락이 대화에 있는 상태입니다 (#104 MN-104-2)
+보건소 찾기 (신고·공유 화면)  단추를 누르면 기기 위치(위도·경도)가 nominatim.openstreetmap.org(해외 공개 서버)로 갑니다. 단추 위에 안내가 있습니다
+                       찾은 보건소 이름은 이메일 조회로 엣지 함수 gov-data 에, 보낸 곳·건수는 발송 이력(hub_state)에 남습니다 (#130 MN-130-3)
+                       신고서를 보낼 때 이메일은 기기의 메일 앱을 열고(mailto), 카카오톡은 내용을 클립보드에 복사합니다
 생년월일               Google 에서 받지 않습니다 (2026-10-23 민감 스코프 user.birthday.read 요청을 뺐습니다 · #81 MN-81-1). 프로필 화면에서 직접 입력 → health_profiles
 Health Connect (안드로이드 앱만)  「건강기기 연결」 시트에서 걸음·수면(지난 24시간)·심박(지난 6시간)을 읽어 화면에 보여 줍니다
                        앱(WebView)에는 블루투스가 없어 「읽은 값 클라우드에 저장」 단추가 생기지 않습니다
@@ -117,7 +123,7 @@ HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽�
                        같은 출처로 읽어 fonts.googleapis.com · cdn.jsdelivr.net 에 접속하지 않습니다 (2026-11-03 · #51 MN-51-3).
                        따로 여는 페이지(오늘증상기록 · 예방접종_데이터API · seed_cards)는 아직 접속합니다 — IP·기기 정보가 Google·jsDelivr 에 남습니다
 푸시 구독              「접종 시기 알림」을 켜면 브라우저의 푸시 서비스(Chrome 은 Google FCM · Safari 는 Apple) 주소와 열쇠가
-                       → Supabase push_subscriptions (비로그인도 등록됨 · uid 없음). 보내는 쪽 소스는 저장소에 없습니다 (#16 MN-16-5)
+                       → Supabase push_subscriptions (로그인한 사용자만 · 알려진 푸시 서비스 주소만 · 2026-11-03 #166 MN-51-6. 그 전에 생긴 uid 없는 행은 남아 있음). 보내는 쪽 소스는 저장소에 없습니다 (#16 MN-16-5)
 기기 백업 (앱 셸)      백업에서 뺍니다 (2026-11-03 대표님 결정 · #83 MN-83-2·3). 안드로이드 앱은 allowBackup="false" + dataExtractionRules 로
                        WebView localStorage(복약 일정·복용 기록·증상 기록 사본)와 SharedPreferences 를 구글 계정 백업·기기 간 이전에서 뺍니다.
                        iOS 앱은 복용 기록을 앱 지원 폴더 MediNoteMeds/ 로 옮기고 그 폴더와 Library/WebKit 에 isExcludedFromBackup 을 겁니다.
@@ -134,7 +140,7 @@ Google 토큰            Google 로그인은 2026-11-03 부터 access_type=offli
 기기 백업 · 잠금화면 알림 · Google 토큰 세 줄은 2026-10-08 에 코드를 읽고 더했습니다 (#83) — 서버 밖의 길입니다.
 Health Connect 줄은 2026-09-28 에 `onNativeHealth` · `toRows` 를 읽고 고쳤고, 09-29 에 앱에는 저장 단추가 없다는 것(#46 Codex)을 반영했습니다.
 HealthKit 줄은 2026-09-30 에 `ContentView.swift` 를 읽고 고쳤습니다 — 「불리지 않습니다」는 09-25 (#30) 뒤로 사실이 아니었습니다 (#47 MN-47-4).
-**AI 도우미 경로는 개인정보처리방침(PRIVACY.md)에 아직 없습니다** — MN-22-2.
+AI 도우미 경로는 개인정보처리방침 2-5 에 있습니다 (#22 MN-22-2) — 2026-11-03 에 두 경로 · 웹 검색 · 서버에 남는 사용 기록을 더했습니다.
 
 **「서버로 보내지 않습니다」·「기기를 떠나지 않습니다」라고 쓰지 마세요.** 사실이 아닙니다.
 
