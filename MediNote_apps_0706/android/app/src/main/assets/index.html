@@ -630,17 +630,18 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       dueAdult: "\uB3C5\uAC10\uC774 10\uC6D4\uC5D0 \uC608\uC815\uB3FC \uC788\uC5B4\uC694. \uB20C\uB7EC\uC11C \uD655\uC778\uD558\uC138\uC694.",
       askAssistant: "\uB3C4\uC6B0\uBBF8\uC5D0\uAC8C \uBB3C\uC5B4\uBCF4\uAE30",
       todayMed: "\uC624\uB298\uC758 \uBCF5\uC57D",
-      medHalf: "\uC808\uBC18 \uC644\uB8CC\uD588\uC5B4\uC694.\n\uC800\uB141 \uC57D 2\uAC1C\uAC00 \uB0A8\uC558\uC5B4\uC694.",
+      // 첫 화면 「오늘」은 복약 알림에 등록한 약으로 그립니다 — 예시 기록(혈압약·당뇨약·나이로비 여행)은 뺐습니다 (#69 MN-69-3·4 · 대표님 결정 2026-11-03)
+      medNone: "아직 등록한 약이 없어요.",
+      medAdd: "약 알림 추가",
+      medTaken: "복용했어요",
+      medNotYet: "아직",
+      medSkipped: "「아직」으로 기록했어요",
+      medLeft: (n) => `오늘 남은 복용 ${n}회`,
+      medAllDone: "오늘 정한 복용을 모두 기록했어요.",
       doses: "\uD68C\uBD84",
       today: "\uC624\uB298",
-      morningDone: "\uC544\uCE68 \uC57D \uBCF5\uC6A9 \uC644\uB8CC",
-      bpDm: "\uD608\uC555\uC57D \xB7 \uB2F9\uB1E8\uC57D",
-      eveningDose: "\uC800\uB141 \uC57D",
-      eveningWhen: "\uC800\uB141 \uC2DD\uD6C4 30\uBD84 \xB7 2\uC815",
       fluComing: "\uB3C5\uAC10 \uC811\uC885 \uC2DC\uC98C\uC774 \uB2E4\uAC00\uC640\uC694",
       fluWhen: "10\uC6D4 \xB7 65\uC138 \uC774\uC0C1 \uAD6D\uAC00\uC9C0\uC6D0",
-      nairobi: "\uB098\uC774\uB85C\uBE44 \uC5EC\uD589 \xB7 \uD669\uC5F4 \uC811\uC885 \uD544\uC694",
-      nairobiSub: "\uD56D\uACF5\uAD8C \uC790\uB3D9 \uAC10\uC9C0 \xB7 \uCD9C\uAD6D 46\uC77C \uC804",
       lifeSched: "\uC0DD\uC560\uC8FC\uAE30 \uC811\uC885",
       newVac: "\uC0C8\uB85C \uB4F1\uB85D\uB41C \uC811\uC885\uC57D",
       newVacBody: "\uC740 \uC2DD\uC57D\uCC98 \uD488\uBAA9\uD5C8\uAC00 \uC790\uB8CC\uC5D0\uC11C \uC790\uB3D9 \uC5C5\uB370\uC774\uD2B8\uB3FC\uC694. \uD5C8\uAC00 \uC644\uB8CC\uC640 \uAD6D\uAC00\uAD8C\uC7A5\uC740 \uAD6C\uBD84\uD574 \uD45C\uC2DC\uD569\uB2C8\uB2E4.",
@@ -687,7 +688,6 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       newsNew: "\uC0C8 \uC811\uC885\uC57D \uC18C\uC2DD",
       newsNewSub: "\uC2DD\uC57D\uCC98 \uC2E0\uADDC \uD5C8\uAC00 \uBC31\uC2E0",
       reviewed: "\uBC29\uC900\uC11D \uC5F0\uAD6C\uC2E4 \uAC10\uC218",
-      dateStr: "7\uC6D4 6\uC77C \uC6D4\uC694\uC77C",
       influenzaLatest: "\uC778\uD50C\uB8E8\uC5D4\uC790 (10.14)",
       hwShare: "\uAE30\uAE30\xB7AI \uC5F0\uACB0 (\uB3D9\uC758 \uAE30\uBC18)",
       hwGoogle: "건강 기기 연결",
@@ -730,17 +730,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       dueAdult: "Flu is due in October. Tap to review what's recommended.",
       askAssistant: "Ask the assistant",
       todayMed: "Today's medication",
-      medHalf: "Halfway there.\n2 evening doses left.",
+      medNone: "No medicines added yet.",
+      medAdd: "Add a medication reminder",
+      medTaken: "Taken",
+      medNotYet: "Not yet",
+      medSkipped: "Marked \u201Cnot yet\u201D",
+      medLeft: (n) => `Doses left today: ${n}`,
+      medAllDone: "All of today's doses are recorded.",
       doses: "doses",
       today: "Today",
-      morningDone: "Morning dose taken",
-      bpDm: "Blood pressure \xB7 Diabetes",
-      eveningDose: "Evening dose",
-      eveningWhen: "30 min after dinner \xB7 2 tablets",
       fluComing: "Flu season is coming",
       fluWhen: "October \xB7 state-funded, 65+",
-      nairobi: "Nairobi trip \xB7 Yellow fever needed",
-      nairobiSub: "Auto-detected from your ticket \xB7 46 days out",
       lifeSched: "Lifelong schedule",
       newVac: "Newly registered vaccines",
       newVacBody: " update automatically from MFDS approval data. Approval and national recommendation are shown separately.",
@@ -787,7 +787,6 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       newsNew: "New vaccine news",
       newsNewSub: "Newly approved (MFDS)",
       reviewed: "Reviewed \xB7 Bang Lab",
-      dateStr: "Mon, Jul 6",
       influenzaLatest: "Influenza (Oct 14)",
       hwShare: "Connect devices \xB7 AI (with consent)",
       hwGoogle: "Connect a health device",
@@ -971,8 +970,67 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var sub = { fontSize: "0.875rem", color: C.d3, lineHeight: 1.6 };
   var card = { background: C.card, borderRadius: "var(--r-lg)", padding: 20, marginTop: 14, border: `1px solid ${C.line}`, boxShadow: "0 1px 2px rgba(10,110,78,.04)" };
   var LabChip = ({ t }) => /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: "0.625rem", fontWeight: 700, color: C.g6, background: C.g1, padding: "5px 11px", borderRadius: "var(--r-full)" } }, t.reviewed);
+  // 복약 알림(medinote:meds:sched)과 기록(medinote:meds:log)을 그대로 읽습니다 — 시트의 「복용했어요」와 같은 저장소 · 같은 7일 통계 (#69 MN-69-4)
+  function readMeds() {
+    let sc = null, lg = [];
+    try { sc = JSON.parse(localStorage.getItem("medinote:meds:sched") || "null"); } catch (e) {}
+    try { lg = JSON.parse(localStorage.getItem("medinote:meds:log") || "[]"); } catch (e) {}
+    return { items: sc && Array.isArray(sc.items) ? sc.items : [], log: Array.isArray(lg) ? lg : [] };
+  }
+  function useMeds() {
+    const [m, setM] = (0, import_react.useState)(readMeds);
+    (0, import_react.useEffect)(() => {
+      const f = () => setM(readMeds());
+      window.addEventListener("medinote:meds", f);
+      window.addEventListener("storage", f);
+      document.addEventListener("visibilitychange", f);
+      return () => { window.removeEventListener("medinote:meds", f); window.removeEventListener("storage", f); document.removeEventListener("visibilitychange", f); };
+    }, []);
+    return m;
+  }
+  // 오늘 시각별 복용 — 같은 약·같은 시각은 한 번만. 오늘 마지막으로 누른 것(복용했어요 · 아직)이 그 칸의 상태입니다. 판정은 하지 않습니다
+  function todayDoses(m) {
+    const dk = new Date().toDateString(), st = {};
+    for (let i = m.log.length - 1; i >= 0; i--) {
+      const e = m.log[i];
+      if (!e || (e.action !== "taken" && e.action !== "skipped")) continue;
+      if (new Date(e.at).toDateString() !== dk) continue;
+      st[e.id + "|" + e.time] = e.action;
+    }
+    const out = [], seen = {};
+    m.items.forEach((it) => (it.times || []).forEach((tm) => { const k = it.id + "|" + tm; if (seen[k]) return; seen[k] = 1; out.push({ it, time: tm, state: st[k] || "" }); }));
+    out.sort((x, y) => x.time < y.time ? -1 : x.time > y.time ? 1 : 0);
+    return out;
+  }
+  function recordDose(action, d) {
+    const data = { id: d.it.id, name: d.it.name, time: d.time };
+    try { if (window.MediNoteMeds && window.MediNoteMeds.record) { window.MediNoteMeds.record(action, data); return; } } catch (e) {}
+    try { const l = JSON.parse(localStorage.getItem("medinote:meds:log") || "[]"); l.unshift(Object.assign({ action, at: Date.now() }, data)); localStorage.setItem("medinote:meds:log", JSON.stringify(l.slice(0, 500))); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("medinote:meds")); } catch (e) {}
+  }
+  function openMedSheet() {
+    try { if (window.MediNoteMeds && window.MediNoteMeds.open) { window.MediNoteMeds.open(); return; } } catch (e) {}
+    const p = document.getElementById("mnmd-pill"); if (p) p.click();
+  }
+  // 날짜는 오늘 — 예전에는 「7월 6일 월요일」이 박혀 있었습니다 (#69 MN-69-3)
+  function todayLabel(t) {
+    const d = new Date();
+    if (t === STR.ko) return `${d.getMonth() + 1}\uC6D4 ${d.getDate()}\uC77C ${"\uC77C\uC6D4\uD654\uC218\uBAA9\uAE08\uD1A0"[d.getDay()]}\uC694\uC77C`;
+    try { return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); } catch (e) { return d.toDateString(); }
+  }
+  var doseBtn = { flex: 1, minHeight: 44, padding: "10px 12px", borderRadius: "var(--r-sm)", fontFamily: "inherit", fontSize: "var(--fs-sub)", fontWeight: 700, cursor: "pointer" };
+  function MedDose({ t, d }) {
+    const [open, setOpen] = (0, import_react.useState)(false);
+    const done = d.state === "taken";
+    const sub = d.time + (done ? " \xB7 " + t.medTaken : d.state === "skipped" ? " \xB7 " + t.medSkipped : "");
+    const rec = (action) => { if (d.state !== action) recordDose(action, d); setOpen(false); };
+    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(Task, { ic: done ? I.check : I.pill, done, b: d.it.name, s: sub, chev: true, onClick: () => setOpen((o) => !o), a11y: { role: "button", tabIndex: 0, "aria-expanded": open, onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((o) => !o); } } } }), open && /* @__PURE__ */ import_react.default.createElement("div", { role: "group", "aria-label": d.it.name + " " + d.time, style: { display: "flex", gap: 8, marginTop: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("taken"), style: { ...doseBtn, background: C.g6, color: "#fff", border: "none" } }, t.medTaken), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("skipped"), style: { ...doseBtn, background: C.card, color: C.g6, border: `1.5px solid ${C.g2}` } }, t.medNotYet)));
+  }
   function Home({ t, go, profile }) {
     const [noti, setNoti] = (0, import_react.useState)(true);
+    const meds = useMeds();
+    const doses = todayDoses(meds);
+    const nDone = doses.filter((d) => d.state === "taken").length;
     const g = profile.ageGroup;
     const greet = g === "child" ? t.greetChild : g === "senior" ? t.greetSenior : g === "hcw" ? t.greetHcw : t.greetAdult;
     const notiBody = g === "senior" ? t.notiSenior : g === "child" ? t.notiChild : t.notiAdult;
@@ -980,9 +1038,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     return /* @__PURE__ */ import_react.default.createElement("div", { style: wrap }, noti && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => {
       setNoti(false);
       go("assist");
-    }, style: { display: "flex", gap: 11, alignItems: "flex-start", background: "rgba(255,255,255,.98)", border: `1px solid ${C.line}`, borderRadius: "var(--r-md)", padding: 13, marginBottom: 14, cursor: "pointer", boxShadow: "0 10px 28px -10px rgba(10,110,78,.35)", animation: "drop .5s cubic-bezier(.2,.9,.3,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 34, height: 34, borderRadius: "var(--r-sm)", background: C.g4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.bell, s: 18, c: "#fff" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.78125rem", fontWeight: 700, color: C.ink, display: "block" } }, t.notiTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: "0.75rem", color: C.d3, lineHeight: 1.45, marginTop: 2 } }, notiBody), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.625rem", color: C.d3, marginTop: 3, display: "block" } }, t.notiNow))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, t.dateStr), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, greet, "\n", profile.name), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => go("assist"), style: { display: "flex", gap: 14, alignItems: "flex-start", background: `linear-gradient(135deg,${C.g6},${C.g7})`, borderRadius: "var(--r-lg)", padding: 19, marginTop: 16, cursor: "pointer", boxShadow: "0 8px 24px -10px rgba(10,110,78,.5)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: "var(--r-md)", background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.calendar, s: 22, c: C.g3 })), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.96875rem", fontWeight: 700, color: "#fff", display: "block" } }, t.dueTitle), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.78125rem", color: C.g1, lineHeight: 1.55, display: "block", marginTop: 5 } }, dueBody), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: "0.78125rem", fontWeight: 700, color: C.g1, marginTop: 11, display: "flex", alignItems: "center", gap: 4 } }, t.askAssistant, " ", /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 13, c: C.g3 })))), /* @__PURE__ */ import_react.default.createElement("div", { style: { ...card, background: C.g0, border: `1px solid ${C.g2}`, display: "flex", alignItems: "center", gap: 17 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: 76, height: 76, flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "76", height: "76", style: { transform: "rotate(-90deg)" } }, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g2, strokeWidth: "7" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g4, strokeWidth: "7", strokeLinecap: "round", strokeDasharray: "195", strokeDashoffset: "97" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "1.125rem", fontWeight: 700, color: C.g6 } }, "2/4"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.625rem", color: C.g6 } }, t.doses))), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: "0.96875rem", fontWeight: 700, color: C.ink } }, t.todayMed), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 5, fontSize: "0.84375rem", whiteSpace: "pre-line" } }, t.medHalf))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.today), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.check, done: true, b: t.morningDone, s: t.bpDm }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.pill, b: t.eveningDose, s: t.eveningWhen, chev: true }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.vaccine, kind: "new", b: t.fluComing, s: t.fluWhen, chev: true, onClick: () => go("vaccine") }), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.plane, kind: "warn", b: t.nairobi, s: t.nairobiSub, chev: true, onClick: () => go("assist") }));
+    }, style: { display: "flex", gap: 11, alignItems: "flex-start", background: "rgba(255,255,255,.98)", border: `1px solid ${C.line}`, borderRadius: "var(--r-md)", padding: 13, marginBottom: 14, cursor: "pointer", boxShadow: "0 10px 28px -10px rgba(10,110,78,.35)", animation: "drop .5s cubic-bezier(.2,.9,.3,1.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 34, height: 34, borderRadius: "var(--r-sm)", background: C.g4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.bell, s: 18, c: "#fff" })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.78125rem", fontWeight: 700, color: C.ink, display: "block" } }, t.notiTitle), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: "0.75rem", color: C.d3, lineHeight: 1.45, marginTop: 2 } }, notiBody), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.625rem", color: C.d3, marginTop: 3, display: "block" } }, t.notiNow))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: eyebrow }, todayLabel(t)), /* @__PURE__ */ import_react.default.createElement(LabChip, { t })), /* @__PURE__ */ import_react.default.createElement("h1", { style: bigH }, greet, "\n", profile.name), /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => go("assist"), style: { display: "flex", gap: 14, alignItems: "flex-start", background: `linear-gradient(135deg,${C.g6},${C.g7})`, borderRadius: "var(--r-lg)", padding: 19, marginTop: 16, cursor: "pointer", boxShadow: "0 8px 24px -10px rgba(10,110,78,.5)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: "var(--r-md)", background: "rgba(255,255,255,.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.calendar, s: 22, c: C.g3 })), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.96875rem", fontWeight: 700, color: "#fff", display: "block" } }, t.dueTitle), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.78125rem", color: C.g1, lineHeight: 1.55, display: "block", marginTop: 5 } }, dueBody), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: "0.78125rem", fontWeight: 700, color: C.g1, marginTop: 11, display: "flex", alignItems: "center", gap: 4 } }, t.askAssistant, " ", /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 13, c: C.g3 })))),  doses.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { ...card, background: C.g0, border: `1px solid ${C.g2}`, display: "flex", alignItems: "center", gap: 17 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: 76, height: 76, flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "76", height: "76", style: { transform: "rotate(-90deg)" }, "aria-hidden": "true" }, /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g2, strokeWidth: "7" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "38", cy: "38", r: "31", fill: "none", stroke: C.g4, strokeWidth: "7", strokeLinecap: "round", strokeDasharray: "195", strokeDashoffset: String(Math.round(195 * (1 - nDone / doses.length))) })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "1.125rem", fontWeight: 700, color: C.g6 } }, nDone, "/", doses.length), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.625rem", color: C.g6 } }, t.doses))), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: "0.96875rem", fontWeight: 700, color: C.ink } }, t.todayMed), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 5, fontSize: "0.84375rem" } }, nDone >= doses.length ? t.medAllDone : t.medLeft(doses.length - nDone)))), /* @__PURE__ */ import_react.default.createElement("p", { style: { ...eyebrow, marginTop: 22, marginBottom: 2 } }, t.today), doses.length === 0 && /* @__PURE__ */ import_react.default.createElement("p", { style: { ...sub, marginTop: 8 } }, t.medNone), doses.length === 0 && /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.pill, b: t.medAdd, chev: true, onClick: openMedSheet, a11y: { role: "button", tabIndex: 0, onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMedSheet(); } } } }), doses.map((d) => /* @__PURE__ */ import_react.default.createElement(MedDose, { key: d.it.id + "|" + d.time, t, d })), /* @__PURE__ */ import_react.default.createElement(Task, { ic: I.vaccine, kind: "new", b: t.fluComing, s: t.fluWhen, chev: true, onClick: () => go("vaccine") }));
   }
-  function Task({ ic, b, s, done, kind, chev, onClick }) {
+  function Task({ ic, b, s, done, kind, chev, onClick, a11y }) {
     let bg = C.g1, st = C.g5, grad = `linear-gradient(135deg,${C.g0},${C.card})`;
     if (done) {
       bg = C.g4;
@@ -999,7 +1057,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       st = "#fff";
       grad = `linear-gradient(135deg,${C.burgBg},${C.card})`;
     }
-    return /* @__PURE__ */ import_react.default.createElement("div", { onClick, style: { display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: "var(--r-md)", background: grad, border: `1px solid ${C.line}`, marginTop: 10, cursor: onClick ? "pointer" : "default", boxShadow: "0 2px 8px -4px rgba(10,110,78,.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: "var(--r-md)", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: ic, s: 21, c: st })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.90625rem", fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.78125rem", color: C.d3 } }, s)), chev && /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d5 }));
+    return /* @__PURE__ */ import_react.default.createElement("div", { onClick, ...(a11y || {}), style: { display: "flex", alignItems: "center", gap: 13, padding: 15, borderRadius: "var(--r-md)", background: grad, border: `1px solid ${C.line}`, marginTop: 10, cursor: onClick ? "pointer" : "default", boxShadow: "0 2px 8px -4px rgba(10,110,78,.1)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: "var(--r-md)", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, /* @__PURE__ */ import_react.default.createElement(Ico, { d: ic, s: 21, c: st })), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react.default.createElement("b", { style: { fontSize: "0.90625rem", fontWeight: 700, color: C.ink, display: "block" } }, b), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: "0.78125rem", color: C.d3 } }, s)), chev && /* @__PURE__ */ import_react.default.createElement(Ico, { d: I.chev, s: 18, c: C.d5 }));
   }
   function Warn({ t, children, kind = "warn" }) {
     const isDanger = kind === "danger";
@@ -2043,7 +2101,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   var KEY="medinote:meds:sched", LOG="medinote:meds:log";
   var PRESET=[["아침","08:00"],["점심","12:30"],["저녁","18:30"],["밤","21:00"]];
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null")||{on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; }catch(e){ return {on:false,quiet:{from:"21:30",to:"08:00"},items:[],sent:{},snooze:{}}; } }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); updateBadge(); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(sc)); }catch(e){} pushNative(); renderNotify(); updateBadge(); emit(); }
+  // 첫 화면 「오늘」 카드가 같은 일정·기록을 다시 그리도록 알립니다 (#69 MN-69-3·4)
+  function emit(){ try{ window.dispatchEvent(new CustomEvent("medinote:meds")); }catch(e){} }
   // 폰 설정에서 알림이 꺼져 있는데 「알림 켜기」가 켜져 있으면 알려 줍니다 — 열려 있는 복약 창에서도 켜고 끌 때·설정에서 돌아올 때 다시 그립니다 (#94 · PR #95 Codex P1 · Sourcery)
   function renderNotify(){
     var box=document.getElementById("mnmdNotifBox"); if(!box) return;
@@ -2057,7 +2117,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function pushNative(){ if(!NATIVE) return; try{ window.Native.scheduleMeds(JSON.stringify({on:!!sc.on,quiet:sc.quiet,items:sc.items})); }catch(e){} }
   function pullNative(){ if(!NATIVE || typeof window.Native.medsLogTake!=="function") return; try{ var nl=JSON.parse(window.Native.medsLogTake()||"[]"); if(nl&&nl.length){ nl.forEach(function(e){ addLog({action:e.action,id:e.id,name:e.name,time:e.time,at:e.at||Date.now()}); }); } }catch(e){} }
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
-  function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
+  function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} emit(); }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
   pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
   window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); } };
@@ -2084,6 +2144,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   window.addEventListener("resize", queueFit);
   try{ new MutationObserver(queueFit).observe(document.body,{childList:true,subtree:true}); }catch(e){}
   queueFit();
+  // 첫 화면 약 카드의 「복용했어요 / 아직」이 시트와 같은 기록(LOG)에 남깁니다 — 「아직」은 기록만, 판정 없음 (#69 MN-69-4)
+  window.MediNoteMeds={ open:function(){ open(); }, record:function(action,data){ record(action,data); } };
   pill.onclick=open; pill.onkeydown=function(e){ if(e.key==="Enter"||e.key===" ") open(); };
 
   function ensure(){
@@ -2125,10 +2187,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     renderList(); ov.classList.add("on");
   }
   function stt(m){ var e=document.getElementById("mnmdSt"); if(e) e.textContent=m; }
+  // 「×」 로 지운 줄은 몇 초 동안 「되돌리기」로 되살릴 수 있습니다 — 같은 자리·같은 id 로 돌아가고 폰 알람도 다시 넘깁니다 (#160 MN-160-2 · 대표님 결정 2026-11-03 가)
+  var undoDel=null, undoTimer=0, UNDO_MS=8000;
+  function clearUndo(){ undoDel=null; if(undoTimer){ clearTimeout(undoTimer); undoTimer=0; } }
   function renderList(){
     var el=document.getElementById("mnmdList"); if(!el) return;
-    el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><button type="button" class="x" data-id="'+it.id+'" aria-label="'+esc(it.name)+' 지우기">×</button></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
-    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ var at=sc.items.findIndex(function(i){ return i.id===x.dataset.id; }); sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); var xs=el.querySelectorAll(".x"), nx=xs[Math.min(Math.max(at,0),xs.length-1)]; if(nx) nx.focus(); else { var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } }; });
+    // 빈 상태에 다음 걸음을 적습니다 (#159 MN-159-1 · 대표님 결정 2026-11-03)
+    el.innerHTML = (sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><button type="button" class="x" data-id="'+it.id+'" aria-label="'+esc(it.name)+' 지우기">×</button></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요. 위에 약 이름을 적고 시각을 골라 「추가」를 눌러 주세요.</div>')+
+      (undoDel ? '<div class="mnhw-note" role="status">「'+esc(undoDel.it.name)+'」 알림을 지웠어요.<div class="mnmd-chips" style="margin-top:6px"><button type="button" id="mnmdUndo">되돌리기</button></div></div>' : '');
+    var ub=document.getElementById("mnmdUndo");
+    if(ub) ub.onclick=function(){ if(!undoDel) return; var d=undoDel; clearUndo(); sc.items.splice(Math.min(d.at,sc.items.length),0,d.it); save(); renderList(); stt("되돌렸어요"); var bx=el.querySelector('.x[data-id="'+d.it.id+'"]'); if(bx) bx.focus(); };
+    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ var at=sc.items.findIndex(function(i){ return i.id===x.dataset.id; }); if(at>=0){ clearUndo(); undoDel={it:sc.items[at],at:at}; undoTimer=setTimeout(function(){ var onU=document.activeElement&&document.activeElement.id==="mnmdUndo"; undoTimer=0; undoDel=null; renderList(); if(onU){ var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } }, UNDO_MS); } sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); var xs=el.querySelectorAll(".x"), nx=xs[Math.min(Math.max(at,0),xs.length-1)]; if(nx) nx.focus(); else { var u=document.getElementById("mnmdUndo"); if(u) u.focus(); else { var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } } }; });
   }
 
   // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
