@@ -32,6 +32,7 @@ ALLOWED = {
     "hyunjeongshin83.github.io": "웹앱 주소 — 안내 문구 속 링크 (#20 MN-20-4)",
     "play.google.com":           "Health Connect 설치 안내 링크 (안드로이드 셸)",
     "nip.kdca.go.kr":            "질병관리청 안내 링크",
+    "nominatim.openstreetmap.org": "★ 보건소 찾기 — 단추를 누르면 기기 위치(위도·경도)가 주소 변환에 쓰여 OpenStreetMap(해외 공개 서버)으로 감. 단추 위 안내 · PRIVACY 2-6 (#130 MN-130-3)",
     "www.w3.org":                "SVG 네임스페이스 — 요청 없음",
     "appassets.androidplatform.net": "안드로이드 WebView 자산 로더의 가상 주소 — 앱 안의 파일을 읽을 뿐 바깥으로 나가지 않음",
 }
