@@ -2028,7 +2028,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 #mnmd-pill.on{display:flex;}
 .mnmd-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #E6F1EE;font-size:var(--fs-sub);color:var(--n-900);}
 .mnmd-row .t{flex:1;} .mnmd-row .t small{display:block;color:var(--n-600);font-size:.9375rem;}
-.mnmd-row .x{font-size:var(--fs-title2);color:var(--n-500);cursor:pointer;padding:0 6px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+.mnmd-row .x{font-size:var(--fs-title2);color:var(--n-500);cursor:pointer;padding:0 6px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;background:none;border:0;font-family:inherit;line-height:1;}
 .mnmd-fld{margin:10px 0;} .mnmd-fld label{display:block;font-size:.9375rem;font-weight:700;color:var(--n-600);margin-bottom:5px;}
 .mnmd-fld input{width:100%;font-family:inherit;font-size:var(--fs-callout);padding:12px 13px;border-radius:var(--r-sm);border:1.5px solid #E6F1EE;}
 .mnmd-chips{display:flex;flex-wrap:wrap;gap:7px;} .mnmd-chips button{font-family:inherit;font-size:var(--fs-sub);font-weight:700;padding:9px 13px;min-height:44px;border-radius:var(--r-lg);border:1.5px solid #E6F1EE;background:#fff;color:var(--n-600);cursor:pointer;}
@@ -2127,8 +2127,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function stt(m){ var e=document.getElementById("mnmdSt"); if(e) e.textContent=m; }
   function renderList(){
     var el=document.getElementById("mnmdList"); if(!el) return;
-    el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><span class="x" data-id="'+it.id+'" aria-label="지우기">×</span></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
-    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); }; });
+    el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><button type="button" class="x" data-id="'+it.id+'" aria-label="'+esc(it.name)+' 지우기">×</button></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
+    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ var at=sc.items.findIndex(function(i){ return i.id===x.dataset.id; }); sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); var xs=el.querySelectorAll(".x"), nx=xs[Math.min(Math.max(at,0),xs.length-1)]; if(nx) nx.focus(); else { var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } }; });
   }
 
   // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
