@@ -114,21 +114,34 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         // 매일 알림(mnmd-<id>-<time>)은 전부 지우고 다시 걸되, 대기 중인 「10분 뒤」(…-later)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
         // 약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-3). 안드로이드 MedScheduler.reschedule 과 같은 규칙.
         center.getPendingNotificationRequests { reqs in
+            var rewrite: [(time: String, meds: [[String: String]], at: Date)] = []
             let gone = reqs.filter { req in
                 let id = req.identifier
                 guard id.hasPrefix("mnmd-") else { return false }
                 if id.hasSuffix("-later") {
                     if !keep.contains(String(id.dropLast(6))) { return true }
                     // 조용한 시간이 바뀌어 대기 중인 「10분 뒤」가 그 안에 들어가면 지웁니다 — iOS 는 울릴 때 다시 보지 않습니다 (PR #67 Codex)
-                    if let t = (req.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate() {
+                    let at = (req.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
+                    if let t = at {
                         let c = Calendar.current.dateComponents([.hour, .minute], from: t)
                         if Self.inQuiet(minutes: (c.hour ?? 0) * 60 + (c.minute ?? 0), quiet: quiet) { return true }
                     }
+                    // 「10분 뒤」에 묶인 약 중 지금 일정에 그 시각으로 남아 있는 것만 — 하나도 없으면 지우고, 줄었으면 남은 약으로 다시 겁니다 (PR #167 Codex)
+                    let time = String(id.dropFirst(5).dropLast(6))
+                    let oldIds = req.content.userInfo["ids"] as? [String] ?? []
+                    let remaining = (groups[time] ?? []).filter { oldIds.contains($0["id"] ?? "") }
+                    if remaining.isEmpty { return true }
+                    if remaining.count != oldIds.count, let t = at { rewrite.append((time: time, meds: remaining, at: t)) }
                     return false
                 }
                 return true
             }.map { $0.identifier }
             self.center.removePendingNotificationRequests(withIdentifiers: gone)
+            // 같은 식별자로 다시 넣으면 대기 중인 것을 바꿉니다 — 울릴 시각은 그대로
+            for r in rewrite {
+                self.add(time: r.time, meds: r.meds,
+                         trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(r.at.timeIntervalSinceNow, 1), repeats: false), suffix: "-later")
+            }
             guard !groups.isEmpty else { return }
             // 남겨 둔 「10분 뒤」만큼 빼고 남은 자리까지만 겁니다. 넘치면 iOS 가 소리 없이 버리므로 화면에 알립니다 (#36 MN-36-4)
             let laterKept = reqs.filter { $0.identifier.hasPrefix("mnmd-") && !gone.contains($0.identifier) }.count
