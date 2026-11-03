@@ -113,16 +113,17 @@ Health Connect (안드로이드 앱만)  「건강기기 연결」 시트에서 
 HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽기」를 누르면 걸음·심박·수면을 읽어 화면에 보여 줍니다
                        (ContentView.swift 가 Native.requestHealth 를 HealthKitManager 로 잇습니다 · #30)
                        안드로이드와 같이 앱에는 저장 단추가 없어 서버로 가지 않습니다
-글꼴                   앱을 열 때마다 fonts.googleapis.com(Gaegu · Nanum Pen Script) · cdn.jsdelivr.net(Pretendard) 에 접속합니다
-                       건강 데이터는 안 가지만 IP·기기 정보가 Google·jsDelivr 에 남습니다. 개인정보처리방침에 아직 없습니다 (#51)
+글꼴                   앱(MediNote_app.html · 앱 안 「증상 신고·공유」 · 앱 셸 3벌)은 글꼴(Pretendard · Gaegu)을 저장소의 vendor/fonts/ 에서
+                       같은 출처로 읽어 fonts.googleapis.com · cdn.jsdelivr.net 에 접속하지 않습니다 (2026-11-03 · #51 MN-51-3).
+                       따로 여는 페이지(오늘증상기록 · 예방접종_데이터API · seed_cards)는 아직 접속합니다 — IP·기기 정보가 Google·jsDelivr 에 남습니다
 푸시 구독              「접종 시기 알림」을 켜면 브라우저의 푸시 서비스(Chrome 은 Google FCM · Safari 는 Apple) 주소와 열쇠가
                        → Supabase push_subscriptions (비로그인도 등록됨 · uid 없음). 보내는 쪽 소스는 저장소에 없습니다 (#16 MN-16-5)
 기기 백업 (앱 셸)      안드로이드 앱은 allowBackup="true" 에 제외 규칙이 없어, WebView localStorage(복약 일정·복용 기록·증상 기록 사본)와
                        SharedPreferences(약 이름·시각·복용 기록)가 구글 계정 자동 백업 대상입니다. iOS 앱은 UserDefaults(복용 기록)와
                        WKWebView 저장소에 백업 제외가 없어 iCloud 기기 백업 대상입니다 — 코드 기준이며 실기기에서는 확인하지 못했습니다 (#83 MN-83-2·3 · 결정 대기)
 잠금화면 알림          복약 알림 본문에 약 이름이 그대로 들어갑니다 (「<약 이름> 드실 시간이에요」) — 기기의 잠금화면 설정에 따라 남에게 보일 수 있습니다 (#83 MN-83-4)
-Google 토큰            Google 로그인은 access_type=offline 으로 refresh token 까지 받아 세션에 담아 기기에 저장합니다.
-                       앱은 provider_token 도 refresh token 도 쓰지 않습니다(생년월일 요청을 뺐습니다) (#83 MN-83-5 · 구글 콘솔 확인 MN-81-1 과 함께 결정)
+Google 토큰            Google 로그인은 2026-11-03 부터 access_type=offline · prompt=consent 없이 요청해 Google refresh token 을 받지 않습니다
+                       (#55 MN-55-5 · #83 MN-83-5). 세션(Supabase 토큰 · 1시간짜리 provider_token)은 그대로 기기에 저장됩니다. 앱은 provider_token 을 쓰지 않습니다
 ```
 
 **바깥으로 나가는 주소의 장부는 `tools/egress-check.py`** 입니다. 새 주소를 부르려면 거기에 「왜」를 적어야 CI 가 통과합니다.

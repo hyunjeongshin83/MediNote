@@ -1,7 +1,9 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v8";   // v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
+const CACHE="medinote-app-v9";   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
+  "vendor/fonts/medinote-fonts.css","vendor/fonts/Pretendard-Regular.subset.woff2","vendor/fonts/Pretendard-SemiBold.subset.woff2",
+  "vendor/fonts/Pretendard-Bold.subset.woff2","vendor/fonts/Pretendard-ExtraBold.subset.woff2","vendor/fonts/Gaegu-Regular.subset.woff2","vendor/fonts/Gaegu-Bold.subset.woff2",
   "icon-192.png","icon-512.png","icon-512-maskable.png","apple-touch-icon.png","favicon-32.png"];
 
 const own=(req)=>caches.open(CACHE).then(c=>c.match(req));   // 같은 주소의 다른 앱 캐시는 읽지 않는다 — 전역 caches.match 는 모든 캐시를 훑는다

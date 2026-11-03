@@ -28,6 +28,10 @@ jobs:
       - name: 앱 화면이 웹앱과 같은지
         run: python3 tools/build-packaged-app.py --check
 
+      # 앱 안 「증상 신고·공유」 base64 사본이 단독 파일과 같은지 (#90 MN-90-1)
+      - name: 증상 신고·공유 사본이 단독 파일과 같은지
+        run: python3 tools/embed-report-screen.py --check
+
       # 「서버로 보내지 않습니다」류 · 사용목적을 뒤집는 낱말 (#49 MN-49-1 · #57 MN-57-2)
       - name: 사실이 아닌 문구가 없는지
         run: python3 tools/phrase-check.py
