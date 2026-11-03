@@ -34,7 +34,7 @@
 3. 건강 기능을 쓸 경우:
    - Signing & Capabilities → **HealthKit** 추가
    - Info.plist에 사용 목적 문구 추가:
-     NSHealthShareUsageDescription = "복약·접종 안내를 돕기 위해 건강 데이터를 읽습니다. 데이터는 기기 안에 있습니다."
+     NSHealthShareUsageDescription = "복약·접종 안내를 돕기 위해 걸음·심박·수면을 읽어 이 화면에 보여 줍니다. 이 앱에서는 읽은 값을 서버에 올리지 않습니다."
 4. Signing & Capabilities → 본인 Apple 계정(Team) 선택.
 
 ## 테스트·배포 방법
