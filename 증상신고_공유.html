@@ -6,9 +6,7 @@
 <title>증상 신고·공유 · MediNote</title>
 <meta name="theme-color" content="#12BDB0">
 <link rel="manifest" href="신고공유.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="vendor/fonts/medinote-fonts.css">
 <style>
 :root{
   --g0:#EEFBF8;--g1:#D8F5EF;--g2:#AEEAE2;--g4:#12BDB0;--g5:#0DA298;--g6:#0A7168;--g7:#06413E;
@@ -321,7 +319,7 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
   function features(){ return [
     {nm:"클라우드 저장", ds:"기록을 클라우드에 보관", on: cloudState===true},
     {nm:"로그인", ds:"계정으로 기록 이어보기", on: !!user || uid!=="guest"},
-    {nm:"AI 리포트", ds:"리포트를 매끄럽게 자동 작성", on: !!apiKey()},
+    {nm:"AI 리포트", ds:"리포트를 매끄럽게 자동 작성", on: false},
     {nm:"보건소 이메일 찾기", ds:"공공데이터 연결이 필요해요", on: ls("medit:govproxy")==="1"},
     {nm:"카카오톡 공유", ds:"카카오 앱키 연결이 필요해요", on: !!ls("medit:kakaokey")}
   ]; }
@@ -333,7 +331,7 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
         '<span class="pill '+(f.on?"on":"off")+'">'+(f.on?"연결됨":"연결 안 됨")+'</span></div>';
     }).join("");
     // 연결 안 된 기능의 버튼을 비활성화
-    gate("airep", !!apiKey());
+    gate("airep", false);
     gate("bogunFindMail", ls("medit:govproxy")==="1");
     gate("hospKao", !!ls("medit:kakaokey"));
   }
@@ -445,23 +443,13 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
   function currentReport(){ var sel=pickedRecs(); if(!sel.length) return null; return aiReport||buildFullReport(sel); }
   function need(){ var sel=pickedRecs(); if(!sel.length){ toast("먼저 증상을 검색해 리포트에 담아 주세요"); return null; } return currentReport(); }
 
-  function apiKey(){ try{ return localStorage.getItem("medit:apikey")||""; }catch(e){ return ""; } }
+  /* AI 리포트 — 개인 키로 Anthropic API 를 직접 부르던 길을 없앴습니다 (#130 MN-130-2).
+     앱 본체는 이 키를 시작할 때 지우고 키를 받는 통로도 없앴습니다(#51). 이 화면도 같게 — 이 단추는 바깥 주소를 부르지 않고
+     기기에서 만든 자동 정리본을 담습니다. AI 로 다듬는 길을 다시 열려면 ai-helper 경유(MediNoteAI.messages)로만 합니다. */
   function aiGenerate(){
     var sel=pickedRecs(); if(!sel.length){ toast("먼저 증상을 검색해 담아 주세요"); return; }
-    var base=buildFullReport(sel), key=apiKey();
-    if(!key){ aiReport=base; $("prev").textContent=base; $("repnote").innerHTML="AI 키가 없어 <b>자동 정리본</b>으로 전부 담았습니다. 검토만 하고 전송하세요."; return; }
-    var btn=$("airep"); btn.disabled=true; var old=btn.textContent; btn.textContent="작성 중…"; $("prev").classList.add("busy");
-    var rep=($("reporter")&&$("reporter").value||"").trim();
-    var sys="너는 예방접종 후 증상·이상반응 신고 리포트를 정리하는 도우미다. 진단·처방은 하지 않는다. 주어진 증상 기록 전부를 빠짐없이 담아, 담백하고 신뢰감 있는 존댓말로 신고·공유용 리포트를 작성한다. 이모지·과한 감탄 금지, 짧은 문장. 코드펜스 없이 평문 텍스트로만 출력. 구성: 개요/증상 경과/종합 요약, 마지막 줄 '본 내용은 정보 제공용이며, 최종 판단·처방은 의료진과 상의합니다.'";
-    var payload={account:uid,reporter:rep||null,today:new Date().toISOString().slice(0,10),records:sel};
-    var body={model:"claude-3-5-haiku-20241022",max_tokens:1300,system:sys,messages:[{role:"user",content:"다음 데이터(JSON)로 리포트를 작성해 주세요:\n"+JSON.stringify(payload)}]};
-    fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify(body)})
-      .then(function(r){ return r.json(); })
-      .then(function(d){ var t=""; try{ t=(d.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim(); }catch(e){}
-        if(t){ aiReport=t; $("prev").textContent=t; $("repnote").innerHTML="AI가 작성한 <b>초안</b>입니다. 검토만 하고 전송하세요."; }
-        else { aiReport=base; $("prev").textContent=base; $("repnote").textContent="자동 정리본으로 담았습니다. 검토 후 전송하세요."; } })
-      .catch(function(){ aiReport=base; $("prev").textContent=base; $("repnote").textContent="AI 연결이 어려워 자동 정리본으로 담았습니다. 검토 후 전송하세요."; })
-      .then(function(){ btn.disabled=false; btn.textContent=old; $("prev").classList.remove("busy"); });
+    var base=buildFullReport(sel);
+    aiReport=base; $("prev").textContent=base; $("repnote").innerHTML="<b>자동 정리본</b>으로 전부 담았습니다. 검토만 하고 전송하세요.";
   }
 
   /* ── 발송 이력 ── */

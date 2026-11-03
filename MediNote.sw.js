@@ -1,7 +1,9 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v8";   // v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
+const CACHE="medinote-app-v9";   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
+  "vendor/fonts/medinote-fonts.css","vendor/fonts/Pretendard-Regular.subset.woff2","vendor/fonts/Pretendard-SemiBold.subset.woff2",
+  "vendor/fonts/Pretendard-Bold.subset.woff2","vendor/fonts/Pretendard-ExtraBold.subset.woff2","vendor/fonts/Gaegu-Regular.subset.woff2","vendor/fonts/Gaegu-Bold.subset.woff2",
   "icon-192.png","icon-512.png","icon-512-maskable.png","apple-touch-icon.png","favicon-32.png"];
 
 const own=(req)=>caches.open(CACHE).then(c=>c.match(req));   // 같은 주소의 다른 앱 캐시는 읽지 않는다 — 전역 caches.match 는 모든 캐시를 훑는다
@@ -31,12 +33,16 @@ self.addEventListener("notificationclick",e=>{
   e.notification.close();
   const d=e.notification.data||{};
   // 복약 알림 단추 (MN-16-6): 「복용했어요」·「10분 뒤」를 열린 화면에 전하고, 없으면 주소로 전달해 연다
-  if(d.id){
-    const action=e.action||"taken";
+  // 본문을 누르면 e.action 이 비어 있습니다 — 기록 없이 앱만 엽니다 (#97 MN-97-3)
+  // d.items: 같은 시각의 약을 묶은 알림 (#123 MN-123-1) · d.id: 묶기 전에 뜬 알림
+  if(d.items||d.id){
+    const action=e.action;
     e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(cl=>{
-      if(cl.length){ cl.forEach(c=>c.postMessage({type:"mnmd",action:action,data:d})); return cl[0].focus&&cl[0].focus(); }
+      if(cl.length){ if(action) cl.forEach(c=>c.postMessage({type:"mnmd",action:action,data:d})); return cl[0].focus&&cl[0].focus(); }
       if(action==="later") return;
-      const q="?mnmd="+action+"&id="+encodeURIComponent(d.id)+"&name="+encodeURIComponent(d.name||"")+"&time="+encodeURIComponent(d.time||"");
+      if(!action) return self.clients.openWindow("MediNote_app.html");
+      const ids=(d.items||[{id:d.id}]).map(x=>x.id).join(",");
+      const q="?mnmd="+action+"&ids="+encodeURIComponent(ids)+"&time="+encodeURIComponent(d.time||"");
       return self.clients.openWindow("MediNote_app.html"+q);
     }));
     return;

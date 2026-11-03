@@ -9,8 +9,9 @@ CLAUDE.md §3 과 PRIVACY.md 가 이 목록을 따르게 합니다. 새 주소�
     python3 tools/egress-check.py --selftest   이어 붙인 주소 꼴을 잡는지 (#54 Codex)
 
 보는 파일: MediNote_app.html · MediNote.sw.js · medinote.config.js (앱 화면 사본 3벌은 MediNote_app.html 과 같아야 하므로 뺍니다)
+        + MediNote_app.html 안에 base64 로 박은 「증상 신고·공유」 사본(window.__MNRP_SRC)을 풀어서 (#130 MN-130-1)
 """
-import re, sys, pathlib
+import base64, re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FILES = ["MediNote_app.html", "MediNote.sw.js", "medinote.config.js"]
@@ -21,15 +22,37 @@ def files():
     for g in GLOBS: out += sorted(ROOT.glob(g))
     return [p for p in out if p.exists()]
 
+# base64 로 박은 화면 사본 — 정규식은 base64 글자 속 주소를 못 봅니다. 풀어서 같은 규칙으로 훑습니다 (#130 MN-130-1)
+EMBED = re.compile(r'window\.__MNRP_SRC\s*=\s*["\']([A-Za-z0-9+/=]+)["\']')
+def embedded(text):
+    out = []
+    for m in EMBED.finditer(text):
+        try: out.append(base64.b64decode(m.group(1)).decode("utf-8"))
+        except Exception: out.append("")   # 풀리지 않는 사본은 빈 글로 — 아래 main 이 실패로 알립니다
+    return out
+def sources():
+    """(이름, 글) — 파일 본문과, 그 안에 박힌 사본을 푼 글"""
+    for p in files():
+        f = str(p.relative_to(ROOT)); text = p.read_text(encoding="utf-8")
+        yield f, text
+        for i, inner in enumerate(embedded(text)):
+            yield f"{f}#__MNRP_SRC" + (f"[{i}]" if i else ""), inner
+
 # 호스트 → 무엇이 가는가. 「건강 데이터」가 가는 곳은 ★.
 ALLOWED = {
     "supabase.co":               "★ Supabase (도쿄) — 프로필·측정값·증상 기록·복약 hub_state. 사용자가 저장을 눌렀을 때 (CLAUDE.md §3)",
-    "functions.supabase.co":     "★ 엣지 함수 ai-helper — 프로필·최근 증상·복용약·대화를 받아 Anthropic(미국)으로 넘김. 앱은 api.anthropic.com 을 직접 부르지 않음",
+    "functions.supabase.co":     "★ 엣지 함수 ai-helper — 프로필·최근 증상·복용약·대화를 받아 Anthropic(미국)으로 넘김. 앱은 api.anthropic.com 을 직접 부르지 않음. "
+                                 "「증상 신고·공유」의 보건소 이메일 찾기는 gov-data 함수에 보건소 이름을 보냄",
     "accounts.google.com":       "Google 로그인",
-    "fonts.googleapis.com":      "글꼴(Gaegu · Nanum Pen Script) — 앱을 열 때 Google 에 IP·기기 정보가 감. 건강 데이터 없음 (#51)",
-    "fonts.gstatic.com":         "위 글꼴 파일",
-    "cdn.jsdelivr.net":          "글꼴(Pretendard) — 앱을 열 때 jsDelivr 에 IP·기기 정보가 감. 건강 데이터 없음 (#51)",
+    # 글꼴(Pretendard · Gaegu)은 vendor/fonts/ 에서 같은 출처로 읽습니다 — fonts.googleapis.com · fonts.gstatic.com · cdn.jsdelivr.net 을 뺐습니다 (#51 MN-51-3)
     "hyunjeongshin83.github.io": "웹앱 주소 — 안내 문구 속 링크 (#20 MN-20-4)",
+    # 아래 넷은 앱 안 「증상 신고·공유」 사본(window.__MNRP_SRC)에서 나옵니다 — 이 장부가 사본 안을 보기 시작하며 드러났습니다 (#130 MN-130-1)
+    "nominatim.openstreetmap.org": "★ 위치 — 「내 위치로 보건소 찾기」를 누르고 위치를 허락하면 위도·경도가 OpenStreetMap(Nominatim · 해외 공개 서버)으로 감. "
+                                 "PRIVACY.md · CLAUDE.md §3 · 단추 앞 안내는 #130 MN-130-3",
+    "apis.data.go.kr":           "공공데이터포털 주소 — 직접 부르지 않고 gov-data 엣지 함수에 base 인자로 넘기는 글자",
+    "kaers.drugsafe.or.kr":      "의약품 부작용 보고(KAERS) 누리집 링크 — 사용자가 단추를 누르면 엶. 신고서 본문은 클립보드에 복사되고 사용자가 붙여 넣음",
+    "accounts.kakao.com":        "카카오톡 친구 고르기 페이지 링크 — 사용자가 단추를 누르면 엶. 신고서 본문은 클립보드에 복사되고 사용자가 붙여 넣음",
+    "www.google.com":            "보건소 이메일을 못 찾았을 때 「<보건소 이름> 이메일 주소」 검색을 엶 — 보건소 이름이 검색어로 감",
     "play.google.com":           "Health Connect 설치 안내 링크 (안드로이드 셸)",
     "nip.kdca.go.kr":            "질병관리청 안내 링크",
     "www.w3.org":                "SVG 네임스페이스 — 요청 없음",
@@ -71,19 +94,34 @@ SELFTEST = [   # (코드 조각, 잡혀야 하는 호스트)
     ('document.querySelector(".modal.open")',            set()),
     ('el.classList.add("is.open")',                      set()),
 ]
+# base64 사본 안의 주소도 보이는지 (#130 MN-130-1)
+def _b64(t): return base64.b64encode(t.encode("utf-8")).decode("ascii")
+SELFTEST_EMBED = [
+    ('window.__MNRP_SRC="' + _b64('fetch("https://api.anthropic.com/v1/messages")') + '";', {"api.anthropic.com"}),
+    ("window.__MNRP_SRC = '" + _b64('fetch("https://nominatim.openstreetmap.org/reverse")') + "';", {"nominatim.openstreetmap.org"}),
+    ('window.__MNRP_SRC="' + _b64('<p>주소 없음</p>') + '";',                                   set()),
+]
+def embedded_hosts(code):
+    h = set()
+    for inner in embedded(code): h |= hosts_in(inner)
+    return h
 def selftest():
     bad = [(c, hosts_in(c), want) for c, want in SELFTEST if hosts_in(c) != want]
+    bad += [(c[:40] + "…", embedded_hosts(c), want) for c, want in SELFTEST_EMBED if embedded_hosts(c) != want]
     for c, got, want in bad: print(f"selftest 실패: {c!r} → {sorted(got)} (기대 {sorted(want)})")
-    print(f"egress-check --selftest: {len(SELFTEST) - len(bad)}/{len(SELFTEST)}")
+    n = len(SELFTEST) + len(SELFTEST_EMBED)
+    print(f"egress-check --selftest: {n - len(bad)}/{n}")
     return 1 if bad else 0
 
 def main():
     if "--selftest" in sys.argv: return selftest()
-    found = {}
-    for p in files():
-        f = str(p.relative_to(ROOT))
-        for h in hosts_in(p.read_text(encoding="utf-8")):
+    found = {}; broken = []
+    for f, text in sources():
+        if "#__MNRP_SRC" in f and not text: broken.append(f); continue
+        for h in hosts_in(text):
             found.setdefault(h, set()).add(f)
+    if broken:
+        print("풀 수 없는 base64 사본: " + ", ".join(broken) + " — tools/embed-report-screen.py 로 다시 박으세요", file=sys.stderr); return 1
     if "--list" in sys.argv:
         for h in sorted(found): print(f"{h:32} {', '.join(sorted(found[h]))}")
         return 0
