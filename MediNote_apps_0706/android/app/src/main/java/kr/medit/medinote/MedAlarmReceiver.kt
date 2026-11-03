@@ -29,7 +29,8 @@ class MedAlarmReceiver : BroadcastReceiver() {
                     val meds = MedScheduler.itemsAt(c, time).filter { m -> ids == null || legacyId != null || m.first in ids }
                     if (meds.isNotEmpty()) MedScheduler.notify(c, time, meds)
                 }
-                if (time.isNotEmpty()) MedScheduler.rescheduleOne(c, time)
+                // 다시 걸기 전에 지금 일정을 다시 봅니다 — 그 사이 알림을 껐거나 그 시각을 지웠으면 걸지 않습니다 (PR #167 Sourcery)
+                if (time.isNotEmpty() && MedScheduler.itemsAt(c, time).isNotEmpty()) MedScheduler.rescheduleOne(c, time)
             }
             MedScheduler.ACT_TAKEN, MedScheduler.ACT_LATER -> {
                 val action = if (i.action == MedScheduler.ACT_TAKEN) "taken" else "later"

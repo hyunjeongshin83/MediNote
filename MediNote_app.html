@@ -1936,23 +1936,31 @@ button,input,select,textarea{font-family:inherit}</style>
       el.querySelectorAll("[data-mn-ti]").forEach(function(x){ var t=x.getAttribute("data-mn-ti"); if(t==="") x.removeAttribute("tabindex"); else x.setAttribute("tabindex",t); x.removeAttribute("data-mn-ti"); });
     }
   }
-  /* 뒤로 가기 = 열린 시트 닫기 (#78 MN-78-5). 시트가 열리면 기록을 하나 쌓고, 뒤로 가기(popstate)가 오면 맨 위 시트의 닫기 단추를 누릅니다.
-     닫기 단추·배경으로 닫으면 쌓은 기록을 되돌립니다. 안드로이드 셸은 web.canGoBack() 이 참이 되어 goBack() → popstate 로 같은 길을 탑니다. */
-  var popping=false;   // 뒤로 가기로 닫는 중 — 기록은 이미 되돌아갔으니 또 되돌리지 않습니다 (시트가 둘 겹쳤을 때 아래 것까지 닫히지 않게)
-  var selfBack=0;      // 닫기 단추·배경으로 닫아 우리가 부른 history.back() 수 — 그 popstate 는 사용자의 뒤로 가기가 아니라 다른 시트를 닫지 않습니다 (PR #167 Codex)
-  function pushSheet(){ popping=false; try{ history.pushState({mnSheet:1},""); }catch(e){} }
-  function popSheet(){ if(popping){ popping=false; return; } try{ if(history.state&&history.state.mnSheet){ selfBack++; history.back(); } }catch(e){} }
+  /* 뒤로 가기 = 열린 시트 닫기 (#78 MN-78-5). 안드로이드 셸은 web.canGoBack() 이 참이 되어 goBack() → popstate 로 같은 길을 탑니다.
+     기록은 시트 수와 상관없이 「열린 시트가 있다」는 표시 하나만 둡니다. 열고 닫을 때마다 reconcile() 이 그 하나를 화면에 맞춥니다 —
+     시트가 있는데 표시가 없으면 쌓고, 시트가 없는데 표시가 있으면 우리가 되돌립니다(selfBack 으로 세어 그 popstate 는 건너뜀).
+     사용자의 뒤로 가기는 맨 위 시트 하나만 닫고, 남은 시트가 있으면 표시를 다시 쌓습니다. 시트가 둘일 때 하나를 닫거나,
+     되돌리는 사이에 시트를 다시 열어도 다른 시트가 함께 닫히거나 표시가 어긋나지 않습니다 (PR #167 Codex · Sourcery) */
+  var selfBack=0;
+  function reconcile(){
+    var want=!!topOpen(), have=false;
+    try{ have=!!(history.state&&history.state.mnSheet); }catch(e){}
+    try{
+      if(want&&!have) history.pushState({mnSheet:1},"");
+      else if(!want&&have&&selfBack===0){ selfBack++; history.back(); }
+    }catch(e){}
+  }
   window.addEventListener("popstate",function(){
-    if(selfBack>0){ selfBack--; return; }
+    if(selfBack>0){ selfBack--; reconcile(); return; }
     var open=topOpen(); if(!open) return;
-    popping=true;
     var c=dialogOf(open).querySelector(CLOSE)||open.querySelector(CLOSE);
     if(c) c.click(); else open.classList.remove("on");
+    reconcile();
   });
   function sync(el){
     var on=el.classList.contains("on");
-    if(on&&!el.__mnOpen){ el.__mnOpen=true; sleep(el,false); opened(el); pushSheet(); }
-    else if(!on&&el.__mnOpen){ el.__mnOpen=false; sleep(el,true); closed(); popSheet(); }
+    if(on&&!el.__mnOpen){ el.__mnOpen=true; sleep(el,false); opened(el); reconcile(); }
+    else if(!on&&el.__mnOpen){ el.__mnOpen=false; sleep(el,true); closed(); reconcile(); }
     else if(!on&&!el.__mnOpen){ sleep(el,true); }
   }
   function topOpen(){ return Array.prototype.slice.call(document.querySelectorAll(WATCH)).filter(function(x){ return x.classList.contains("on"); }).pop(); }

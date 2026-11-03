@@ -36,26 +36,32 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     /// 복용 기록·조용한 시간은 앱 지원 폴더 안 MediNoteMeds/ 에 둡니다. 이 폴더는 iCloud 기기 백업에서 뺍니다 (대표님 결정 2026-11-03 · #83 MN-83-3).
     /// UserDefaults(Library/Preferences)는 파일을 통째로 바꿔 쓰므로 백업 제외 표시가 남지 않아 옮겼습니다.
+    private static let storeURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("MediNoteMeds", isDirectory: true)
     private let storeDir: URL = {
-        var u = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MediNoteMeds", isDirectory: true)
-        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
-        MedNotifier.excludeFromBackup(&u)
-        return u
+        try? FileManager.default.createDirectory(at: MedNotifier.storeURL, withIntermediateDirectories: true)
+        MedNotifier.applyBackupExclusion()
+        return MedNotifier.storeURL
     }()
 
-    static func excludeFromBackup(_ u: inout URL) {
+    /// 백업 제외 표시를 겁니다. 실패하면 기록만 남기고, 다음에 앱이 뜰 때·화면이 뜰 때 다시 겁니다 (PR #167 Sourcery)
+    @discardableResult
+    static func excludeFromBackup(_ url: URL) -> Bool {
+        var u = url
         var v = URLResourceValues()
         v.isExcludedFromBackup = true
-        try? u.setResourceValues(v)
+        do { try u.setResourceValues(v); return true } catch {
+            NSLog("MediNote: 백업 제외 실패 %@ — %@", u.lastPathComponent, error.localizedDescription)
+            return false
+        }
     }
 
-    /// WKWebView 저장소(localStorage 등 · Library/WebKit)를 iCloud 기기 백업에서 뺍니다 (#83 MN-83-3).
-    /// 폴더는 WebKit 이 처음 쓸 때 생기므로 앱이 뜰 때와 화면이 뜬 뒤에 다시 겁니다.
-    static func excludeWebKitFromBackup() {
-        var u = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+    /// 복용 기록 폴더(MediNoteMeds)와 WKWebView 저장소(localStorage 등 · Library/WebKit)를 iCloud 기기 백업에서 뺍니다 (#83 MN-83-3).
+    /// WebKit 폴더는 처음 쓸 때 생기고, 표시가 실패할 수도 있어 앱이 뜰 때와 화면이 뜬 뒤마다 다시 겁니다.
+    static func applyBackupExclusion() {
+        let webkit = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("WebKit", isDirectory: true)
-        if FileManager.default.fileExists(atPath: u.path) { excludeFromBackup(&u) }
+        for u in [storeURL, webkit] where FileManager.default.fileExists(atPath: u.path) { excludeFromBackup(u) }
     }
 
     private func load(_ name: String) -> Any? {
@@ -63,20 +69,29 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         return try? JSONSerialization.jsonObject(with: d)
     }
 
-    private func store(_ name: String, _ obj: Any?) {
+    /// 써졌는지 돌려줍니다 — 옮기기는 새 파일이 써졌을 때만 예전 값을 지웁니다 (PR #167 Sourcery)
+    @discardableResult
+    private func store(_ name: String, _ obj: Any?) -> Bool {
         let f = storeDir.appendingPathComponent(name)
-        guard let obj = obj, let d = try? JSONSerialization.data(withJSONObject: obj) else {
+        guard let obj = obj else {
             try? FileManager.default.removeItem(at: f)
-            return
+            return true
         }
-        try? d.write(to: f, options: .atomic)
+        guard let d = try? JSONSerialization.data(withJSONObject: obj) else { return false }
+        do { try d.write(to: f, options: .atomic); return true } catch { return false }
     }
+
+    /// 일정을 걸 때마다 하나씩 올립니다. 비동기 콜백은 자기 번호가 아직 최신일 때만 알림을 지우고 겁니다 —
+    /// 앞서 부른 일정의 콜백이 늦게 끝나 새 일정을 덮어쓰지 않게 (PR #167 Sourcery)
+    private let genLock = NSLock()
+    private var gen = 0
+    private func isCurrent(_ g: Int) -> Bool { genLock.lock(); defer { genLock.unlock() }; return gen == g }
 
     private override init() {
         super.init()
         let ud = UserDefaults.standard
-        if let old = ud.array(forKey: logKey) { store(logFile, old); ud.removeObject(forKey: logKey) }
-        if let old = ud.dictionary(forKey: quietKey) { store(quietFile, old); ud.removeObject(forKey: quietKey) }
+        if let old = ud.array(forKey: logKey), store(logFile, old) { ud.removeObject(forKey: logKey) }
+        if let old = ud.dictionary(forKey: quietKey), store(quietFile, old) { ud.removeObject(forKey: quietKey) }
         center.delegate = self
         // 설정 앱에서 알림을 끄고 돌아오는 경우를 잡습니다 (#94)
         NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
@@ -111,9 +126,11 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             }
         }
         let keep = Set(groups.keys.map { "mnmd-\($0)" })
+        genLock.lock(); gen += 1; let my = gen; genLock.unlock()
         // 매일 알림(mnmd-<id>-<time>)은 전부 지우고 다시 걸되, 대기 중인 「10분 뒤」(…-later)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
         // 약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-3). 안드로이드 MedScheduler.reschedule 과 같은 규칙.
         center.getPendingNotificationRequests { reqs in
+            guard self.isCurrent(my) else { return }
             var rewrite: [(time: String, meds: [[String: String]], at: Date)] = []
             let gone = reqs.filter { req in
                 let id = req.identifier
@@ -129,9 +146,12 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
                     // 「10분 뒤」에 묶인 약 중 지금 일정에 그 시각으로 남아 있는 것만 — 하나도 없으면 지우고, 줄었으면 남은 약으로 다시 겁니다 (PR #167 Codex)
                     let time = String(id.dropFirst(5).dropLast(6))
                     let oldIds = req.content.userInfo["ids"] as? [String] ?? []
+                    let oldNames = req.content.userInfo["names"] as? [String] ?? []
                     let remaining = (groups[time] ?? []).filter { oldIds.contains($0["id"] ?? "") }
                     if remaining.isEmpty { return true }
-                    if remaining.count != oldIds.count, let t = at { rewrite.append((time: time, meds: remaining, at: t)) }
+                    // 빠진 약이 있거나 이름이 바뀌었으면 지금 일정의 약·이름으로 (PR #167 Sourcery)
+                    let changed = remaining.map { $0["id"] ?? "" } != oldIds || remaining.map { $0["name"] ?? "" } != oldNames
+                    if changed, let t = at { rewrite.append((time: time, meds: remaining, at: t)) }
                     return false
                 }
                 return true
@@ -151,6 +171,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
                 return !Self.inQuiet(minutes: hm.0 * 60 + hm.1, quiet: quiet)
             }
             self.center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
+                guard self.isCurrent(my) else { return }
                 guard ok else {
                     self.js("window.onNativeMeds && window.onNativeMeds({granted:false})")
                     return
@@ -241,7 +262,14 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         store(logFile, arr)
     }
 
-    func clearLog() { store(logFile, nil) }
+    /// 웹이 받아 간 것까지만 지웁니다 — 받아 간 뒤에 단추로 더해진 기록은 남겨 다음에 올립니다 (PR #167 Sourcery).
+    /// upTo 가 없으면(예전 화면) 전부 지웁니다.
+    func clearLog(upTo: Int64? = nil) {
+        guard let upTo = upTo else { store(logFile, nil); return }
+        let arr = load(logFile) as? [[String: Any]] ?? []
+        let rest = arr.filter { (($0["at"] as? NSNumber)?.int64Value ?? 0) > upTo }
+        store(logFile, rest.isEmpty ? nil : rest)
+    }
 
     /// 웹의 Native.medsLogTake() 가 읽어 갈 자리에 기록을 올려 둡니다
     func pushLogToWeb() {
@@ -266,7 +294,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             // 알림으로 켠 앱에서 같은 기록이 두 번 들어가지 않습니다 (PR #79 Codex P1)
             self.pushLogToWeb()
             self.refreshNotifyState()
-            Self.excludeWebKitFromBackup()
+            Self.applyBackupExclusion()
         }
     }
 

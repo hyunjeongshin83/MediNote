@@ -12,7 +12,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         _ = MedNotifier.shared   // init 에서 UNUserNotificationCenter.current().delegate = self
-        MedNotifier.excludeWebKitFromBackup()   // WKWebView 저장소를 iCloud 기기 백업에서 뺍니다 (#83 MN-83-3)
+        MedNotifier.applyBackupExclusion()   // 복용 기록 폴더 · WKWebView 저장소를 iCloud 기기 백업에서 뺍니다 (#83 MN-83-3)
         return true
     }
 }
