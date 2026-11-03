@@ -997,10 +997,17 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     const [m, setM] = (0, import_react.useState)(readMeds);
     (0, import_react.useEffect)(() => {
       const f = () => setM(readMeds());
+      // 첫 화면을 열어 둔 채 자정을 넘기면 어제 「복용했어요」가 오늘 칸에 남아 오늘 기록을 막았습니다 (PR #169 Codex P2).
+      // 다음 자정(현지 시각)에 다시 읽고, 폰이 잠들어 타이머가 늦을 때를 위해 화면으로 돌아올 때(focus · visibilitychange)도 다시 읽습니다
+      let tm = 0;
+      const arm = () => { const n = new Date(), nx = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 0, 1); tm = setTimeout(() => { f(); arm(); }, Math.max(1000, nx - n)); };
+      const g = () => { clearTimeout(tm); f(); arm(); };
+      arm();
       window.addEventListener("medinote:meds", f);
       window.addEventListener("storage", f);
-      document.addEventListener("visibilitychange", f);
-      return () => { window.removeEventListener("medinote:meds", f); window.removeEventListener("storage", f); document.removeEventListener("visibilitychange", f); };
+      window.addEventListener("focus", g);
+      document.addEventListener("visibilitychange", g);
+      return () => { clearTimeout(tm); window.removeEventListener("medinote:meds", f); window.removeEventListener("storage", f); window.removeEventListener("focus", g); document.removeEventListener("visibilitychange", g); };
     }, []);
     return m;
   }
