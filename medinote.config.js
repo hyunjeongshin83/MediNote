@@ -26,6 +26,9 @@
     anonAuth: false,
     /* 설치한 웹앱(PWA) 아이콘에 「시간이 지났는데 안 먹은 복용 수」 숫자를 — Badging API 실험 (#97 MN-97-1).
        기본 꺼짐. 켜기 전에 MN-97-2 (홈 화면에 숫자가 남에게 보임) 결정. */
-    appBadge: false
+    appBadge: false,
+    /* 시트를 내장 <dialog>(showModal) 로 — 지금은 iOS 「홈 화면에 추가」 안내 한 곳만 (#141 MN-141-2 · 대표님 결정 2026-11-03).
+       실기기 TalkBack·VoiceOver 에서 문제가 보이면 false 로 되돌리면 예전 div 시트가 그대로 뜹니다. */
+    nativeDialog: true
   };
 })();

@@ -110,6 +110,8 @@ class MainActivity : ComponentActivity() {
         // targetSdk 36 부터는 예측 뒤로가기가 기본이라 onBackPressed() 가 불리지 않습니다 — 웹 화면의 뒤로가기는 여기서 (#87)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // 웹 화면은 시트를 열 때 history.pushState 로 기록을 쌓습니다 — 시트가 열려 있으면 canGoBack 이 참이고,
+                // goBack() 이 popstate 로 그 시트만 닫습니다. 열린 시트가 없으면 아래로 가 앱을 닫습니다 (#78 MN-78-5)
                 if (web.canGoBack()) web.goBack()
                 else { isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true }  // 안드로이드 12+ 는 뒤로가기에 앱이 종료되지 않고 백그라운드로 가므로 다시 켭니다
             }
