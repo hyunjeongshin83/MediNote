@@ -34,10 +34,13 @@ class MedAlarmReceiver : BroadcastReceiver() {
             }
             MedScheduler.ACT_TAKEN, MedScheduler.ACT_LATER -> {
                 val action = if (i.action == MedScheduler.ACT_TAKEN) "taken" else "later"
-                val list = ids ?: emptyArray()
+                // 지금 일정에 그 시각으로 남아 있는 약만 — 알림을 껐거나 약·시각을 지운 뒤 남은 알림의 단추는 기록하지 않습니다 (PR #168 Codex)
+                val now = MedScheduler.itemsAt(c, time).map { it.first }.toSet()
+                val all = ids ?: emptyArray()
                 val names = i.getStringArrayExtra("names") ?: arrayOf(i.getStringExtra("name") ?: "")
-                list.forEachIndexed { k, id -> MedScheduler.addLog(c, action, id, names.getOrNull(k) ?: "", time) }
-                if (action == "later" && list.isNotEmpty()) MedScheduler.snooze(c, time, list)
+                val keep = all.indices.filter { all[it] in now }
+                keep.forEach { k -> MedScheduler.addLog(c, action, all[k], names.getOrNull(k) ?: "", time) }
+                if (action == "later" && keep.isNotEmpty()) MedScheduler.snooze(c, time, keep.map { all[it] }.toTypedArray())
                 dismiss(c, i.getIntExtra("nid", 0))
             }
         }

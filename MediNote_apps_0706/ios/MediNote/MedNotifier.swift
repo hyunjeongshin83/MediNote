@@ -31,6 +31,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     private let logKey = "medinote.meds.log"       // 예전 자리(UserDefaults) — 처음 한 번 옮기고 지웁니다
     private let quietKey = "medinote.meds.quiet"   // 「10분 뒤」가 조용한 시간을 보도록 일정과 함께 둡니다 (#36 MN-36-3)
     private let logFile = "log.json", quietFile = "quiet.json"
+    private let groupsFile = "groups.json"         // 지금 일정의 시각 → 약 — 앱이 꺼진 채 단추를 눌러도 지금 일정과 맞춰 봅니다 (PR #168 Codex)
     private let category = "MNMD"
     private static let maxPending = 64             // iOS 가 걸어 두는 지역 알림 한도
 
@@ -127,6 +128,16 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
         let keep = Set(groups.keys.map { "mnmd-\($0)" })
         genLock.lock(); gen += 1; let my = gen; genLock.unlock()
+        store(groupsFile, groups)
+        // 이미 떠 있는 복약 알림 중 지금 일정에 없는 시각 것은 걷습니다 — 알림을 끄거나 기록을 지운 뒤 남은 알림의
+        // 「복용했어요」·「10분 뒤」가 기록을 다시 만들지 않게 (PR #168 Codex)
+        center.getDeliveredNotifications { ds in
+            let stale = ds.map { $0.request.identifier }.filter { id in
+                guard id.hasPrefix("mnmd-") else { return false }
+                return !keep.contains(id.hasSuffix("-later") ? String(id.dropLast(6)) : id)
+            }
+            if !stale.isEmpty { self.center.removeDeliveredNotifications(withIdentifiers: stale) }
+        }
         // 매일 알림(mnmd-<id>-<time>)은 전부 지우고 다시 걸되, 대기 중인 「10분 뒤」(…-later)는 그 약·시각이 일정에 남아 있으면 살려 둡니다 —
         // 약을 하나 더 추가하기만 해도 방금 누른 「10분 뒤」가 사라지던 것 (#66 MN-66-3). 안드로이드 MedScheduler.reschedule 과 같은 규칙.
         center.getPendingNotificationRequests { reqs in
@@ -232,6 +243,12 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         if ids.isEmpty, let id = u["id"] as? String { ids = [id]; names = [u["name"] as? String ?? ""] }
         var meds: [[String: String]] = []
         for (k, id) in ids.enumerated() { meds.append(["id": id, "name": k < names.count ? names[k] : ""]) }
+        // 지금 일정에 그 시각으로 남아 있는 약만 기록합니다 — 알림을 껐거나 약·시각을 지운 뒤 남은 알림의 단추는 기록하지 않습니다 (PR #168 Codex).
+        // groups.json 이 아직 없으면(업데이트 뒤 일정을 한 번도 다시 걸지 않음) 예전처럼 거르지 않습니다.
+        if let cur = load(groupsFile) as? [String: [[String: String]]] {
+            let now = Set((cur[time] ?? []).map { $0["id"] ?? "" })
+            meds = meds.filter { now.contains($0["id"] ?? "") }
+        }
         switch response.actionIdentifier {
         case "taken":
             for m in meds { addLog(action: "taken", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }

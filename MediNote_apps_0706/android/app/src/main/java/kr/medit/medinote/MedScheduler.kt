@@ -85,6 +85,14 @@ object MedScheduler {
         val codes = JSONArray()
         for (t in slots) { val code = requestCode(t); setAlarm(c, am, code, t, nextOccurrence(t), null); codes.put(code) }
         prefs(c).edit().putString(KEY_CODES, codes.toString()).apply()
+        // 이미 떠 있는 복약 알림 중 지금 일정에 없는 시각 것은 걷습니다 — 알림을 끄거나 기록을 지운 뒤 남은 알림의
+        // 「복용했어요」·「10분 뒤」가 기록을 다시 만들지 않게 (PR #168 Codex)
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        try {
+            for (sbn in nm.activeNotifications) {
+                if (sbn.notification.channelId == CHANNEL && sbn.id !in keep) nm.cancel(sbn.tag, sbn.id)
+            }
+        } catch (_: Exception) {}
     }
 
     /** 다음 날 같은 시각 (알림이 울린 뒤 다시 겁니다) */
