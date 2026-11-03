@@ -190,7 +190,10 @@ button,input,select,textarea{font-family:inherit}</style>
     anonAuth: false,
     /* 설치한 웹앱(PWA) 아이콘에 「시간이 지났는데 안 먹은 복용 수」 숫자를 — Badging API 실험 (#97 MN-97-1).
        기본 꺼짐. 켜기 전에 MN-97-2 (홈 화면에 숫자가 남에게 보임) 결정. */
-    appBadge: false
+    appBadge: false,
+    /* 시트를 내장 <dialog>(showModal) 로 — 지금은 iOS 「홈 화면에 추가」 안내 한 곳만 (#141 MN-141-2 · 대표님 결정 2026-11-03).
+       실기기 TalkBack·VoiceOver 에서 문제가 보이면 false 로 되돌리면 예전 div 시트가 그대로 뜹니다. */
+    nativeDialog: true
   };
 })();
 
@@ -2391,11 +2394,16 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 #mnin-bar .cl{border:none;background:transparent;color:var(--n-500);font-size:var(--fs-headline);cursor:pointer;width:44px;height:44px;flex-shrink:0;}
 #mnin-ios{position:fixed;inset:0;z-index:100060;background:rgba(6,65,62,.4);display:none;align-items:flex-end;justify-content:center;}
 #mnin-ios.on{display:flex;}
-#mnin-ios .sh{background:#fff;max-width:var(--measure-frame);width:calc(100% - 24px);margin:0 12px 18px;border-radius:var(--r-md);padding:18px;font-family:'Pretendard',sans-serif;text-align:center;}
-#mnin-ios .sh h4{font-size:var(--fs-callout);font-weight:700;color:var(--n-900);margin-bottom:8px;}
-#mnin-ios .sh p{font-size:.9375rem;color:var(--n-600);line-height:1.6;}
-#mnin-ios .sh b{color:var(--brand);}
-#mnin-ios .sh button{margin-top:14px;border:none;background:var(--n-100);color:var(--brand);font-family:inherit;font-weight:700;font-size:var(--fs-sub);border-radius:var(--r-sm);padding:11px 20px;cursor:pointer;}
+#mnin-ios .sh,#mnin-iosdlg .sh{background:#fff;max-width:var(--measure-frame);width:calc(100% - 24px);margin:0 12px 18px;border-radius:var(--r-md);padding:18px;font-family:'Pretendard',sans-serif;text-align:center;}
+#mnin-ios .sh h4,#mnin-iosdlg .sh h4{font-size:var(--fs-callout);font-weight:700;color:var(--n-900);margin-bottom:8px;}
+#mnin-ios .sh p,#mnin-iosdlg .sh p{font-size:.9375rem;color:var(--n-600);line-height:1.6;}
+#mnin-ios .sh b,#mnin-iosdlg .sh b{color:var(--brand);}
+#mnin-ios .sh button,#mnin-iosdlg .sh button{margin-top:14px;border:none;background:var(--n-100);color:var(--brand);font-family:inherit;font-weight:700;font-size:var(--fs-sub);border-radius:var(--r-sm);padding:11px 20px;cursor:pointer;}
+/* 내장 <dialog> 판 — 가두기·Esc·뒤 화면 inert·초점 복귀를 브라우저가 합니다 (#141 MN-141-2 · 시트 한 곳부터). 모양은 위 #mnin-ios 와 같게 */
+#mnin-iosdlg{border:none;padding:0;background:transparent;width:100%;max-width:none;max-height:none;margin:auto 0 0;display:none;justify-content:center;}
+#mnin-iosdlg[open]{display:flex;}
+#mnin-iosdlg .sh{margin:0 12px 18px;}
+#mnin-iosdlg::backdrop{background:rgba(6,65,62,.4);}
 </style>
 <script>
 (function(){
@@ -2416,17 +2424,29 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     document.body.appendChild(bar);
     document.getElementById("mnin-go").onclick=doInstall;
     document.getElementById("mnin-x").onclick=function(){ hide(); try{ localStorage.setItem("medinote:installhide","1"); }catch(e){} };
+    var body='<h4 id="mnin-ios-title">홈 화면에 추가</h4><p>사파리 아래 <b>공유</b> 버튼을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택하세요.</p><button id="mnin-iosok">확인</button>';
+    if(useDialog()){
+      // 시트 7개 중 가장 단순한 이 안내부터 내장 dialog + showModal() 로 (#141 MN-141-2 · 대표님 결정 2026-11-03).
+      // 접근성 보강 레이어의 WATCH 에는 넣지 않습니다 — 가두기·Esc·inert·초점 복귀를 브라우저가 합니다. 끄려면 medinote.config.js 의 nativeDialog:false
+      var dlg=document.createElement("dialog"); dlg.id="mnin-iosdlg"; dlg.setAttribute("aria-labelledby","mnin-ios-title");
+      dlg.innerHTML='<div class="sh">'+body+'</div>';
+      document.body.appendChild(dlg);
+      dlg.addEventListener("click",function(e){ if(e.target===dlg||e.target.id==="mnin-iosok") dlg.close(); });
+      return;
+    }
     var ios=document.createElement("div"); ios.id="mnin-ios";
-    ios.innerHTML='<div class="sh"><h4>홈 화면에 추가</h4><p>사파리 아래 <b>공유</b> 버튼을 누른 뒤<br><b>‘홈 화면에 추가’</b>를 선택하세요.</p><button id="mnin-iosok">확인</button></div>';
+    ios.innerHTML='<div class="sh">'+body+'</div>';
     document.body.appendChild(ios);
     ios.onclick=function(e){ if(e.target===ios||e.target.id==="mnin-iosok") ios.classList.remove("on"); };
   }
+  function useDialog(){ try{ return (window.MEDINOTE_CONFIG||{}).nativeDialog!==false && typeof HTMLDialogElement==="function" && typeof document.createElement("dialog").showModal==="function"; }catch(e){ return false; } }
+  function openIOS(){ var d=document.getElementById("mnin-iosdlg"); if(d){ if(!d.open) d.showModal(); return; } document.getElementById("mnin-ios").classList.add("on"); }
   function show(){ if(standalone()) return; buildBar(); document.getElementById("mnin-bar").classList.add("on"); }
   function hide(){ var b=document.getElementById("mnin-bar"); if(b) b.classList.remove("on"); }
   function doInstall(){
     var e=window.__mnInstall;
     if(e && e.prompt){ e.prompt(); if(e.userChoice){ e.userChoice.then(function(){ window.__mnInstall=null; hide(); }); } else hide(); return; }
-    if(isIOS()){ document.getElementById("mnin-ios").classList.add("on"); return; }
+    if(isIOS()){ openIOS(); return; }
     hide();
   }
 
