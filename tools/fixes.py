@@ -70,7 +70,8 @@ def todo(item):
     """사람 확인 없이 지금 반영해도 되는 항목인가."""
     blocked = item.get('막는것', '').strip()
     state = item.get('상태', '').strip()
-    return blocked in ('없음', '') and state.startswith('대기')
+    # 「없음 (대표님 결정 YYYY-MM-DD · …)」 처럼 결정 기록이 붙은 것도 막는 것이 없는 것입니다 — 예약 작업이 결정을 이렇게 적습니다
+    return (blocked == '' or blocked == '없음' or blocked.startswith('없음 (')) and state.startswith('대기')
 
 
 def _get(url, token):
