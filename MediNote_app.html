@@ -1790,7 +1790,7 @@ button,input,select,textarea{font-family:inherit}</style>
   function renderList(){
     var el=document.getElementById("mnmdList"); if(!el) return;
     el.innerHTML = sc.items.length ? sc.items.map(function(it){ return '<div class="mnmd-row"><div class="t">'+esc(it.name)+'<small>'+it.times.join(" · ")+'</small></div><button type="button" class="x" data-id="'+it.id+'" aria-label="'+esc(it.name)+' 지우기">×</button></div>'; }).join("") : '<div class="mnhw-note">아직 등록한 약이 없어요.</div>';
-    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); var nx=el.querySelector(".x"); if(nx) nx.focus(); else { var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } }; });
+    el.querySelectorAll(".x").forEach(function(x){ x.onclick=function(){ var at=sc.items.findIndex(function(i){ return i.id===x.dataset.id; }); sc.items=sc.items.filter(function(i){ return i.id!==x.dataset.id; }); save(); renderList(); var xs=el.querySelectorAll(".x"), nx=xs[Math.min(Math.max(at,0),xs.length-1)]; if(nx) nx.focus(); else { var nm=document.getElementById("mnmdName"); if(nm) nm.focus(); } }; });
   }
 
   // 울리기 — 앱이 열려 있는 동안 30초마다 봄. 같은 약·같은 시각은 하루 한 번.
