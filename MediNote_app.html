@@ -1721,7 +1721,9 @@ button,input,select,textarea{font-family:inherit}</style>
   function log(){ try{ return JSON.parse(localStorage.getItem(LOG)||"[]"); }catch(e){ return []; } }
   function addLog(e){ var l=log(); l.unshift(e); try{ localStorage.setItem(LOG,JSON.stringify(l.slice(0,500))); }catch(x){} }
   var sc=load(); sc.items=sc.items||[]; sc.sent=sc.sent||{}; sc.snooze=sc.snooze||{}; sc.quiet=sc.quiet||{from:"21:30",to:"08:00"};
-  pullNative(); document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
+  pullNative();
+  pushNative();   // 앱이 뜰 때 한 번 — 업데이트한 앱이 예전 약별 알림(본문에 약 이름)을 일정을 고칠 때까지 안고 있지 않게, 바로 시각별 묶음으로 다시 겁니다 (PR #167 Codex)
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden){ pullNative(); renderNotify(); updateBadge(); } });
   window.onNativeMeds=function(r){ if(r&&r.granted===false){ sc.on=false; save(); /* 폰에 저장된 일정도 꺼야 안드로이드 알람이 남지 않습니다 (#47 MN-47-1) */ var c=document.getElementById("mnmdOn"); if(c) c.checked=false; stt("알림 권한이 없어 켤 수 없어요. 폰 설정에서 메디노트 알림을 허용해 주세요."); }
     if(r&&r.limit) stt("알림 시각이 너무 많아 일부 시각은 알림이 오지 않아요. 시각 수를 줄여 주세요.");   /* iPhone 은 걸어 둘 수 있는 알림이 64개까지입니다 (#36 MN-36-4) */ };
   function hm(t){ var a=String(t||"0:0").split(":"); return (+a[0])*60+(+a[1]); }
