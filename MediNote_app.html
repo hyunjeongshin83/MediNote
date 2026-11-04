@@ -1617,13 +1617,32 @@ button,input,select,textarea{font-family:inherit}</style>
     }catch(e){ el("mnsy-st").textContent="기기에 저장했어요."; }
   }
 
+  // 기기 사본과 서버 사본의 합집합 — 키: ts|date|symptom. 증상 기록은 지우는 단추가 없어 합쳐도 되살아나는 기록이 없다 (#172).
+  function mergeRecords(a,b){
+    var seen={}, out=[];
+    (a||[]).concat(b||[]).forEach(function(r){
+      if(!r||typeof r!=="object") return;
+      var k=(r.ts||"")+"|"+(r.date||"")+"|"+(r.symptom||"");
+      if(seen[k]) return; seen[k]=1; out.push(r);
+    });
+    out.sort(function(x,y){ var a1=String(x.ts||""), b1=String(y.ts||""); return a1<b1?1:(a1>b1?-1:0); });
+    return out;
+  }
   function loadRecords(){
     records=[];
     try{ var s=localStorage.getItem(REPORT_KEY()); if(s){ var v=JSON.parse(s); records=Array.isArray(v)?v:(v.records||[]); } }catch(e){}
     renderList();
     try{
       window.MediNoteKV.get(REPORT_KEY())
-        .then(function(v){ if(v&&Array.isArray(v.records)){ records=v.records; try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){} renderList(); } })
+        .then(function(v){
+          var srv=(v&&Array.isArray(v.records))?v.records:[];
+          // 서버 사본으로 기기 사본을 덮어쓰지 않는다 — 클라우드 저장이 실패한 기록(「다음에 동기화」)이 사라진다 (#172 MN-172-1)
+          var merged=mergeRecords(records,srv);
+          records=merged;
+          try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){}
+          renderList();
+          if(records.length>srv.length){ try{ window.MediNoteKV.put(REPORT_KEY(),{records:records}).catch(function(){}); }catch(e){} }
+        })
         .catch(function(){});
     }catch(e){}
   }
