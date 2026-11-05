@@ -1981,19 +1981,23 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     return out;
   }
   function loadRecords(){
+    // 요청을 보낼 때의 키를 고정한다 — 응답을 기다리는 사이 계정이 바뀌면 그 응답은 버린다.
+    // 안 그러면 이전 계정의 기록이 새 계정의 클라우드로 올라간다 (#173 Codex P1)
+    var key=REPORT_KEY();
     records=[];
-    try{ var s=localStorage.getItem(REPORT_KEY()); if(s){ var v=JSON.parse(s); records=Array.isArray(v)?v:(v.records||[]); } }catch(e){}
+    try{ var s=localStorage.getItem(key); if(s){ var v=JSON.parse(s); records=Array.isArray(v)?v:(v.records||[]); } }catch(e){}
     renderList();
     try{
-      window.MediNoteKV.get(REPORT_KEY())
+      window.MediNoteKV.get(key)
         .then(function(v){
+          if(REPORT_KEY()!==key) return;
           var srv=(v&&Array.isArray(v.records))?v.records:[];
           // 서버 사본으로 기기 사본을 덮어쓰지 않는다 — 클라우드 저장이 실패한 기록(「다음에 동기화」)이 사라진다 (#172 MN-172-1)
           var merged=mergeRecords(records,srv);
           records=merged;
-          try{ localStorage.setItem(REPORT_KEY(),JSON.stringify(records)); }catch(e){}
+          try{ localStorage.setItem(key,JSON.stringify(records)); }catch(e){}
           renderList();
-          if(records.length>srv.length){ try{ window.MediNoteKV.put(REPORT_KEY(),{records:records}).catch(function(){}); }catch(e){} }
+          if(records.length>srv.length){ try{ window.MediNoteKV.put(key,{records:records}).catch(function(){}); }catch(e){} }
         })
         .catch(function(){});
     }catch(e){}
