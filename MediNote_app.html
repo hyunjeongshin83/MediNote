@@ -1645,7 +1645,8 @@ button,input,select,textarea{font-family:inherit}</style>
           records=merged;
           try{ localStorage.setItem(key,JSON.stringify(records)); }catch(e){}
           renderList();
-          if(records.length>srv.length){ try{ window.MediNoteKV.put(key,{records:records}).catch(function(){}); }catch(e){} }
+          // 여기서 서버로 다시 올리지 않는다 — 읽은 시점의 목록으로 덮어쓰면 그 사이 다른 기기가 저장한 기록을 지운다 (#173 Codex P2).
+          // 기기에만 있는 기록은 기기에 남고 보이며, 다음 「기록하기」 때 합친 목록 전체가 올라간다.
         })
         .catch(function(){});
     }catch(e){}
