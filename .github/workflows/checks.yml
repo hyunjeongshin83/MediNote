@@ -42,6 +42,12 @@ jobs:
           python3 tools/egress-check.py --selftest
           python3 tools/egress-check.py
 
+      # 글이 런타임에 들어오는데 낭독 영역(aria-live)에 없는 칸을 알려 줌 — 경고만, 실패시키지 않음 (#174 MN-174-2)
+      - name: 낭독 영역 밖의 칸 (경고만)
+        run: |
+          python3 tools/live-check.py --selftest
+          python3 tools/live-check.py
+
       # React 첫 화면의 인라인 style 이 토큰 밖으로 새는지 — <style> 만 보던 검사의 구멍 (#74 MN-74-6)
       - name: React 인라인 style 이 토큰 안에 있는지
         run: |
