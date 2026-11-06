@@ -2314,7 +2314,7 @@ html.mnlg-pill-on .mn-ib{display:none!important;} /* #114 MN-114-3 */
       '</div>'+
       '<button id="mnlg-out">로그아웃</button>'+
       '<div id="mnlg-gerr"></div>'+
-      '<div id="mnlg-wipe" style="display:none"><div id="mnlg-wipe-q"></div>'+
+      '<div id="mnlg-wipe" style="display:none"><div id="mnlg-wipe-q" role="alert"></div>'+
         '<button id="mnlg-wipe-yes" type="button"></button><button id="mnlg-wipe-no" type="button" class="mnlg-2nd"></button></div>'+
       '<button id="mnlg-wipelink" type="button" class="mnlg-link">이 기기의 내 기록 지우기</button>'+
       '<div id="mnlg-note">회원가입은 메일로 받은 코드를 넣어 마칩니다.</div>';
@@ -2471,13 +2471,15 @@ html.mnlg-pill-on .mn-ib{display:none!important;} /* #114 MN-114-3 */
   }
   function askWipe(kind){
     var w=el("mnlg-wipe"); if(!w) return;
+    // 칸을 먼저 보이게 한 뒤 글을 넣어야 role="alert" 가 질문을 낭독한다 — 숨긴 채 넣으면 단추만 읽힌다 (#174 MN-174-3 가)
+    w.style.display="block";
     el("mnlg-wipe-q").textContent=(kind==="logout"?"로그아웃합니다. ":"")+"이 기기에 남은 복약 일정·복용 기록·증상 기록 사본·측정값도 지울까요? 계정에 저장한 기록은 지워지지 않습니다.";
     el("mnlg-wipe-yes").textContent=(kind==="logout")?"지우고 로그아웃":"지우기";
     el("mnlg-wipe-no").textContent=(kind==="logout")?"남기고 로그아웃":"취소";
     // 지운 뒤에는 화면 안에 남은 상태(복약 일정 등)까지 비우려고 다시 엽니다
     el("mnlg-wipe-yes").onclick=function(){ w.style.display="none"; if(kind==="logout") logout(function(){ wipeDevice(); location.reload(); }); else { wipeDevice(); location.reload(); } };
     el("mnlg-wipe-no").onclick=function(){ w.style.display="none"; if(kind==="logout") logout(); };
-    w.style.display="block"; el("mnlg-wipe-yes").focus();
+    el("mnlg-wipe-yes").focus();
   }
 
   function initSb(){
