@@ -27,6 +27,11 @@ NOT_STATUS = {
     "mnlg-hd": "로그인 시트의 제목 줄 — 시트를 열 때 한 번 정해지는 제목",
     "mnlg-nm": "로그인 시트에 보이는 이름 — 표시",
     "mnsy-list": "증상 기록 시트의 「최근 기록」 목록 — 저장 결과는 #mnsy-st 가 알림, 이 칸은 목록 표시",
+    "mncardOv": "복약 카드 시트의 바깥 틀 — 시트 마크업을 한 번 넣는 칸",
+    "mnhwOv": "건강 기기 시트의 바깥 틀 — 시트 마크업을 한 번 넣는 칸",
+    "mnmdOv": "복약 알림 시트의 바깥 틀 — 시트 마크업을 한 번 넣는 칸",
+    "mnmdList": "복약 알림 시트의 일정 목록 — 사용자가 연 시트의 내용 표시 (알림 꺼짐 같은 상태는 #mnmdNotifBox)",
+    "root": "React 마운트 지점 — 화면 전체가 들어가는 칸",
     "mnmd-pill": "복약 알림 알약(role=button, aria-label 이 있음) — 같은 변수 이름 pill 이 로그인 알약에도 쓰여 잡힌 것 포함",
 }
 
@@ -35,16 +40,16 @@ WRITE = re.compile(
     r'|(?:\bel|document\.getElementById)\(\s*["\']([A-Za-z][\w-]*)["\']\s*\)\s*\.insertAdjacentHTML\(')
 LIVE_LIST = re.compile(r'querySelectorAll\(\s*"([^"]+)"\s*\)\s*\.forEach\(\s*function\s*\(\s*\w+\s*\)\s*\{\s*\w+\.setAttribute\(\s*"aria-live"')
 
-ASSIGN = re.compile(r'\b(?:var|let|const)\s+([A-Za-z_]\w{2,})\s*=\s*(?:\bel|document\.getElementById)\(\s*["\']([A-Za-z][\w-]*)["\']\s*\)')
+ASSIGN = re.compile(r'\b(?:var|let|const)\s+([A-Za-z_]\w*)\s*=\s*(?:\bel|document\.getElementById)\(\s*["\']([A-Za-z][\w-]*)["\']\s*\)')
+NEAR = 700   # 담은 곳에서 이만큼(글자) 안의 쓰기만 같은 변수로 봅니다 — e · s 처럼 짧은 이름이 다른 함수에서 다시 쓰여 잡히는 것을 줄임
 def var_write_ids(text):
-    """var out=el("a") 로 담은 변수에 out.textContent= · out.innerHTML= · out.insertAdjacentHTML( 로 글을 넣는 id"""
-    names = {}
-    for m in ASSIGN.finditer(text):
-        names.setdefault(m.group(1), set()).add(m.group(2))
+    """var out=el("a") 로 담은 변수에, 담은 곳 근처에서 out.textContent= · out.innerHTML= · out.insertAdjacentHTML( 로 글을 넣는 id (한 글자 이름도 봅니다)"""
     out = set()
-    for name, idset in names.items():
-        if re.search(r'\b%s\.(?:textContent|innerHTML|innerText)\s*=(?!=)|\b%s\.insertAdjacentHTML\(' % (re.escape(name), re.escape(name)), text):
-            out |= idset
+    for m in ASSIGN.finditer(text):
+        name = re.escape(m.group(1))
+        rest = text[m.end(): m.end() + NEAR]
+        if re.search(r'\b%s\.(?:textContent|innerHTML|innerText)\s*=(?!=)|\b%s\.insertAdjacentHTML\(' % (name, name), rest):
+            out.add(m.group(2))
     return out
 
 def tag_of(text, i):
@@ -58,13 +63,15 @@ def analyse(text):
         ids.setdefault(m.group(1) or m.group(2), 0)
     for i in var_write_ids(text):
         ids.setdefault(i, 0)
-    covered = set()
+    covered, covered_cls = set(), set()
     for m in LIVE_LIST.finditer(text):
         covered |= {x.strip()[1:] for x in m.group(1).split(",") if x.strip().startswith("#")}
+        covered_cls |= {x.strip()[1:] for x in m.group(1).split(",") if x.strip().startswith(".")}
     cand, skipped = [], {}
     for i in sorted(ids):
         tag, raw = tag_of(text, i)
-        if i in covered or re.search(r'role=\\?["\'](?:alert|status|log)|aria-live', raw):
+        classes = set((re.search(r'\bclass=\\?["\']([^"\'\\]*)', raw) or [None, ""])[1].split())
+        if i in covered or classes & covered_cls or re.search(r'role=\\?["\'](?:alert|status|log)|aria-live', raw):
             continue
         if tag == "button":
             skipped[i] = "단추 글자"; continue
@@ -75,19 +82,23 @@ def analyse(text):
 
 def selftest():
     html = '''
-<div id="a1" role="alert"></div><div id="a2"></div><div id="a3"></div><button id="a4"></button><div id="a5"></div><div id="a6"></div><div id="a7"></div><div id="a8"></div>
+<div id="a1" role="alert"></div><div id="a2"></div><div id="a3"></div><button id="a4"></button><div id="a5"></div><div id="a6"></div><div id="a7"></div><div id="a8"></div><div id="a9"></div><div id="c1" class="k z"></div><div id="b1"></div>
 <script>
 el("a1").textContent="x"; el("a2").textContent="x"; el("a3").innerHTML="x"; el("a4").textContent="x";
 document.getElementById("a5").insertAdjacentHTML("beforeend","x");
 var out=document.getElementById("a6"); out.insertAdjacentHTML("beforeend","x");
 var box=el("a7"); box.textContent="x"; var keep=el("a8"); keep.className="y";
+var e=el("a9"); e.textContent="x"; el("c1").textContent="x";
+var s=el("b1"); s.className="y";
+/* 멀리 떨어진 곳 */xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+s.textContent="far";
 d.querySelectorAll(".k,#a2").forEach(function(s){ s.setAttribute("aria-live","polite"); });
 </script>'''
     ids, cov, cand, skipped = analyse(html)
-    ok = (cand == ["a3", "a5", "a6", "a7"] and cov == {"a2"} and skipped == {"a4": "단추 글자"} and ids == ["a1", "a2", "a3", "a4", "a5", "a6", "a7"])
+    ok = (cand == ["a3", "a5", "a6", "a7", "a9"] and cov == {"a2"} and skipped == {"a4": "단추 글자"} and ids == ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a9", "c1"])
     if not ok:
         print(f"live-check selftest FAIL: 후보={cand} 목록={sorted(cov)} 건너뜀={skipped}", file=sys.stderr); sys.exit(1)
-    print("live-check selftest PASS (role 있는 칸 · 목록에 있는 칸 · 단추 · 목록 밖 칸)")
+    print("live-check selftest PASS (role 있는 칸 · 목록에 있는 칸 · 단추 · 목록 밖 칸 · 변수 · 한 글자 이름 · 먼 곳의 같은 이름)")
 
 def main():
     if "--selftest" in sys.argv: return selftest()
