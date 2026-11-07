@@ -2167,7 +2167,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   function renderNotify(){
     var box=document.getElementById("mnmdNotifBox"); if(!box) return;
     var bad=NATIVE && sc && sc.on && typeof window.Native.notifyAllowed==="function" && !window.Native.notifyAllowed();
-    box.innerHTML=bad ? '<div class="mnhw-note">폰 설정에서 메디노트 알림이 꺼져 있어 알림이 오지 않아요. 켜 주세요. <button type="button" class="mnhw-btn" id="mnmdNotif" style="margin-top:6px">알림 설정 열기</button></div>' : '';
+    var html=bad ? '<div class="mnhw-note">폰 설정에서 메디노트 알림이 꺼져 있어 알림이 오지 않아요. 켜 주세요. <button type="button" class="mnhw-btn" id="mnmdNotif" style="margin-top:6px">알림 설정 열기</button></div>' : '';
+    if(box.getAttribute("data-h")!==html){ box.setAttribute("data-h",html); box.innerHTML=html; }   /* 같은 내용으로 다시 그리면 낭독기가 같은 경고를 되풀이해 읽으므로 바뀔 때만 (aria-live · #174 후보) */
     var nf=document.getElementById("mnmdNotif"); if(nf) nf.onclick=function(){ try{ window.Native.openNotifySettings(); }catch(e){} };
   }
   window.__mnNotifyChanged=renderNotify;   // iOS: 설정을 읽는 일은 비동기라 값이 오면 MedNotifier 가 부릅니다
@@ -2364,7 +2365,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       if(!x.hasAttribute("tabindex")) x.tabIndex=0;
       if(!x.hasAttribute("aria-label")) x.setAttribute("aria-label","닫기");
     });
-    d.querySelectorAll(".mnhw-st,#mnmdSt,#mnsy-hint,#mnsy-st,#mnlg-gerr,#mnlg-status,#mnhwOut").forEach(function(s){ s.setAttribute("aria-live","polite"); });
+    d.querySelectorAll(".mnhw-st,#mnmdSt,#mnsy-hint,#mnsy-st,#mnlg-gerr,#mnlg-status,#mnhwOut,#mnmdNotifBox").forEach(function(s){ s.setAttribute("aria-live","polite"); });
     if(!d.hasAttribute("tabindex")) d.tabIndex=-1;
     last=document.activeElement;
     setTimeout(function(){ var f=d.querySelector(FOCUS); (f||d).focus({preventScroll:true}); },40);
