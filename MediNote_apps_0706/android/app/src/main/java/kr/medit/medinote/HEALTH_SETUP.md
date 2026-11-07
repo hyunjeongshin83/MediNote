@@ -28,16 +28,17 @@ MainActivity 가 `window.Native` 다리로 HealthConnectManager 를 웹 화면�
 ## Android — 남은 설정 (그때 목록)
 1. app/build.gradle 의 dependencies 에 추가:
    implementation "androidx.health.connect:connect-client:1.1.0-alpha07"
-2. AndroidManifest.xml 에 권한 추가:
+2. AndroidManifest.xml 에 권한 추가 — 읽기 세 가지입니다 (이미 들어 있음 · HealthConnectManager.permissions 와 같아야 합니다):
    <uses-permission android:name="android.permission.health.READ_STEPS"/>
    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+   <uses-permission android:name="android.permission.health.READ_SLEEP"/>
 3. 테스트 기기에 'Health Connect' 앱 설치(최신 안드로이드는 내장).
 4. ~~HealthConnectManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.~~ 09-25 에 연결됐습니다 (#27).
 
 ## iOS — 남은 설정 (빌드 직전)
 1. Xcode → Signing & Capabilities → **HealthKit** 추가.
-2. Info.plist 에 사용 목적 문구 추가:
-   NSHealthShareUsageDescription = "복약·접종 안내를 돕기 위해 건강 데이터를 읽습니다. 데이터는 기기 안에 있습니다."
+2. Info.plist 의 사용 목적 문구(NSHealthShareUsageDescription)는 `ios/project.yml` 에 있는 것이 기준입니다 — 여기에 옮겨 적지 않습니다(갈라지지 않게).
+   예전에 이 줄에 적혀 있던 문구는 앱이 실제로 읽는 것(걸음·심박·수면)·쓰는 곳과 달라 지웠습니다 (#182 MN-182-1).
 3. ~~HealthKitManager 를 화면의 '연결' 버튼에 연결하면 바로 테스트 가능.~~ 09-25 에 연결됐습니다 (#30 · ContentView.swift).
 4. iOS 앱 빌드는 Mac + Xcode 가 필요합니다.
 
