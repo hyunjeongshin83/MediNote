@@ -1,6 +1,35 @@
 {
-  "updated": "2026-11-09T02:40:00Z",
+  "updated": "2026-11-09T06:55:00Z",
   "runs": [
+    {
+      "at": "2026-11-09T06:55:00Z",
+      "task": "최신앱 디자인 · API 실험",
+      "commits": [
+        {
+          "sha": "d6f9b4f",
+          "title": "「복용했어요」 진동 — Vibration API 실험, 설정 뒤 (MN-186-1)"
+        }
+      ],
+      "issues": [
+        {
+          "n": 186,
+          "title": "[리서치][API실험] 메디노트 Vibration API",
+          "research": true
+        }
+      ],
+      "prs": [
+        {
+          "n": 187,
+          "title": "Vibration API 실험 (haptic 기본 꺼짐)",
+          "state": "merged",
+          "opened": "2026-11-09"
+        }
+      ],
+      "decisions": [
+        "MN-186-2: 「복용했어요」를 누르면 안드로이드 크롬에서 짧게 진동하게 켤까요 (예/아니오)"
+      ],
+      "note": "설정 haptic 기본 false 라 손님 화면 변화 없음. 헤드리스 Chromium 으로만 확인 — 실기기 진동·Firefox 지원은 확인하지 못함"
+    },
     {
       "at": "2026-11-09T02:40:00Z",
       "task": "MedIT 연구",
@@ -175,22 +204,6 @@
       "prs": [],
       "decisions": [],
       "note": "A 갈래 ①. 앱 코드 반영 없음. PubMed 대조 — 간질액 지연 6.8분은 맞으나 6명·공복 조건, 투석 16.7%·한국 소아 10.6% 원문 못 찾음(투석 11.1%·CKD 입원 17.0% 보고). 케톤 De Novo·21 CFR 조문 등은 대조 못 함"
-    },
-    {
-      "at": "2026-11-05T21:30:00Z",
-      "task": "메디노트 리서치",
-      "commits": [],
-      "issues": [],
-      "prs": [
-        {
-          "n": 175,
-          "title": "건강 기기 시트 읽은 값 영역 낭독 (MN-174-1)",
-          "state": "merged",
-          "opened": "2026-11-06"
-        }
-      ],
-      "decisions": [],
-      "note": "규제·스토어: 새로 알아낸 것 없음(안드로이드 정확한 알람 권한 SCHEDULE_EXACT_ALARM 의 Play 신고 필요 여부는 웹 검색으로 확정 못 함 — 이슈 안 올림). MN-174-1 은 PR #175 에서 검토 대기"
     }
   ]
 }
