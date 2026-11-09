@@ -1931,7 +1931,18 @@ button,input,select,textarea{font-family:inherit}</style>
       if(action==="later") sc.snooze[it.id+"|"+data.time]=Date.now()+10*60000;
     });
     if(action==="later") save();
+    if(action==="taken") buzz();
     updateBadge();
+  }
+  // 「복용했어요」를 눌렀을 때 짧게 한 번 진동 (Vibration API · 실험 · #186 MN-186-1)
+  // medinote.config.js 의 haptic 이 true 일 때만. 기본은 꺼짐 — 화면·소리·저장은 그대로입니다. 바깥 주소 없음, 보내는 값 없음.
+  // 앱 셸(WebView)에는 진동 권한 선언이 없어 건너뜁니다. iOS Safari 는 이 API 가 없어 아무 일도 없습니다. 눌렀을 때(사용자 동작) 한 번만 부릅니다.
+  function buzz(){
+    try{
+      if(NATIVE || (window.MEDINOTE_CONFIG||{}).haptic!==true || typeof navigator.vibrate!=="function") return;
+      var ua=navigator.userActivation; if(ua && !ua.isActive) return;   // 알림 창 단추·앱 열림 주소로 들어온 기록은 지금 눌린 것이 아니라 건너뜁니다
+      navigator.vibrate(40);
+    }catch(e){}
   }
   // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
   // medinote.config.js 의 appBadge 가 true 일 때만, 설치한 웹앱(PWA)에서만 켜집니다. 기본은 꺼짐 — 화면은 그대로입니다 (#97 MN-97-1).
