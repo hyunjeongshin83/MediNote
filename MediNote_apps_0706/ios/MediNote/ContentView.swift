@@ -105,13 +105,18 @@ struct WebView: UIViewRepresentable {
         }
 
         // 우리 화면(file://)만 이 안에서 엽니다. 바깥 링크는 Safari 로.
+        // 링크를 누른 것뿐 아니라, 화면의 스크립트가 location.href 로 mailto:·tel:·sms: 로 이동시키는 것도 바깥으로 넘깁니다 —
+        // 증상 신고·공유의 「병원에 메일로 보내기」가 이 길입니다. 스크립트 이동은 navigationType 이 .other 라 지금까지 그대로 지나가
+        // WKWebView 가 열지 못했습니다 (안드로이드는 shouldOverrideUrlLoading 이 모든 이동을 잡아 열어 줍니다 · #191 MN-191-1).
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            if let url = navigationAction.request.url, url.scheme != "file",
-               navigationAction.navigationType == .linkActivated {
-                UIApplication.shared.open(url)
-                decisionHandler(.cancel)
-                return
+            if let url = navigationAction.request.url, url.scheme != "file" {
+                let scheme = url.scheme?.lowercased() ?? ""
+                if navigationAction.navigationType == .linkActivated || ["mailto", "tel", "sms"].contains(scheme) {
+                    UIApplication.shared.open(url)
+                    decisionHandler(.cancel)
+                    return
+                }
             }
             decisionHandler(.allow)
         }
