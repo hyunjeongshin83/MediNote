@@ -1,5 +1,5 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v9";   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
+const CACHE="medinote-app-v10";   // v10: 나의 기록 탭 예시 안내 · 접종 탭 예방접종도우미 안내 (#198) · v9 이전은 아래   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "vendor/fonts/medinote-fonts.css","vendor/fonts/Pretendard-Regular.subset.woff2","vendor/fonts/Pretendard-SemiBold.subset.woff2",
