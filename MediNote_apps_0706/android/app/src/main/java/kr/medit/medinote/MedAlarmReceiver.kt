@@ -27,7 +27,10 @@ class MedAlarmReceiver : BroadcastReceiver() {
                 val sc = MedScheduler.schedule(c)
                 if (sc != null && sc.optBoolean("on", false) && !MedScheduler.inQuiet(c, min)) {
                     // 「10분 뒤」로 다시 울릴 때는 그 알림에 묶였던 약만
-                    val meds = MedScheduler.itemsAt(c, time).filter { m -> ids == null || legacyId != null || m.first in ids }
+                    // 오늘 건너뛴 약은 거릅니다 — 「10분 뒤」를 눌러 둔 뒤나 미리 앱에서 건너뛴 약이 다시 울리지 않게 (#204 MN-204-1)
+                    val meds = MedScheduler.itemsAt(c, time)
+                        .filter { m -> ids == null || legacyId != null || m.first in ids }
+                        .filter { m -> !MedScheduler.isSkippedToday(c, m.first, time) }
                     if (meds.isNotEmpty()) MedScheduler.notify(c, time, meds)
                 }
                 // 다시 걸기 전에 지금 일정을 다시 봅니다 — 그 사이 알림을 껐거나 그 시각을 지웠으면 걸지 않습니다 (PR #167 Sourcery)
@@ -39,8 +42,10 @@ class MedAlarmReceiver : BroadcastReceiver() {
                 val now = MedScheduler.itemsAt(c, time).map { it.first }.toSet()
                 val all = ids ?: emptyArray()
                 val names = i.getStringArrayExtra("names") ?: arrayOf(i.getStringExtra("name") ?: "")
-                val keep = all.indices.filter { all[it] in now }
+                // 건너뛴 약은 「복용했어요」·「10분 뒤」로 덮어쓰지 않습니다 — 건너뛴 뒤에 떠 있던 알림의 단추 (#204 MN-204-1)
+                val keep = all.indices.filter { all[it] in now && (action == "passed" || !MedScheduler.isSkippedToday(c, all[it], time)) }
                 keep.forEach { k -> MedScheduler.addLog(c, action, all[k], names.getOrNull(k) ?: "", time) }
+                if (action == "passed") keep.forEach { k -> MedScheduler.skipToday(c, all[k], time) }
                 if (action == "later" && keep.isNotEmpty()) MedScheduler.snooze(c, time, keep.map { all[it] }.toTypedArray())
                 dismiss(c, i.getIntExtra("nid", 0))
             }

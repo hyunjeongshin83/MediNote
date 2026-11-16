@@ -31,6 +31,8 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     private let logKey = "medinote.meds.log"       // 예전 자리(UserDefaults) — 처음 한 번 옮기고 지웁니다
     private let quietKey = "medinote.meds.quiet"   // 「10분 뒤」가 조용한 시간을 보도록 일정과 함께 둡니다 (#36 MN-36-3)
     private let logFile = "log.json", quietFile = "quiet.json"
+    private let skipLock = NSLock()             // 건너뜀 기록과 「10분 뒤」 다시 쓰기를 한 번에 하나씩 (PR #206 Codex)
+    private let skipFile = "skip.json"           // 오늘 건너뛴 약 {d:"yyyy-MM-dd", k:["약id|시각"]} (#204 MN-204-1)
     private let groupsFile = "groups.json"         // 지금 일정의 시각 → 약 — 앱이 꺼진 채 단추를 눌러도 지금 일정과 맞춰 봅니다 (PR #168 Codex)
     private let category = "MNMD"
     private static let maxPending = 64             // iOS 가 걸어 두는 지역 알림 한도
@@ -250,11 +252,17 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             let now = Set((cur[time] ?? []).map { $0["id"] ?? "" })
             meds = meds.filter { now.contains($0["id"] ?? "") }
         }
+        // 건너뛴 약은 「복용했어요」·「10분 뒤」로 덮어쓰지 않습니다 — 건너뛴 뒤에도 떠 있던 알림의 단추 (#204 MN-204-1)
+        if response.actionIdentifier != "passed" {
+            let skipped = skippedToday()
+            meds = meds.filter { !skipped.contains(($0["id"] ?? "") + "|" + time) }
+        }
         switch response.actionIdentifier {
         case "taken":
             for m in meds { addLog(action: "taken", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
         case "passed":
             for m in meds { addLog(action: "passed", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
+            for m in meds { skipToday(id: m["id"] ?? "", time: time) }
         case "later":
             for m in meds { addLog(action: "later", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
             // 10분 뒤가 조용한 시간 안이면 기록만 남기고 울리지 않습니다 — 안드로이드(MED_FIRE 에서 확인)와 같은 결과 (#36 MN-36-3)
@@ -270,6 +278,60 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
         pushLogToWeb()
         completionHandler()
+    }
+
+    // MARK: 건너뜀 (#204 MN-204-1)
+
+    private static func dayKey() -> String {
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+
+    private func skippedToday() -> Set<String> {
+        guard let o = load(skipFile) as? [String: Any], o["d"] as? String == Self.dayKey(), let k = o["k"] as? [String] else { return [] }
+        return Set(k)
+    }
+
+    /// 앱 안 「건너뛰어요」(Native.skipMedToday)와 알림의 「건너뛰어요」 — 오늘 그 약·시각을 건너뛴 것으로 적고,
+    /// 대기 중인 「10분 뒤」(…-later)에서 그 약을 뺍니다(남은 약이 없으면 지움). 떠 있는 알림에 남은 약이 없으면 걷습니다.
+    /// 아직 오지 않은 오늘의 정각 알림은 iOS 가 울릴 때 코드를 돌려 주지 않아 거를 수 없습니다 — 매일 반복 알림을 건드리면
+    /// 내일 알림을 잃을 수 있어 그대로 둡니다 (#204 에 남은 한계로 적음).
+    func skipToday(id: String, time: String) {
+        guard !id.isEmpty, Self.hm(time) != nil else { return }
+        skipLock.lock()
+        var set = skippedToday()
+        set.insert(id + "|" + time)
+        store(skipFile, ["d": Self.dayKey(), "k": Array(set).sorted()])
+        skipLock.unlock()
+        let laterId = "mnmd-\(time)-later"
+        center.getPendingNotificationRequests { reqs in
+            // 연달아 건너뛰면 이 콜백이 겹쳐 돕니다 — 한 번에 하나씩, 그리고 늘 가장 새 건너뜀 기록으로 판단합니다
+            self.skipLock.lock(); defer { self.skipLock.unlock() }
+            let skipped = self.skippedToday()
+            guard let req = reqs.first(where: { $0.identifier == laterId }) else { return }
+            let oldIds = req.content.userInfo["ids"] as? [String] ?? []
+            let oldNames = req.content.userInfo["names"] as? [String] ?? []
+            var meds: [[String: String]] = []
+            for (k, i) in oldIds.enumerated() where !skipped.contains(i + "|" + time) {
+                meds.append(["id": i, "name": k < oldNames.count ? oldNames[k] : ""])
+            }
+            if meds.count == oldIds.count { return }
+            self.center.removePendingNotificationRequests(withIdentifiers: [laterId])
+            if meds.isEmpty { return }
+            let left = (req.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()?.timeIntervalSinceNow ?? 1
+            self.add(time: time, meds: meds, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(left, 1), repeats: false), suffix: "-later")
+        }
+        center.getDeliveredNotifications { ds in
+            self.skipLock.lock(); defer { self.skipLock.unlock() }
+            let skipped = self.skippedToday()
+            let gone = ds.filter { d in
+                let rid = d.request.identifier
+                guard rid == "mnmd-\(time)" || rid == "mnmd-\(time)-later" else { return false }
+                let ids = d.request.content.userInfo["ids"] as? [String] ?? []
+                return !ids.isEmpty && ids.allSatisfy { skipped.contains($0 + "|" + time) }
+            }.map { $0.request.identifier }
+            if !gone.isEmpty { self.center.removeDeliveredNotifications(withIdentifiers: gone) }
+        }
     }
 
     // MARK: 기록

@@ -39,6 +39,9 @@ object MedScheduler {
     private const val KEY_SCHED = "sched"
     private const val KEY_LOG = "log"
     private const val KEY_CODES = "codes"
+    private val skipLock = Any()
+    private const val KEY_SHOWN = "shown_"        // 마지막으로 띄운 그 시각 알림에 든 약 id — 건너뛴 뒤 알림을 걷을지 볼 때 씁니다 (PR #206 Codex)
+    private const val KEY_SKIP = "skip"          // 오늘 건너뛴 약 {d:"yyyyMMdd", k:["약id|시각"]} (#204 MN-204-1)
     const val CHANNEL = "meds"
 
     const val ACT_FIRE = "kr.medit.medinote.MED_FIRE"
@@ -106,6 +109,38 @@ object MedScheduler {
     fun snooze(c: Context, time: String, ids: Array<String>) {
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         setAlarm(c, am, requestCode(time) + 1, time, System.currentTimeMillis() + 10 * 60_000L, ids)
+    }
+
+    private fun dayKey(): String {
+        val d = Calendar.getInstance()
+        return "%04d%02d%02d".format(d.get(Calendar.YEAR), d.get(Calendar.MONTH) + 1, d.get(Calendar.DAY_OF_MONTH))
+    }
+
+    private fun skippedToday(c: Context): Set<String> = try {
+        val o = JSONObject(prefs(c).getString(KEY_SKIP, "{}") ?: "{}")
+        if (o.optString("d") != dayKey()) emptySet()
+        else (0 until (o.optJSONArray("k")?.length() ?: 0)).map { o.getJSONArray("k").optString(it) }.toSet()
+    } catch (_: Exception) { emptySet() }
+
+    /** 오늘 그 약·시각을 건너뛰었는지 — 울릴 때마다 봅니다. 날짜가 바뀌면 저절로 비어 내일부터는 평소대로 울립니다. */
+    fun isSkippedToday(c: Context, id: String, time: String): Boolean = "$id|$time" in skippedToday(c)
+
+    /** 앱 안 「건너뛰어요」·알림의 「건너뛰어요」 — 그 약·시각의 대기 중인 「10분 뒤」와 아직 오지 않은 오늘 알림을 거둡니다.
+     *  같은 시각의 다른 약은 그대로 울립니다. 알람 자체는 지우지 않아 내일 알림은 평소대로입니다 (#204 MN-204-1). */
+    fun skipToday(c: Context, id: String, time: String) {
+        if (id.isEmpty() || !time.matches(Regex("\\d\\d:\\d\\d"))) return
+        // 읽고-고치고-쓰기를 한 번에 하나씩 — 앱 안 「건너뛰어요」(웹뷰 스레드)와 알림 단추(방송 수신기, 메인 스레드)가 동시에 오면 서로의 추가를 덮어쓸 수 있습니다 (PR #206 Codex)
+        val set = synchronized(skipLock) {
+            val next = skippedToday(c).toMutableSet().apply { add("$id|$time") }
+            prefs(c).edit().putString(KEY_SKIP, JSONObject().put("d", dayKey()).put("k", JSONArray(next.toList())).toString()).commit()
+            next
+        }
+        // 떠 있는 그 시각 알림에 남은 약이 하나도 없으면 걷습니다 (일부만 건너뛰었으면 알림은 그대로 두고, 단추는 건너뛴 약을 거릅니다)
+        // 지금 일정의 약 전부가 아니라 떠 있는 알림에 든 약으로 봅니다 — 「10분 뒤」 알림에는 그때 묶인 약만 들어 있고, 그 뒤 같은 시각에 약이 추가됐을 수 있습니다
+        val shown = try { JSONArray(prefs(c).getString(KEY_SHOWN + time, null) ?: "[]") } catch (_: Exception) { JSONArray() }
+        val shownIds = (0 until shown.length()).map { shown.optString(it) }
+        val left = if (shownIds.isNotEmpty()) shownIds.filter { "$it|$time" !in set } else itemsAt(c, time).map { it.first }.filter { "$it|$time" !in set }
+        if (left.isEmpty()) (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(requestCode(time))
     }
 
     /** 지금 일정에서 그 시각에 먹는 약 (id, 이름) — 같은 약은 한 번만 */
@@ -203,6 +238,7 @@ object MedScheduler {
             if (Build.VERSION.SDK_INT < 26) setPriority(Notification.PRIORITY_HIGH)
         }
         nm.notify(nid, b.build())
+        prefs(c).edit().putString(KEY_SHOWN + time, JSONArray(ids.toList()).toString()).apply()
     }
 
     /** 기록 — 웹이 열리면 가져가서 localStorage 기록에 합칩니다 */
