@@ -2292,8 +2292,9 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     list.forEach(function(it){
       addLog({action:action,id:it.id,name:it.name,time:data.time,at:Date.now()});
       if(action==="later") sc.snooze[it.id+"|"+data.time]=Date.now()+10*60000;
+      if(action==="passed") delete sc.snooze[it.id+"|"+data.time];   // 「10분 뒤」를 눌러 둔 뒤 건너뛰면 대기 중인 다시 알림도 거둡니다 (PR #203 Codex)
     });
-    if(action==="later") save();
+    if(action==="later" || action==="passed") save();
     if(action==="taken") buzz();
     updateBadge();
   }
