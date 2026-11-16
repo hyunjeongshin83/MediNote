@@ -1,33 +1,6 @@
 {
-  "updated": "2026-11-15T21:30:00Z",
+  "updated": "2026-11-16T02:40:00Z",
   "runs": [
-    {
-      "at": "2026-11-07T21:30:00Z",
-      "task": "메디노트 리서치",
-      "commits": [
-        {
-          "sha": "a688349",
-          "title": "설치 안내 HEALTH_SETUP.md 를 코드와 맞춤 (MN-182-1)"
-        }
-      ],
-      "issues": [
-        {
-          "n": 182,
-          "title": "[리서치] Health Connect·HealthKit · 설치 안내 문서가 코드와 갈라짐",
-          "research": true
-        }
-      ],
-      "prs": [
-        {
-          "n": 183,
-          "title": "HEALTH_SETUP.md 를 코드와 맞춤",
-          "state": "merged",
-          "opened": "2026-11-08"
-        }
-      ],
-      "decisions": [],
-      "note": "두 앱이 읽는 범위는 CLAUDE.md §3 과 코드가 일치. 어긋난 건 개발자용 설치 안내 한 장(옛 iOS 문구·READ_SLEEP 누락) — 반영·병합. 실기기·스토어 심사·Health Connect 정식 판 여부는 확인하지 못함"
-    },
     {
       "at": "2026-11-07T01:30:00Z",
       "task": "메디노트 리서치",
@@ -169,6 +142,21 @@
         "MN-63-5: PRIVACY 를 GitHub Pages 주소로 공개해도 될까요 (묵은 질문)"
       ],
       "note": "오늘은 새로 알아낸 것이 없습니다 — 주제 5(복약 알림·일정): 안드로이드 MedScheduler·MedAlarmReceiver·MedSystemReceiver, iOS MedNotifier, 웹 tick 을 읽었고 정확 알람 안내(MN-36-1·설정 열기 단추)·묶음 알림(MN-123-1)·조용한 시간(#66·#184)·재부팅/시계 변경·64개 한도·낡은 알림 걷기는 모두 이미 반영됨 또는 질문 카드로 올라와 있음. 요청 코드 충돌(시각 연속 분)도 액션이 달라 겹치지 않음을 확인"
+    },
+    {
+      "at": "2026-11-16T02:40:00Z",
+      "task": "MedIT 연구",
+      "commits": [],
+      "issues": [
+        {
+          "n": 201,
+          "title": "[리서치] 4D 프로파일 ① 센싱(이어서) — iCGM 기준·Libre Duo De Novo 는 맞고 862.1354 번호·MARD 부재는 미확인",
+          "research": true
+        }
+      ],
+      "prs": [],
+      "decisions": [],
+      "note": "A 갈래(① 센싱). 조문 원문은 eCFR 접속 불가로 2차 출처 발췌로 대조. 고칠 것 없음. 웹 검색 3 · 하위 조사 1(실패) · DB 조회 0"
     }
   ]
 }
