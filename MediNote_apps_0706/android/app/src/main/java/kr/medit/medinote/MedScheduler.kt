@@ -39,6 +39,7 @@ object MedScheduler {
     private const val KEY_SCHED = "sched"
     private const val KEY_LOG = "log"
     private const val KEY_CODES = "codes"
+    private val skipLock = Any()
     private const val KEY_SHOWN = "shown_"        // 마지막으로 띄운 그 시각 알림에 든 약 id — 건너뛴 뒤 알림을 걷을지 볼 때 씁니다 (PR #206 Codex)
     private const val KEY_SKIP = "skip"          // 오늘 건너뛴 약 {d:"yyyyMMdd", k:["약id|시각"]} (#204 MN-204-1)
     const val CHANNEL = "meds"
@@ -128,8 +129,12 @@ object MedScheduler {
      *  같은 시각의 다른 약은 그대로 울립니다. 알람 자체는 지우지 않아 내일 알림은 평소대로입니다 (#204 MN-204-1). */
     fun skipToday(c: Context, id: String, time: String) {
         if (id.isEmpty() || !time.matches(Regex("\\d\\d:\\d\\d"))) return
-        val set = skippedToday(c).toMutableSet().apply { add("$id|$time") }
-        prefs(c).edit().putString(KEY_SKIP, JSONObject().put("d", dayKey()).put("k", JSONArray(set.toList())).toString()).apply()
+        // 읽고-고치고-쓰기를 한 번에 하나씩 — 앱 안 「건너뛰어요」(웹뷰 스레드)와 알림 단추(방송 수신기, 메인 스레드)가 동시에 오면 서로의 추가를 덮어쓸 수 있습니다 (PR #206 Codex)
+        val set = synchronized(skipLock) {
+            val next = skippedToday(c).toMutableSet().apply { add("$id|$time") }
+            prefs(c).edit().putString(KEY_SKIP, JSONObject().put("d", dayKey()).put("k", JSONArray(next.toList())).toString()).commit()
+            next
+        }
         // 떠 있는 그 시각 알림에 남은 약이 하나도 없으면 걷습니다 (일부만 건너뛰었으면 알림은 그대로 두고, 단추는 건너뛴 약을 거릅니다)
         // 지금 일정의 약 전부가 아니라 떠 있는 알림에 든 약으로 봅니다 — 「10분 뒤」 알림에는 그때 묶인 약만 들어 있고, 그 뒤 같은 시각에 약이 추가됐을 수 있습니다
         val shown = try { JSONArray(prefs(c).getString(KEY_SHOWN + time, null) ?: "[]") } catch (_: Exception) { JSONArray() }
