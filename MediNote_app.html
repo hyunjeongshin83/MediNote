@@ -1937,7 +1937,9 @@ button,input,select,textarea{font-family:inherit}</style>
     list.forEach(function(it){
       addLog({action:action,id:it.id,name:it.name,time:data.time,at:Date.now()});
       if(action==="later") sc.snooze[it.id+"|"+data.time]=Date.now()+10*60000;
-      if(action==="passed"){ var pk=it.id+"|"+data.time; delete sc.snooze[pk]; sc.sent[pk]=dayKey(); }   // 건너뛰면 그 약·시각의 대기 중인 다시 알림도, 아직 오지 않은 오늘 알림도 거둡니다 — 같은 시각의 다른 약은 그대로 (PR #203 Codex)
+      if(action==="passed"){ var pk=it.id+"|"+data.time; delete sc.snooze[pk]; sc.sent[pk]=dayKey();
+        // 앱(안드로이드·iOS)에서는 알림을 폰이 맡으므로, 폰에 걸린 「10분 뒤」·오늘 알림도 거두라고 알립니다 (#204 MN-204-1)
+        if(NATIVE && typeof window.Native.skipMedToday==="function"){ try{ window.Native.skipMedToday(String(it.id), String(data.time)); }catch(e){} } }   // 건너뛰면 그 약·시각의 대기 중인 다시 알림도, 아직 오지 않은 오늘 알림도 거둡니다 — 같은 시각의 다른 약은 그대로 (PR #203 Codex)
     });
     if(action==="later" || action==="passed") save();
     if(action==="taken") buzz();

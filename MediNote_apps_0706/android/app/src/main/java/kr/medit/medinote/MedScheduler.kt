@@ -39,6 +39,7 @@ object MedScheduler {
     private const val KEY_SCHED = "sched"
     private const val KEY_LOG = "log"
     private const val KEY_CODES = "codes"
+    private const val KEY_SKIP = "skip"          // 오늘 건너뛴 약 {d:"yyyyMMdd", k:["약id|시각"]} (#204 MN-204-1)
     const val CHANNEL = "meds"
 
     const val ACT_FIRE = "kr.medit.medinote.MED_FIRE"
@@ -106,6 +107,31 @@ object MedScheduler {
     fun snooze(c: Context, time: String, ids: Array<String>) {
         val am = c.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         setAlarm(c, am, requestCode(time) + 1, time, System.currentTimeMillis() + 10 * 60_000L, ids)
+    }
+
+    private fun dayKey(): String {
+        val d = Calendar.getInstance()
+        return "%04d%02d%02d".format(d.get(Calendar.YEAR), d.get(Calendar.MONTH) + 1, d.get(Calendar.DAY_OF_MONTH))
+    }
+
+    private fun skippedToday(c: Context): Set<String> = try {
+        val o = JSONObject(prefs(c).getString(KEY_SKIP, "{}") ?: "{}")
+        if (o.optString("d") != dayKey()) emptySet()
+        else (0 until (o.optJSONArray("k")?.length() ?: 0)).map { o.getJSONArray("k").optString(it) }.toSet()
+    } catch (_: Exception) { emptySet() }
+
+    /** 오늘 그 약·시각을 건너뛰었는지 — 울릴 때마다 봅니다. 날짜가 바뀌면 저절로 비어 내일부터는 평소대로 울립니다. */
+    fun isSkippedToday(c: Context, id: String, time: String): Boolean = "$id|$time" in skippedToday(c)
+
+    /** 앱 안 「건너뛰어요」·알림의 「건너뛰어요」 — 그 약·시각의 대기 중인 「10분 뒤」와 아직 오지 않은 오늘 알림을 거둡니다.
+     *  같은 시각의 다른 약은 그대로 울립니다. 알람 자체는 지우지 않아 내일 알림은 평소대로입니다 (#204 MN-204-1). */
+    fun skipToday(c: Context, id: String, time: String) {
+        if (id.isEmpty() || !time.matches(Regex("\\d\\d:\\d\\d"))) return
+        val set = skippedToday(c).toMutableSet().apply { add("$id|$time") }
+        prefs(c).edit().putString(KEY_SKIP, JSONObject().put("d", dayKey()).put("k", JSONArray(set.toList())).toString()).apply()
+        // 떠 있는 그 시각 알림에 남은 약이 하나도 없으면 걷습니다 (일부만 건너뛰었으면 알림은 그대로 두고, 단추는 건너뛴 약을 거릅니다)
+        val left = itemsAt(c, time).filter { "${it.first}|$time" !in set }
+        if (left.isEmpty()) (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(requestCode(time))
     }
 
     /** 지금 일정에서 그 시각에 먹는 약 (id, 이름) — 같은 약은 한 번만 */

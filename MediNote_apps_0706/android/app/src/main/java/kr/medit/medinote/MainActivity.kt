@@ -42,6 +42,7 @@ import org.json.JSONObject
  *  medsNative()        true — 복약 알림을 폰이 맡는다는 표시. 웹은 자기 타이머를 끕니다
  *  scheduleMeds(json)  {on, quiet, items} 를 저장하고 알람을 다시 겁니다. 알림 권한이 없으면 먼저 묻습니다
  *  medsLogTake()       알림 단추로 남긴 기록(JSON 배열)을 돌려주고 비웁니다 — 웹이 자기 기록에 합칩니다
+ *  skipMedToday(id, time) 앱 안 「건너뛰어요」 — 그 약·시각의 대기 중인 다시 알림과 오늘 알림을 거둡니다 (#204)
  *  exactAlarmAllowed() 정확한 시각 알람이 허용됐는지 (Android 12 이상)
  *  notifyAllowed()     폰 설정에서 알림이 꺼져 있지 않은지 · openNotifySettings() 그 설정 화면 열기 (#94)
  *  openExactAlarmSettings() 그 허용 화면 열기
@@ -202,6 +203,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         @JavascriptInterface fun medsLogTake(): String = MedScheduler.takeLog(this@MainActivity)
+        /* 앱 안에서 「건너뛰어요」를 눌렀을 때 — 그 약·시각의 대기 중인 「10분 뒤」와 오늘 알림을 거둡니다 (#204 MN-204-1) */
+        @JavascriptInterface fun skipMedToday(id: String, time: String) { MedScheduler.skipToday(this@MainActivity, id, time) }
         /* 폰 설정에서 메디노트 알림(또는 「복약 알림」 채널)이 꺼져 있으면 false — 알람은 울려도 알림이 조용히 버려집니다 (#94). */
         @JavascriptInterface fun notifyAllowed(): Boolean {
             val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
