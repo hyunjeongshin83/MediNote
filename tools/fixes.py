@@ -96,7 +96,12 @@ def _list_open(repo, token, tries=3, wait=2):
     """
     base = 'https://api.github.com/repos/%s/issues' % repo
     for i in range(tries):
-        out = _get(base + '?state=open&per_page=100', token)
+        out = []
+        for page in range(1, 11):      # 열린 이슈가 백 건을 넘으면 오래된 것이 목록에서 잘려 FIXES.md 에서 빠집니다 (2026-11-16 #204 를 올린 뒤 MN-15-1~4 가 사라짐)
+            part = _get(base + '?state=open&per_page=100&page=%d' % page, token)
+            out.extend(part)
+            if len(part) < 100:
+                break
         have = {x['number'] for x in out}
         try:
             recent = _get(base + '?state=all&per_page=15&sort=created&direction=desc', token)
