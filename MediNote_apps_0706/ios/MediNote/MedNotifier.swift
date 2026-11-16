@@ -31,6 +31,7 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     private let logKey = "medinote.meds.log"       // 예전 자리(UserDefaults) — 처음 한 번 옮기고 지웁니다
     private let quietKey = "medinote.meds.quiet"   // 「10분 뒤」가 조용한 시간을 보도록 일정과 함께 둡니다 (#36 MN-36-3)
     private let logFile = "log.json", quietFile = "quiet.json"
+    private let skipLock = NSLock()             // 건너뜀 기록과 「10분 뒤」 다시 쓰기를 한 번에 하나씩 (PR #206 Codex)
     private let skipFile = "skip.json"           // 오늘 건너뛴 약 {d:"yyyy-MM-dd", k:["약id|시각"]} (#204 MN-204-1)
     private let groupsFile = "groups.json"         // 지금 일정의 시각 → 약 — 앱이 꺼진 채 단추를 눌러도 지금 일정과 맞춰 봅니다 (PR #168 Codex)
     private let category = "MNMD"
@@ -297,12 +298,16 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
     /// 내일 알림을 잃을 수 있어 그대로 둡니다 (#204 에 남은 한계로 적음).
     func skipToday(id: String, time: String) {
         guard !id.isEmpty, Self.hm(time) != nil else { return }
+        skipLock.lock()
         var set = skippedToday()
         set.insert(id + "|" + time)
         store(skipFile, ["d": Self.dayKey(), "k": Array(set).sorted()])
-        let skipped = set
+        skipLock.unlock()
         let laterId = "mnmd-\(time)-later"
         center.getPendingNotificationRequests { reqs in
+            // 연달아 건너뛰면 이 콜백이 겹쳐 돕니다 — 한 번에 하나씩, 그리고 늘 가장 새 건너뜀 기록으로 판단합니다
+            self.skipLock.lock(); defer { self.skipLock.unlock() }
+            let skipped = self.skippedToday()
             guard let req = reqs.first(where: { $0.identifier == laterId }) else { return }
             let oldIds = req.content.userInfo["ids"] as? [String] ?? []
             let oldNames = req.content.userInfo["names"] as? [String] ?? []
@@ -317,6 +322,8 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
             self.add(time: time, meds: meds, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(left, 1), repeats: false), suffix: "-later")
         }
         center.getDeliveredNotifications { ds in
+            self.skipLock.lock(); defer { self.skipLock.unlock() }
+            let skipped = self.skippedToday()
             let gone = ds.filter { d in
                 let rid = d.request.identifier
                 guard rid == "mnmd-\(time)" || rid == "mnmd-\(time)-later" else { return false }

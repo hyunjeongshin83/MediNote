@@ -1,5 +1,5 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v15";   // v15: 앱 안 건너뛰어요가 폰 알림도 거둠 (#204) · v14: 미리 건너뛰면 오늘 알림도 거둠 (#203) · v13: 건너뛰면 10분 뒤 다시 알림도 거둠 (#203) · v12: 약 카드에도 「건너뛰어요」 (#203) · v11: 알림 단추 「건너뛰어요」 (#202) · v10: 나의 기록 탭 예시 안내 · 접종 탭 예방접종도우미 안내 (#198) · v9 이전은 아래   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
+const CACHE="medinote-app-v16";   // v16: 알림 걷기를 떠 있는 알림의 약으로 판단 (#206) · v15: 앱 안 건너뛰어요가 폰 알림도 거둠 (#204) · v14: 미리 건너뛰면 오늘 알림도 거둠 (#203) · v13: 건너뛰면 10분 뒤 다시 알림도 거둠 (#203) · v12: 약 카드에도 「건너뛰어요」 (#203) · v11: 알림 단추 「건너뛰어요」 (#202) · v10: 나의 기록 탭 예시 안내 · 접종 탭 예방접종도우미 안내 (#198) · v9 이전은 아래   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "vendor/fonts/medinote-fonts.css","vendor/fonts/Pretendard-Regular.subset.woff2","vendor/fonts/Pretendard-SemiBold.subset.woff2",
