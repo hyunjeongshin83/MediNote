@@ -11,6 +11,7 @@ import java.util.Calendar
  *  MED_FIRE        정한 시각 — 조용한 시간이 아니면 알림을 띄우고, 다음 날 같은 시각을 다시 겁니다
  *  MED_TAKEN       알림의 「복용했어요」 — 그 알림에 묶인 약 전부를 기록에 남기고 알림을 닫습니다
  *  MED_LATER       알림의 「10분 뒤」 — 10분 뒤 한 번 더 울리게 하고 알림을 닫습니다
+ *  MED_PASSED      알림의 「건너뛰어요」 — 오늘 이 시각은 건너뛴다고 기록만 남기고 알림을 닫습니다 (다시 울리지 않습니다 · #202 MN-202-1)
  *  재부팅 · 앱 업데이트 · 시간대/시계 변경 · 정확 알람 권한 변경은 MedSystemReceiver 가 받습니다 (#36 MN-36-1)
  */
 class MedAlarmReceiver : BroadcastReceiver() {
@@ -32,8 +33,8 @@ class MedAlarmReceiver : BroadcastReceiver() {
                 // 다시 걸기 전에 지금 일정을 다시 봅니다 — 그 사이 알림을 껐거나 그 시각을 지웠으면 걸지 않습니다 (PR #167 Sourcery)
                 if (time.isNotEmpty() && MedScheduler.itemsAt(c, time).isNotEmpty()) MedScheduler.rescheduleOne(c, time)
             }
-            MedScheduler.ACT_TAKEN, MedScheduler.ACT_LATER -> {
-                val action = if (i.action == MedScheduler.ACT_TAKEN) "taken" else "later"
+            MedScheduler.ACT_TAKEN, MedScheduler.ACT_LATER, MedScheduler.ACT_PASSED -> {
+                val action = when (i.action) { MedScheduler.ACT_TAKEN -> "taken"; MedScheduler.ACT_PASSED -> "passed"; else -> "later" }
                 // 지금 일정에 그 시각으로 남아 있는 약만 — 알림을 껐거나 약·시각을 지운 뒤 남은 알림의 단추는 기록하지 않습니다 (PR #168 Codex)
                 val now = MedScheduler.itemsAt(c, time).map { it.first }.toSet()
                 val all = ids ?: emptyArray()

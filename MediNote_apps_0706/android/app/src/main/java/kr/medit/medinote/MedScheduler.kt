@@ -26,7 +26,7 @@ import java.util.Calendar
  *   정한 시각  → MedAlarmReceiver(MED_FIRE) → 알림(복용했어요 · 10분 뒤) → 다음 날 같은 시각 다시 걺
  *                알람·알림은 시각마다 하나 — 같은 시각의 약은 한 통으로 묶고 본문에 약 이름을 쓰지 않습니다
  *                (「약 N가지 드실 시간이에요」 · 잠금화면에 약 이름이 보이지 않게 · #83 MN-83-4 · #123 MN-123-1 · #36 MN-36-4)
- *   단추       → MedAlarmReceiver(MED_TAKEN · MED_LATER) → 기록(log)에 남김 → 웹이 열리면 Native.medsLogTake() 로 가져감
+ *   단추       → MedAlarmReceiver(MED_TAKEN · MED_LATER · MED_PASSED) → 기록(log)에 남김 → 웹이 열리면 Native.medsLogTake() 로 가져감
  *   재부팅     → MedAlarmReceiver(BOOT_COMPLETED) → 저장된 일정으로 다시 걺
  *   앱 업데이트 · 시간대/시계 변경 · 정확 알람 권한 변경 → 같은 수신기 → 다시 걺 (#36 MN-36-1)
  *
@@ -44,6 +44,7 @@ object MedScheduler {
     const val ACT_FIRE = "kr.medit.medinote.MED_FIRE"
     const val ACT_TAKEN = "kr.medit.medinote.MED_TAKEN"
     const val ACT_LATER = "kr.medit.medinote.MED_LATER"
+    const val ACT_PASSED = "kr.medit.medinote.MED_PASSED"   // 「건너뛰어요」 (#202 MN-202-1)
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -198,6 +199,7 @@ object MedScheduler {
             setCategory(Notification.CATEGORY_REMINDER)
             addAction(Notification.Action.Builder(null as android.graphics.drawable.Icon?, "복용했어요", act(ACT_TAKEN, nid + 3)).build())
             addAction(Notification.Action.Builder(null as android.graphics.drawable.Icon?, "10분 뒤", act(ACT_LATER, nid + 5)).build())
+            addAction(Notification.Action.Builder(null as android.graphics.drawable.Icon?, "건너뛰어요", act(ACT_PASSED, nid + 7)).build())
             if (Build.VERSION.SDK_INT < 26) setPriority(Notification.PRIORITY_HIGH)
         }
         nm.notify(nid, b.build())

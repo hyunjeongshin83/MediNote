@@ -100,8 +100,9 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
         let taken = UNNotificationAction(identifier: "taken", title: "복용했어요", options: [])
         let later = UNNotificationAction(identifier: "later", title: "10분 뒤", options: [])
+        let passed = UNNotificationAction(identifier: "passed", title: "건너뛰어요", options: [])   // #202 MN-202-1
         center.setNotificationCategories([
-            UNNotificationCategory(identifier: category, actions: [taken, later], intentIdentifiers: [], options: [])
+            UNNotificationCategory(identifier: category, actions: [taken, later, passed], intentIdentifiers: [], options: [])
         ])
     }
 
@@ -252,6 +253,8 @@ final class MedNotifier: NSObject, UNUserNotificationCenterDelegate {
         switch response.actionIdentifier {
         case "taken":
             for m in meds { addLog(action: "taken", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
+        case "passed":
+            for m in meds { addLog(action: "passed", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
         case "later":
             for m in meds { addLog(action: "later", id: m["id"] ?? "", name: m["name"] ?? "", time: time) }
             // 10분 뒤가 조용한 시간 안이면 기록만 남기고 울리지 않습니다 — 안드로이드(MED_FIRE 에서 확인)와 같은 결과 (#36 MN-36-3)
