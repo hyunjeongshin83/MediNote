@@ -300,6 +300,8 @@ button,input,select,textarea{font-family:inherit}</style>
       medTaken: "복용했어요",
       medNotYet: "아직",
       medSkipped: "「아직」으로 기록했어요",
+      medPassed: "건너뛰었어요",
+      medPassBtn: "건너뛰어요",
       medLeft: (n) => `오늘 남은 복용 ${n}회`,
       medAllDone: "오늘 정한 복용을 모두 기록했어요.",
       doses: "\uD68C\uBD84",
@@ -401,6 +403,8 @@ button,input,select,textarea{font-family:inherit}</style>
       medTaken: "Taken",
       medNotYet: "Not yet",
       medSkipped: "Marked \u201Cnot yet\u201D",
+      medPassed: "Skipped",
+      medPassBtn: "Skip",
       medLeft: (n) => `Doses left today: ${n}`,
       medAllDone: "All of today's doses are recorded.",
       doses: "doses",
@@ -668,7 +672,7 @@ button,input,select,textarea{font-family:inherit}</style>
     const dk = new Date().toDateString(), st = {};
     for (let i = m.log.length - 1; i >= 0; i--) {
       const e = m.log[i];
-      if (!e || (e.action !== "taken" && e.action !== "skipped")) continue;
+      if (!e || (e.action !== "taken" && e.action !== "skipped" && e.action !== "passed")) continue;
       if (new Date(e.at).toDateString() !== dk) continue;
       st[e.id + "|" + e.time] = e.action;
     }
@@ -698,15 +702,15 @@ button,input,select,textarea{font-family:inherit}</style>
   function MedDose({ t, d }) {
     const [open, setOpen] = (0, import_react.useState)(false);
     const done = d.state === "taken";
-    const sub = d.time + (done ? " \xB7 " + t.medTaken : d.state === "skipped" ? " \xB7 " + t.medSkipped : "");
+    const sub = d.time + (done ? " \xB7 " + t.medTaken : d.state === "skipped" ? " \xB7 " + t.medSkipped : d.state === "passed" ? " \xB7 " + t.medPassed : "");
     const rec = (action) => { if (d.state !== action) recordDose(action, d); setOpen(false); };
-    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(Task, { ic: done ? I.check : I.pill, done, b: d.it.name, s: sub, chev: true, onClick: () => setOpen((o) => !o), a11y: { role: "button", tabIndex: 0, "aria-expanded": open } }), open && /* @__PURE__ */ import_react.default.createElement("div", { role: "group", "aria-label": d.it.name + " " + d.time, style: { display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("taken"), style: { ...doseBtn, background: C.g6, color: "#fff", border: "none" } }, t.medTaken), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("skipped"), style: { ...doseBtn, background: C.card, color: C.g6, border: `1.5px solid ${C.g2}` } }, t.medNotYet)));
+    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(Task, { ic: done ? I.check : I.pill, done, b: d.it.name, s: sub, chev: true, onClick: () => setOpen((o) => !o), a11y: { role: "button", tabIndex: 0, "aria-expanded": open } }), open && /* @__PURE__ */ import_react.default.createElement("div", { role: "group", "aria-label": d.it.name + " " + d.time, style: { display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("taken"), style: { ...doseBtn, background: C.g6, color: "#fff", border: "none" } }, t.medTaken), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("skipped"), style: { ...doseBtn, background: C.card, color: C.g6, border: `1.5px solid ${C.g2}` } }, t.medNotYet), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", onClick: () => rec("passed"), style: { ...doseBtn, background: C.card, color: C.g6, border: `1.5px solid ${C.g2}` } }, t.medPassBtn)));   // 크롬 계열 알림은 단추를 둘까지만 보여 주므로 앱 안에도 같은 길을 둡니다 (PR #203 Codex)
   }
   function Home({ t, go, profile }) {
     const [noti, setNoti] = (0, import_react.useState)(true);
     const meds = useMeds();
     const doses = todayDoses(meds);
-    const nDone = doses.filter((d) => d.state === "taken").length;
+    const nDone = doses.filter((d) => d.state === "taken" || d.state === "passed").length;   // 건너뛴 것도 오늘은 정리된 칸 — 먹은 것으로 세지는 않습니다 (PR #203 Codex)
     const g = profile.ageGroup;
     const greet = g === "child" ? t.greetChild : g === "senior" ? t.greetSenior : g === "hcw" ? t.greetHcw : t.greetAdult;
     const notiBody = g === "senior" ? t.notiSenior : g === "child" ? t.notiChild : t.notiAdult;
@@ -1920,7 +1924,7 @@ button,input,select,textarea{font-family:inherit}</style>
     var data={time:time,items:list.map(function(it){ return {id:it.id,name:it.name}; })};
     try{
       if(navigator.serviceWorker && navigator.serviceWorker.controller){
-        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"}]}); });
+        navigator.serviceWorker.ready.then(function(reg){ reg.showNotification("메디노트 복약 알림",{body:body,icon:"icon-192.png",badge:"favicon-32.png",lang:"ko",tag:"mnmd-"+time,data:data,requireInteraction:true,actions:[{action:"taken",title:"복용했어요"},{action:"later",title:"10분 뒤"},{action:"passed",title:"건너뛰어요"}]}); });
       } else if("Notification" in window && Notification.permission==="granted"){
         // 본문을 누르면 앱만 엽니다 — 「복용했어요」는 단추로만 기록합니다 (#97 MN-97-3)
         var n=new Notification("메디노트 복약 알림",{body:body,icon:"icon-192.png",tag:"mnmd-"+time}); n.onclick=function(){ try{ window.focus(); }catch(e){} n.close(); };
@@ -1928,13 +1932,14 @@ button,input,select,textarea{font-family:inherit}</style>
     }catch(e){}
   }
   function record(action,data){
-    if(action!=="taken" && action!=="later" && action!=="skipped") return;   // skipped: 첫 화면 카드의 「아직」 — 기록만 (#69 MN-69-4)
+    if(action!=="taken" && action!=="later" && action!=="skipped" && action!=="passed") return;   // skipped: 첫 화면 카드의 「아직」 — 기록만 (#69 MN-69-4) · passed: 알림 단추 「건너뛰어요」 — 기록만, 오늘 다시 울리지 않고 밀린 약 숫자에서도 뺍니다 (#202 MN-202-1)
     var list=data.items || (data.id ? [{id:data.id,name:data.name}] : []);   // data.id: 묶기 전에 뜬 알림
     list.forEach(function(it){
       addLog({action:action,id:it.id,name:it.name,time:data.time,at:Date.now()});
       if(action==="later") sc.snooze[it.id+"|"+data.time]=Date.now()+10*60000;
+      if(action==="passed"){ var pk=it.id+"|"+data.time; delete sc.snooze[pk]; sc.sent[pk]=dayKey(); }   // 건너뛰면 그 약·시각의 대기 중인 다시 알림도, 아직 오지 않은 오늘 알림도 거둡니다 — 같은 시각의 다른 약은 그대로 (PR #203 Codex)
     });
-    if(action==="later") save();
+    if(action==="later" || action==="passed") save();
     if(action==="taken") buzz();
     updateBadge();
   }
@@ -1954,7 +1959,7 @@ button,input,select,textarea{font-family:inherit}</style>
   // 앱이 열려 있거나 되돌아올 때만 갱신됩니다 — 닫힌 동안 시각이 지나는 것을 알릴 서버·백그라운드 경로는 없습니다.
   function overdueCount(){
     var now=new Date(), m=now.getHours()*60+now.getMinutes(), dk=now.toDateString(), done={};
-    log().forEach(function(e){ if(e.action==="taken" && new Date(e.at).toDateString()===dk) done[e.id+"|"+e.time]=1; });
+    log().forEach(function(e){ if((e.action==="taken"||e.action==="passed") && new Date(e.at).toDateString()===dk) done[e.id+"|"+e.time]=1; });
     var n=0, seen={}; sc.items.forEach(function(it){ (it.times||[]).forEach(function(t){ var k=it.id+"|"+t; if(seen[k]) return; seen[k]=1; if(hm(t)<=m && !done[k]) n++; }); });
     return n;   // 같은 약·같은 시각이 두 번 들어 있어도 한 번만 셉니다 — 알림도 한 번만 울립니다
   }
