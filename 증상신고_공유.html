@@ -476,7 +476,7 @@ input:focus{outline:none;border-color:var(--g4);background:#fff;}
   }
 
   /* ── 전송 핸들러 ── */
-  function openWin(u){ var w=window.open(u,"_blank","noopener"); if(!w) location.href=u; }
+  function openWin(u){ var a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove(); }   /* window.open(…,"noopener") 은 열려도 null 을 돌려줘 아래 폴백 이동이 항상 걸렸습니다 (#210 MN-210-1) */
   function mailto(to,sub,body){ location.href="mailto:"+encodeURIComponent(to||"")+"?subject="+encodeURIComponent(sub)+"&body="+encodeURIComponent(body); }
 
   function showQR(){
