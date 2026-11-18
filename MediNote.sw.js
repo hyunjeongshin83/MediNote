@@ -16,7 +16,7 @@ self.addEventListener("fetch",e=>{
   if(u.origin!==self.location.origin){ e.respondWith(fetch(req).catch(()=>own(req))); return; } // Supabase 등: 네트워크 우선
   // HTML/문서: 네트워크 우선(항상 최신 앱), 오프라인 시 캐시
   if(req.mode==="navigate" || (req.headers.get("accept")||"").indexOf("text/html")>-1){
-    e.respondWith(fetch(req).then(r=>{const c=r.clone();const key=u.origin+u.pathname;caches.open(CACHE).then(x=>x.put(key,c)).catch(()=>{});return r;}).catch(()=>own(req).then(h=>h||own("MediNote_app.html"))));   // 주소의 ?쿼리·#해시는 캐시 키에서 뺀다 — 알림 단추의 약 id·시각이 남지 않게 (#213 MN-213-1)
+    e.respondWith(fetch(req).then(r=>{const c=r.clone();const key=u.origin+u.pathname;caches.open(CACHE).then(x=>x.put(key,c)).catch(()=>{});return r;}).catch(()=>own(u.origin+u.pathname).then(h=>h||own("MediNote_app.html"))));   // 주소의 ?쿼리·#해시는 캐시 키에서 뺀다(저장·조회 모두) — 알림 단추의 약 id·시각이 남지 않게 (#213 MN-213-1)
     return;
   }
   // 그 외 정적 자산: 캐시 우선
