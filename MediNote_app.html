@@ -1999,7 +1999,8 @@ button,input,select,textarea{font-family:inherit}</style>
 
   // 알림 단추 → 서비스워커가 message 로 돌려줌 (닫혀 있었으면 ?mnmd=… 로 열림)
   if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message",function(e){ var d=e.data||{}; if(d.type==="mnmd") record(d.action,d.data||{}); }); }
-  try{ var q=new URLSearchParams(location.search); if(q.get("mnmd")){
+  try{ var q=new URLSearchParams(location.hash.replace(/^#/,"")); if(!q.get("mnmd")) q=new URLSearchParams(location.search);   // 새 길은 #해시(요청에 안 실림) · ?쿼리는 이미 발행된 예전 주소 호환 (#213 MN-213-1)
+    if(q.get("mnmd")){
     var ids=(q.get("ids")||q.get("id")||"").split(",").filter(Boolean);
     record(q.get("mnmd"),{time:q.get("time")||"",items:ids.map(function(id){ var it=sc.items.filter(function(x){ return x.id===id; })[0]; return {id:id,name:it?it.name:(q.get("name")||"")}; })});
     history.replaceState(null,"",location.pathname); } }catch(e){}

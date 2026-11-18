@@ -1,5 +1,5 @@
 /* MediNote 서비스워커 — 오프라인 캐시 + 알림(푸시) 표시 (원본 앱 UI 변경 없음) */
-const CACHE="medinote-app-v19";   // v18: 로그인 창 이름·이메일·비밀번호 칸에 aria-label (#207) · v17: 안드로이드 건너뜀 기록을 한 번에 하나씩 (#206) · v16: 알림 걷기를 떠 있는 알림의 약으로 판단 (#206) · v15: 앱 안 건너뛰어요가 폰 알림도 거둠 (#204) · v14: 미리 건너뛰면 오늘 알림도 거둠 (#203) · v13: 건너뛰면 10분 뒤 다시 알림도 거둠 (#203) · v12: 약 카드에도 「건너뛰어요」 (#203) · v11: 알림 단추 「건너뛰어요」 (#202) · v10: 나의 기록 탭 예시 안내 · 접종 탭 예방접종도우미 안내 (#198) · v9 이전은 아래   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
+const CACHE="medinote-app-v20";   // v20: 알림 단추가 앱을 열 때 약 id·시각을 ?쿼리 대신 #해시로 (#213 MN-213-1) · v18: 로그인 창 이름·이메일·비밀번호 칸에 aria-label (#207) · v17: 안드로이드 건너뜀 기록을 한 번에 하나씩 (#206) · v16: 알림 걷기를 떠 있는 알림의 약으로 판단 (#206) · v15: 앱 안 건너뛰어요가 폰 알림도 거둠 (#204) · v14: 미리 건너뛰면 오늘 알림도 거둠 (#203) · v13: 건너뛰면 10분 뒤 다시 알림도 거둠 (#203) · v12: 약 카드에도 「건너뛰어요」 (#203) · v11: 알림 단추 「건너뛰어요」 (#202) · v10: 나의 기록 탭 예시 안내 · 접종 탭 예방접종도우미 안내 (#198) · v9 이전은 아래   // v9: 글꼴을 vendor/fonts/ 에서 같은 출처로 (#51 MN-51-3 · 2026-11-03) · v8: 같은 주소(github.io)의 다른 앱 캐시를 지우지 않음 (2026-10-15)
 const ASSETS=["MediNote_app.html","manifest.webmanifest",
   "medinote.config.js","vendor/react-18.production.min.js","vendor/react-dom-18.production.min.js","vendor/supabase-js-2.umd.js","vendor/qrcodejs-1.0.0.min.js",
   "vendor/fonts/medinote-fonts.css","vendor/fonts/Pretendard-Regular.subset.woff2","vendor/fonts/Pretendard-SemiBold.subset.woff2",
@@ -16,7 +16,7 @@ self.addEventListener("fetch",e=>{
   if(u.origin!==self.location.origin){ e.respondWith(fetch(req).catch(()=>own(req))); return; } // Supabase 등: 네트워크 우선
   // HTML/문서: 네트워크 우선(항상 최신 앱), 오프라인 시 캐시
   if(req.mode==="navigate" || (req.headers.get("accept")||"").indexOf("text/html")>-1){
-    e.respondWith(fetch(req).then(r=>{const c=r.clone();caches.open(CACHE).then(x=>x.put(req,c)).catch(()=>{});return r;}).catch(()=>own(req).then(h=>h||own("MediNote_app.html"))));
+    e.respondWith(fetch(req).then(r=>{const c=r.clone();const key=u.origin+u.pathname;caches.open(CACHE).then(x=>x.put(key,c)).catch(()=>{});return r;}).catch(()=>own(req).then(h=>h||own("MediNote_app.html"))));   // 주소의 ?쿼리·#해시는 캐시 키에서 뺀다 — 알림 단추의 약 id·시각이 남지 않게 (#213 MN-213-1)
     return;
   }
   // 그 외 정적 자산: 캐시 우선
@@ -42,7 +42,8 @@ self.addEventListener("notificationclick",e=>{
       if(action==="later") return;
       if(!action) return self.clients.openWindow("MediNote_app.html");
       const ids=(d.items||[{id:d.id}]).map(x=>x.id).join(",");
-      const q="?mnmd="+action+"&ids="+encodeURIComponent(ids)+"&time="+encodeURIComponent(d.time||"");
+      // 해시(#)로 넘깁니다 — ?쿼리는 호스트 요청에 실리고 Cache Storage 에 주소째 남습니다 (#213 MN-213-1)
+      const q="#mnmd="+action+"&ids="+encodeURIComponent(ids)+"&time="+encodeURIComponent(d.time||"");
       return self.clients.openWindow("MediNote_app.html"+q);
     }));
     return;
