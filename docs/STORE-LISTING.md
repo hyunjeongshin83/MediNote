@@ -56,6 +56,7 @@ AI 도우미에 물은 내용은 외부 AI 사업자(미국)에 전달됩니다.
 | Google Play — 건강 앱 신고서 (Health apps declaration, 2025-08 도입 · 2026-01 시행) | Health Connect 를 읽는 앱은 Play Console 에서 신고서를 내야 하고, 「의료기기」 표시 항목이 생겼음. 데이터 안전(Data safety) 칸과 실제 수집이 같아야 함 | 신고서 **미제출**(대표님 계정). 답안 초안은 아래 | <!-- phrase-ok -->
 | Google Play — AI 제3자 전달 (2026-07-15 정책) | 사용자 데이터를 외부 모델 사업자에 보내면 개인정보처리방침 **과** 데이터 안전 칸 **둘 다**에 적고, 첫 전송 전 동의를 받아야 함 | 방침 2-5 절 ✔ · 앱 첫 사용 확인창 ✔ (`viaHelper` ACK) · 데이터 안전 칸 **미작성** |
 | Google Play — Android 16 세분 권한 (2026-04 갱신) | 건강 권한을 종류별로 요청·설명 | 걸음·심박·수면 세 권한만 선언 ✔ · 권한 근거 화면(ACTION_SHOW_PERMISSIONS_RATIONALE) ✔ |
+| Google Play — 정확한 알람 권한 | 두 가지가 다름. `SCHEDULE_EXACT_ALARM`(우리 선언)은 사용자가 설정에서 허용하는 권한이며 Android 14+ 새 설치는 기본 거부. `USE_EXACT_ALARM`은 알람·타이머·캘린더 같은 핵심 기능 앱에 한정된 제한 권한으로 알려져 있음 (제3자 글 기준 · 정책 본문 미확인 · Codex 가 Google 정책 페이지를 근거로 지적) | `SCHEDULE_EXACT_ALARM` 선언 ✔ · 설정 안내 화면(exactAlarmAllowed) ✔ · `USE_EXACT_ALARM` 은 선언하지 않음 · Play Console 에 별도 신고가 필요한지는 미확인 — 출시 전 대표님이 Console 에서 확인 (#216) |
 | Apple — 심사 지침 5.1.3 | HealthKit 데이터를 광고·마케팅·제3자에 쓰지 않고 iCloud 에 저장하지 않음 | HealthKit 값은 화면 표시만, 서버로 안 감 ✔ (CLAUDE.md §3) | <!-- phrase-ok -->
 
 **데이터 안전 칸 답안 초안** (대표님 확인 뒤 입력)
