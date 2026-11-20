@@ -129,6 +129,9 @@ HealthKit (iOS 앱만)   같은 시트에서 「앱에서 건강(HealthKit) 읽�
                        iOS 앱은 복용 기록을 앱 지원 폴더 MediNoteMeds/ 로 옮기고 그 폴더와 Library/WebKit 에 isExcludedFromBackup 을 겁니다.
                        폰을 바꾸면 알림 일정과 기록은 옮겨지지 않습니다 — 코드 기준이며 실기기에서는 확인하지 못했습니다
 잠금화면 알림          같은 시각의 약은 알림 한 통으로 묶고 본문에 약 이름을 쓰지 않습니다 (「약 N가지 드실 시간이에요 (08:00)」 · 웹·안드로이드·iOS) (#83 MN-83-4 · #123 MN-123-1)
+복약 알림 단추 (웹)  알림의 단추를 눌러 닫힌 앱을 열 때 약 id·시각은 주소의 # 뒤(MediNote_app.html#mnmd=…)에만 실립니다
+                       # 뒤는 브라우저가 서버 요청에 붙이지 않아 호스트로 가지 않고, 서비스워커 캐시에도 쿼리 없는 주소로만 남습니다 (코드 기준 · 서비스워커 openWindow · #213 MN-213-1)
+                       예전 ?mnmd= 주소로 열린 것도 읽히지만 새로 만들지는 않습니다. 헤드리스 크롬(Playwright)에서 캐시 항목을 확인했고 실기기는 확인하지 못했습니다
 Google 토큰            Google 로그인은 2026-11-03 부터 access_type=offline · prompt=consent 없이 요청해 Google refresh token 을 받지 않습니다
                        (#55 MN-55-5 · #83 MN-83-5). 세션(Supabase 토큰 · 1시간짜리 provider_token)은 그대로 기기에 저장됩니다. 앱은 provider_token 을 쓰지 않습니다
 ```
