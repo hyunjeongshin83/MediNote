@@ -1,24 +1,6 @@
 {
-  "updated": "2026-11-19T21:20:00Z",
+  "updated": "2026-11-20T02:25:00Z",
   "runs": [
-    {
-      "at": "2026-11-14T21:30:00Z",
-      "task": "메디노트 리서치",
-      "commits": [],
-      "issues": [
-        {
-          "n": 200,
-          "title": "[리서치] Health Connect·HealthKit · 안드로이드 권한 두 번 거절 뒤 되돌릴 길 안내 없음",
-          "research": true
-        }
-      ],
-      "prs": [],
-      "decisions": [
-        "MN-200-1: 안드로이드 Health Connect 거절 문구에 「Health Connect 앱 › 앱 권한 › 메디노트 에서 켤 수 있습니다」 한 줄을 넣을까요",
-        "MN-63-5: PRIVACY 를 GitHub Pages 주소로 공개해도 될까요 (묵은 질문)"
-      ],
-      "note": "주제 4 Health Connect·HealthKit — 이미 반영된 것(#63·#92·#156·MN-120-1)은 다시 올리지 않고, 권한 잠김 뒤 안내 공백 1건만 올림. 실기기 확인은 못 함"
-    },
     {
       "at": "2026-11-15T21:30:00Z",
       "task": "메디노트 리서치",
@@ -197,6 +179,21 @@
         "MN-216-2: 정확한 알람을 지금처럼 사용자가 설정에서 허용하는 방식으로 두고 Play Console 신고 필요 여부는 출시 전 확인해도 됩니까 (예/아니오)"
       ],
       "note": "Codex 지적(SCHEDULE_EXACT_ALARM 과 USE_EXACT_ALARM 혼동) 반영해 이슈·문서 정정. Google 정책 페이지는 열지 못했음(제3자 글 기준)"
+    },
+    {
+      "at": "2026-11-20T02:25:00Z",
+      "task": "MedIT 연구",
+      "commits": [],
+      "issues": [
+        {
+          "n": 219,
+          "title": "[리서치] 4D 프로파일 ⑤ 검증 — 「심장·순환」 절 옮김: 산술 일곱 곳은 맞고, 「맥파가 혈류보다 약 20배」는 기본 선택에서 약 28배이며, n=1,455 는 정상값 집단",
+          "research": true
+        }
+      ],
+      "prs": [],
+      "decisions": [],
+      "note": "앱 반영 없는 연구. 연령별 PWV 표값·Krogh/Poole·Guyton 분배표는 원문을 못 읽어 못 대 봄(틀렸다는 뜻 아님). PubMed 5회 · 웹 0회"
     }
   ]
 }
