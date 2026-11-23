@@ -1913,7 +1913,7 @@ html.mnmd-pill-on:not([data-mn-tab="assist"]) .mn-body{padding-bottom:var(--mnmd
     document.getElementById("mnmdAdd").onclick=function(){
       var name=document.getElementById("mnmdName").value.trim(), custom=document.getElementById("mnmdCustom").value; var times=pickTimes.slice(); if(/^\d\d:\d\d$/.test(custom)) times.push(custom);
       if(!name) return stt("약 이름을 적어 주세요"); if(!times.length) return stt("시각을 하나는 골라 주세요");
-      sc.items.push({id:"m"+Date.now().toString(36),name:name,times:times.sort()}); sc.on=true; save(); renderList(); document.getElementById("mnmdOn").checked=true; document.getElementById("mnmdName").value=""; stt("추가했어요");
+      sc.items.push({id:"m"+Date.now().toString(36),name:name,times:times.sort()}); sc.on=true; save(); askPersist(); renderList(); document.getElementById("mnmdOn").checked=true; document.getElementById("mnmdName").value=""; stt("추가했어요");
       if("Notification" in window && Notification.permission==="default") Notification.requestPermission();
     };
     ["mnmdQ1","mnmdQ2"].forEach(function(id){ document.getElementById(id).onchange=function(){ var v=this.value; if(/^\d\d:\d\d$/.test(v)){ if(id==="mnmdQ1") sc.quiet.from=v; else sc.quiet.to=v; save(); stt("조용한 시간을 저장했어요"); } }; });
@@ -1969,6 +1969,17 @@ html.mnmd-pill-on:not([data-mn-tab="assist"]) .mn-body{padding-bottom:var(--mnmd
       if(NATIVE || (window.MEDINOTE_CONFIG||{}).haptic!==true || typeof navigator.vibrate!=="function") return;
       var ua=navigator.userActivation; if(ua && !ua.isActive) return;   // 알림 창 단추·앱 열림 주소로 들어온 기록은 지금 눌린 것이 아니라 건너뜁니다
       navigator.vibrate(40);
+    }catch(e){}
+  }
+  // 복약을 새로 추가하는 순간(사용자 동작 안) 브라우저에 「이 기기 저장 공간을 지우지 말아 달라」고 한 번 요청 (StorageManager.persist() · 실험 · #230 MN-230-2 · 대표님 결정 2026-11-23: 예)
+  // medinote.config.js 의 persistStorage 가 true 일 때만. 기본은 꺼짐 — 화면·소리·저장은 그대로이고 결과는 쓰지 않습니다. 바깥 주소 없음, 보내는 값 없음.
+  // 앱 셸(WebView)은 건너뜁니다. 브라우저가 거절해도 아무 일도 없습니다(크롬은 허락 창 없이 알아서 판단 · Firefox 는 허락 창이 뜰 수 있어 켜기 전에 확인).
+  function askPersist(){
+    try{
+      if(NATIVE || (window.MEDINOTE_CONFIG||{}).persistStorage!==true) return;
+      var S=navigator.storage; if(!S || typeof S.persist!=="function") return;
+      var ua=navigator.userActivation; if(ua && !ua.isActive) return;
+      S.persist().catch(function(){});
     }catch(e){}
   }
   // 앱 아이콘 숫자 (Badging API · 실험) — 정한 시각이 지났는데 아직 「복용했어요」를 안 누른 오늘 복용 수.
