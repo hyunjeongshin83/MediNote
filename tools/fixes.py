@@ -16,7 +16,7 @@
 쓰는 법
 -------
     python3 tools/fixes.py              사람이 읽는 표
-    python3 tools/fixes.py --todo       막는 것 없고 아직 대기인 것만 (반영 대상)
+    python3 tools/fixes.py --todo       막는 것 없고 아직 대기인 것만 (반영 대상 · 준비물이 남았거나 (예약 작업) 인 카드는 뺍니다)
     python3 tools/fixes.py --json       기계가 읽는 목록
     python3 tools/fixes.py --report     docs/FIXES.md 를 다시 만듭니다
 
@@ -207,7 +207,10 @@ def table(items):
         if not todo(x):
             why = x.get('막는것', '').strip()
             st = x.get('상태', '').strip()
-            lines.append('     ⏸ %s' % (why if why not in ('없음', '') else st))
+            if needs_hands(x):
+                lines.append('     ✋ 사람 손 필요 — %s' % (x.get('준비물', '').strip() or '예약 작업 지시문'))
+            else:
+                lines.append('     ⏸ %s' % (why if why not in ('없음', '') else st))
         lines.append('')
     return '\n'.join(lines)
 
@@ -282,6 +285,8 @@ def report(items, repo):
 
     A('## 바로 반영해도 되는 것')
     A('')
+    A('(준비물이 남았거나 `파일:` 이 `(예약 작업)` 인 카드는 막는것이 없어도 여기가 아니라 아래 「사람 손이 필요한 것」입니다.)')
+    A('')
     A('`막는것: 없음` 이고 아직 `대기` 인 것입니다. **사람 확인 없이 고쳐도 됩니다.**')
     A('')
     if t:
@@ -304,13 +309,14 @@ def report(items, repo):
     A('`막는것` 은 없지만 **에이전트가 혼자 끝낼 수 없는 것**입니다 — `준비물:` 이 남았거나 `파일:` 이 `(예약 작업)` 인 카드. 「바로 반영」 숫자에 세지 않습니다.')
     A('')
     if hands:
-        A('| id | 이슈 | 무엇 | 준비물 · 까닭 |')
-        A('|---|---|---|---|')
+        A('| id | 이슈 | 파일 | 무엇 | 준비물 · 까닭 |')
+        A('|---|---|---|---|---|')
         for x in hands:
             why = x.get('준비물', '').strip()
             if not why or why == '없음':
                 why = '예약 작업 지시문 — 그 작업을 가진 세션이 고침'
-            A('| `%s` | #%s | %s | %s |' % (x.get('id'), x.get('이슈'), x.get('무엇', ''), why))
+            cell = lambda v: str(v).replace('|', '\\|').replace('\n', ' ')   # 이슈 글이 표를 깨지 않게 (#233 Sourcery)
+            A('| `%s` | #%s | %s | %s | %s |' % (x.get('id'), x.get('이슈'), cell(x.get('파일', '')), cell(x.get('무엇', '')), cell(why)))
     else:
         A('없습니다.')
     A('')

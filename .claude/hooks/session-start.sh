@@ -28,13 +28,15 @@ try:
 except SystemExit:
     sys.exit(3)
 todo = [x for x in items if fixes.todo(x)]
-wait = [x for x in items if not fixes.todo(x) and x.get('상태','').startswith('대기')]
+hands = [x for x in items if fixes.needs_hands(x)]
+wait = [x for x in items if not fixes.todo(x) and not fixes.needs_hands(x) and x.get('상태','').startswith('대기')]
 done = [x for x in items if x.get('상태','').startswith('반영됨')]
 print('이슈에서 방금 읽었습니다 (%s).' % fixes.DEFAULT_REPO)
 print()
 print('```')
 print('바로 반영    %d 건   ← 확인 없이 고칩니다' % len(todo))
 print('사람 대기    %d 건   ← 손대지 않습니다 (docs/FIXES.md 에 막는 것이 적혀 있습니다)' % len(wait))
+print('손 필요      %d 건   ← 결정은 끝났고 사람·예약 작업 세션이 해야 합니다' % len(hands))
 print('반영됨       %d 건' % len(done))
 print('```')
 if todo:
