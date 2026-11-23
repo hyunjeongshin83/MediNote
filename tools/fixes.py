@@ -40,7 +40,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_REPO = 'hyunjeongshin83/MediNote'
 
-KEYS = ['id', '파일', '무엇', '어떻게', '확인', '막는것', '상태']
+KEYS = ['id', '파일', '무엇', '어떻게', '확인', '막는것', '준비물', '상태']
 BLOCK = re.compile(r'```fix[ \t]*\n(.*?)```', re.S)
 
 
@@ -66,13 +66,33 @@ def parse_blocks(body, issue_no, issue_title):
     return out
 
 
-def todo(item):
-    """사람 확인 없이 지금 반영해도 되는 항목인가."""
+def _undecided_free(item):
+    """결정은 끝났거나 처음부터 결정이 필요 없는 항목인가 (막는것 칸만 본다)."""
     blocked = item.get('막는것', '').strip()
-    state = item.get('상태', '').strip()
     # 「없음 (대표님 결정 YYYY-MM-DD · …)」 처럼 대표님 결정 기록이 붙은 것도 막는 것이 없는 것입니다 — 예약 작업이 결정을 이렇게 적습니다.
     # 「없음 (문서의 사실 오류) — 단 … 미룸」 같은 단서 달린 것은 그대로 사람 대기에 둡니다 (#164 Sourcery).
-    return (blocked in ('없음', '') or blocked.startswith('없음 (대표님 결정')) and state.startswith('대기')
+    return blocked in ('없음', '') or blocked.startswith('없음 (대표님 결정')
+
+
+def needs_hands(item):
+    """결정은 끝났지만 에이전트가 혼자 끝낼 수 없는 항목인가 (#229 MN-229-1).
+
+    · 준비물 — 사람이 가져와야 할 값·파일·설정이 남았다 (`준비물: <누가> <무엇을>`). 「예」 뒤에도 남는 것
+    · 예약 작업 — `파일:` 이 「(예약 작업)」 으로 시작하면 지시문을 고치는 길이 에이전트에게 닫혀 있다
+    이런 항목은 「바로 반영」 숫자에 세지 않습니다 — 일거리처럼 보이지만 아무 세션도 끝낼 수 없었습니다.
+    """
+    if not item.get('상태', '').strip().startswith('대기') or not _undecided_free(item):
+        return False
+    prep = item.get('준비물', '').strip()
+    if prep and prep != '없음':
+        return True
+    return item.get('파일', '').strip().startswith('(예약 작업)')
+
+
+def todo(item):
+    """사람 확인 없이 지금 반영해도 되는 항목인가."""
+    state = item.get('상태', '').strip()
+    return _undecided_free(item) and state.startswith('대기') and not needs_hands(item)
 
 
 def _get(url, token):
@@ -230,7 +250,8 @@ def _question_line(blocked, today=None):
 
 def report(items, repo):
     t = [x for x in items if todo(x)]
-    blocked = [x for x in items if not todo(x) and x.get('상태', '').startswith('대기')]
+    hands = [x for x in items if needs_hands(x)]
+    blocked = [x for x in items if not todo(x) and not needs_hands(x) and x.get('상태', '').startswith('대기')]
     done = [x for x in items if x.get('상태', '').startswith('반영됨')]
     held = [x for x in items if x.get('상태', '').startswith('보류')]
     doing = [x for x in items if x.get('상태', '').startswith('진행')]   # 어느 세션이 맡아 고치는 중 — 끊기면 여기서 이어받습니다
@@ -246,6 +267,7 @@ def report(items, repo):
     A('저장소       %s' % repo)
     A('바로 반영    %d 건' % len(t))
     A('사람 대기    %d 건' % len(blocked))
+    A('결정 끝남·손 필요  %d 건' % len(hands))
     A('반영됨       %d 건' % len(done))
     A('진행 중      %d 건' % len(doing))
     A('보류         %d 건' % len(held))
@@ -276,6 +298,22 @@ def report(items, repo):
     else:
         A('없습니다.')
         A('')
+
+    A('## 결정은 끝났고 사람 손이 필요한 것')
+    A('')
+    A('`막는것` 은 없지만 **에이전트가 혼자 끝낼 수 없는 것**입니다 — `준비물:` 이 남았거나 `파일:` 이 `(예약 작업)` 인 카드. 「바로 반영」 숫자에 세지 않습니다.')
+    A('')
+    if hands:
+        A('| id | 이슈 | 무엇 | 준비물 · 까닭 |')
+        A('|---|---|---|---|')
+        for x in hands:
+            why = x.get('준비물', '').strip()
+            if not why or why == '없음':
+                why = '예약 작업 지시문 — 그 작업을 가진 세션이 고침'
+            A('| `%s` | #%s | %s | %s |' % (x.get('id'), x.get('이슈'), x.get('무엇', ''), why))
+    else:
+        A('없습니다.')
+    A('')
 
     A('## 사람이 정해야 넘어가는 것')
     A('')
