@@ -1,35 +1,6 @@
 {
-  "updated": "2026-11-26T21:20:00Z",
+  "updated": "2026-11-27T02:25:00Z",
   "runs": [
-    {
-      "at": "2026-11-23T06:14:34Z",
-      "task": "최신앱 디자인 · API 실험",
-      "commits": [
-        {
-          "sha": "aa5e131",
-          "title": "실험: StorageManager.persist() — 기기 저장 공간 보호 요청 (labs)"
-        }
-      ],
-      "issues": [
-        {
-          "n": 230,
-          "title": "[리서치][API실험] 2026-11-23 메디노트 StorageManager.persist()",
-          "research": true
-        }
-      ],
-      "prs": [
-        {
-          "n": 231,
-          "title": "실험: StorageManager.persist() (labs)",
-          "state": "merged",
-          "opened": "2026-11-23"
-        }
-      ],
-      "decisions": [
-        "MN-230-2: 설정 플래그(기본 꺼짐)로 약 추가 때 저장 공간 보호를 요청해도 될까요"
-      ],
-      "note": "MN-230-1 병합(labs 화면 · 앱 본체 변화 없음), 크롬 새 프로필에서는 거절, Safari·셸 미확인"
-    },
     {
       "at": "2026-11-23T06:26:56Z",
       "task": "최신앱 디자인 · API 실험",
@@ -162,6 +133,24 @@
       "prs": [],
       "decisions": [],
       "note": "건강 데이터가 어디로 가는지 — 바깥 주소 11곳 전부 장부에 있음 · 「기기에서 지우기」는 medinote:·medit: 키를 모두 지우고 Supabase 세션은 로그아웃(signOut)이 지움. 새로 알아낸 것 없음"
+    },
+    {
+      "at": "2026-11-27T02:25:00Z",
+      "task": "MedIT 연구",
+      "commits": [],
+      "issues": [
+        {
+          "n": 238,
+          "title": "[리서치] 에이전트 하네스 · 2026-11-27 ③ 「Codex 를 보고 병합」 관문이 드래프트 PR 에서는 돌지 않고, 평소엔 병합이 Codex 끝보다 14초~3분 뒤",
+          "research": true
+        }
+      ],
+      "prs": [],
+      "decisions": [
+        "MN-238-1: 세 저장소 CLAUDE.md 「리뷰 봇」 절에 Codex 가 도는 조건·병합 순서 한 줄을 더해도 될까요(예/아니오)",
+        "MN-238-2: 매일 작업 지시문의 병합 문장 수정 승인(예약 작업)"
+      ],
+      "note": "B 갈래 ③ · 오늘 백신노트 PR #262 가 드래프트라 Codex 가 안 돌아 55분 대기 → ready 로 바꾸자 P2 1건 지적 · 앱 코드 반영 없음"
     }
   ]
 }
